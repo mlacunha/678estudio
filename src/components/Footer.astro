@@ -1,33 +1,76 @@
 ---
 import BrandMark from './BrandMark.astro';
+import { getRequestStudioSettings } from '../db/studioSettings';
+import { buildWhatsAppQuotePath } from '../utils/whatsapp';
 
 const currentYear = new Date().getFullYear();
+const { whatsapp, instagram, facebook, email } = await getRequestStudioSettings(Astro.locals);
+const channels = [
+  {
+    label: 'WhatsApp',
+    href: whatsapp && buildWhatsAppQuotePath({ customMessage: 'Olá! Gostaria de conversar com o 678 Estudio sobre uma peça personalizada.' }),
+    icon: 'M20.5 11.5a8.5 8.5 0 0 1-12.7 7.4L3 20l1.1-4.7a8.5 8.5 0 1 1 16.4-3.8Z M8.7 7.9c-.8.4-.9 1.6-.2 2.9a8 8 0 0 0 4 4c1.3.6 2.5.5 2.9-.3l.3-.8-2.2-1.1-.8.8a6 6 0 0 1-2.5-2.5l.8-.8-1.1-2.2Z',
+  },
+  {
+    label: 'Instagram',
+    href: instagram,
+    icon: 'M8 3h8a5 5 0 0 1 5 5v8a5 5 0 0 1-5 5H8a5 5 0 0 1-5-5V8a5 5 0 0 1 5-5Z M16 12a4 4 0 1 1-8 0 4 4 0 0 1 8 0Z M17.5 6.5h.01',
+  },
+  {
+    label: 'Facebook',
+    href: facebook,
+    icon: 'M14 21v-8h3l.5-3H14V8.5c0-.9.4-1.5 1.6-1.5H18V4h-2.5C12.5 4 11 5.8 11 8.5V10H8v3h3v8',
+  },
+  {
+    label: 'E-mail',
+    href: email && `mailto:${encodeURIComponent(email).replace('%40', '@')}`,
+    icon: 'M4 5h16a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1Z M3 7l9 6 9-6',
+  },
+].filter(channel => channel.href);
 ---
 
-<footer class="bg-surface text-ink-muted text-xs border-t border-line py-12">
+<footer class="border-t border-line bg-surface py-8 text-sm text-ink-muted sm:py-10">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div class="flex flex-col md:flex-row items-center justify-between gap-6 text-center md:text-left">
+    <div class="grid items-start gap-6 sm:grid-cols-2 lg:grid-cols-[1fr_auto_auto] lg:gap-12">
       <div>
-        <div class="flex items-center justify-center md:justify-start gap-2 text-ink font-semibold text-sm">
+        <a href="/" class="inline-flex items-center gap-2 font-semibold text-ink hover:text-accent">
           <BrandMark class="size-10" />
           <span>678 Estudio</span>
-        </div>
-        <p class="mt-2 text-ink-muted max-w-sm">
-          Quadros decorativos, canecas premium, papelaria refinada e marcenaria artesanal com excelência e precisão.
+        </a>
+        <p class="mt-2 max-w-xs leading-relaxed">
+          Estúdio de design e personalização de quadros, canecas, papelaria e peças em madeira.
         </p>
       </div>
 
-      <div class="flex flex-wrap justify-center gap-6 text-ink-secondary">
-        <a href="/#quadros" class="hover:text-accent motion-safe:transition-colors">Quadros</a>
-        <a href="/#canecas" class="hover:text-accent motion-safe:transition-colors">Canecas</a>
-        <a href="/#papelaria" class="hover:text-accent motion-safe:transition-colors">Agendas & Planners</a>
-        <a href="/#artesanato" class="hover:text-accent motion-safe:transition-colors">Madeira & Especiais</a>
-      </div>
+      <nav aria-label="Categorias no rodapé">
+        <p class="mb-2 text-xs font-semibold uppercase tracking-wider text-ink">Coleções</p>
+        <ul class="grid grid-cols-2 gap-x-4 text-ink-secondary lg:gap-x-8">
+          <li><a href="/#quadros" class="inline-flex min-h-10 items-center hover:text-accent">Quadros</a></li>
+          <li><a href="/#canecas" class="inline-flex min-h-10 items-center hover:text-accent">Canecas</a></li>
+          <li><a href="/#papelaria" class="inline-flex min-h-10 items-center hover:text-accent">Agendas &amp; Planners</a></li>
+          <li><a href="/#artesanato" class="inline-flex min-h-10 items-center hover:text-accent">Madeira &amp; Especiais</a></li>
+        </ul>
+      </nav>
 
-      <div class="flex items-center gap-4 text-ink-muted text-[11px]">
-        <span>&copy; {currentYear} 678 Estudio. Todos os direitos reservados.</span>
-        <a href="/admin" class="hover:text-accent text-ink-muted motion-safe:transition-colors">Admin</a>
-      </div>
+      {channels.length > 0 && (
+        <nav aria-label="Canais de contato">
+          <p class="mb-2 text-xs font-semibold uppercase tracking-wider text-ink">Contato</p>
+          <ul class="grid grid-cols-2 gap-x-4">
+            {channels.map(({ label, href, icon }) => (
+              <li>
+                <a href={href} target="_blank" rel="noopener noreferrer" class="inline-flex min-h-11 items-center gap-2 text-ink-secondary hover:text-accent">
+                  <svg aria-hidden="true" class="size-5 shrink-0 text-accent" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d={icon} /></svg>
+                  {label}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </nav>
+      )}
+    </div>
+    <div class="mt-6 flex flex-wrap items-center justify-between gap-x-4 border-t border-line pt-2 text-xs">
+      <span>&copy; {currentYear} 678 Estudio. Todos os direitos reservados.</span>
+      <a href="/admin" class="inline-flex min-h-11 items-center hover:text-accent">Admin</a>
     </div>
   </div>
 </footer>

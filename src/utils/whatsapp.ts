@@ -1,14 +1,21 @@
 export interface WhatsAppMessageParams {
-  phoneNumber: string;
   productName?: string;
   categoryTitle?: string;
   mockupUrl?: string;
   customMessage?: string;
 }
 
-export const DEFAULT_STUDIO_PHONE = "5511999999999";
+export const WHATSAPP_UNAVAILABLE = 'O atendimento pelo WhatsApp está indisponível no momento.';
 
-export function formatWhatsAppMessage(params: WhatsAppMessageParams): string {
+export function normalizeWhatsAppNumber(value: string): string | undefined {
+  if (!/^\+?[0-9(). -]+$/.test(value)) return;
+  const digits = value.replace(/\D/g, '');
+  if (!/^[1-9]\d{7,14}$/.test(digits)) return;
+  if (digits.startsWith('55') && !/^55[1-9]\d[2-9]\d{7,8}$/.test(digits)) return;
+  return digits;
+}
+
+export function formatWhatsAppMessage(params: WhatsAppMessageParams = {}): string {
   const { productName, categoryTitle, mockupUrl, customMessage } = params;
 
   if (customMessage) {
@@ -36,18 +43,12 @@ export function formatWhatsAppMessage(params: WhatsAppMessageParams): string {
   return lines.join("\n");
 }
 
-export function buildWhatsAppLink(params: Partial<WhatsAppMessageParams> = {}): string {
-  const rawPhone = params.phoneNumber || DEFAULT_STUDIO_PHONE;
-  const sanitizedPhone = rawPhone.replace(/\D/g, "");
+export function buildWhatsAppLink(phoneNumber: string, message: string): string | undefined {
+  const normalized = normalizeWhatsAppNumber(phoneNumber);
+  if (normalized) return `https://wa.me/${normalized}?text=${encodeURIComponent(message)}`;
+}
 
-  const message = formatWhatsAppMessage({
-    phoneNumber: sanitizedPhone,
-    productName: params.productName,
-    categoryTitle: params.categoryTitle,
-    mockupUrl: params.mockupUrl,
-    customMessage: params.customMessage,
-  });
-
-  return `https://wa.me/${sanitizedPhone}?text=${encodeURIComponent(message)}`;
+export function buildWhatsAppQuotePath(params: WhatsAppMessageParams = {}): string {
+  return `/contato/whatsapp?text=${encodeURIComponent(formatWhatsAppMessage(params))}`;
 }
 

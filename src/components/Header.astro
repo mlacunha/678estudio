@@ -1,8 +1,10 @@
 ---
-import { buildWhatsAppLink } from '../utils/whatsapp';
+import { getRequestStudioSettings } from '../db/studioSettings';
+import { buildWhatsAppQuotePath } from '../utils/whatsapp';
 import BrandMark from './BrandMark.astro';
 
-const directContactLink = buildWhatsAppLink({
+const { whatsapp } = await getRequestStudioSettings(Astro.locals);
+const directContactLink = whatsapp && buildWhatsAppQuotePath({
   customMessage: 'Olá! Vim pelo site do 678 Estudio e gostaria de conversar sobre um projeto personalizado.'
 });
 ---
@@ -36,14 +38,14 @@ const directContactLink = buildWhatsAppLink({
     </nav>
 
     <div class="flex shrink-0 items-center gap-1.5 sm:gap-3">
-      <a
+      {directContactLink && <a
         href={directContactLink}
         target="_blank"
         rel="noopener noreferrer"
         class="hidden sm:inline-flex min-h-11 items-center px-4 rounded-md text-sm font-semibold whitespace-nowrap bg-action hover:bg-action-hover text-on-action motion-safe:transition-colors"
       >
         <span>Solicitar Orçamento</span>
-      </a>
+      </a>}
 
       <button id="theme-toggle" type="button" hidden aria-label="Tema escuro" aria-pressed="false" class="inline-flex size-11 shrink-0 items-center justify-center rounded-md border border-control text-ink-secondary hover:bg-surface-muted hover:text-accent [&[hidden]]:hidden">
         <svg data-theme-icon="dark" aria-hidden="true" class="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
@@ -96,14 +98,14 @@ const directContactLink = buildWhatsAppLink({
         Simular Quadro
       </a>
     </div>
-    <a
+    {directContactLink && <a
       href={directContactLink}
       target="_blank"
       rel="noopener noreferrer"
       class="mt-4 flex items-center justify-center w-full min-h-11 rounded-md text-sm font-semibold bg-action text-on-action"
     >
       <span>Solicitar Orçamento via WhatsApp</span>
-    </a>
+    </a>}
   </nav>
 </header>
 

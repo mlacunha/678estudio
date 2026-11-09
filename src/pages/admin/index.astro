@@ -2,11 +2,41 @@
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import BrandMark from '../../components/BrandMark.astro';
 import { getAllCategories, getAllProducts } from '../../db/catalogRepository';
+import { getStudioSettings, saveStudioSettings, STUDIO_FIELDS, validateStudioSettings, type StudioSettings } from '../../db/studioSettings';
 
 export const prerender = false;
 
-const categories = await getAllCategories();
-const products = await getAllProducts();
+const storedSettings = await getStudioSettings();
+Astro.locals.studioSettings = Promise.resolve(storedSettings);
+let settings = storedSettings;
+if (settings.whatsapp) settings = { ...settings, whatsapp: `+${settings.whatsapp}` };
+let settingsErrors: Partial<Record<keyof StudioSettings, string>> = {};
+if (Astro.request.method === 'POST') {
+  const form = await Astro.request.formData().catch(() => null);
+  if (!form || !STUDIO_FIELDS.every(field => typeof form.get(field) === 'string')) {
+    return new Response('Formulário inválido.', { status: 400 });
+  }
+  for (const field of STUDIO_FIELDS) {
+    const value = String(form.get(field)).trim();
+    if (value.length > 254) return new Response('Campo muito longo.', { status: 400 });
+    settings = { ...settings, [field]: value };
+  }
+  const result = validateStudioSettings(settings);
+  settingsErrors = result.errors;
+  if (Object.keys(settingsErrors).length === 0) {
+    await saveStudioSettings(result.settings);
+    return Astro.redirect('/admin?contatos=salvos#configuracoes-estudio', 303);
+  }
+  Astro.response.status = 422;
+}
+
+const [categories, products] = await Promise.all([getAllCategories(), getAllProducts()]);
+const fields = {
+  whatsapp: { label: 'WhatsApp principal', type: 'tel', placeholder: '+55 (DDD) número' },
+  instagram: { label: 'Instagram', type: 'url', placeholder: 'https://www.instagram.com/…' },
+  facebook: { label: 'Facebook', type: 'url', placeholder: 'https://www.facebook.com/…' },
+  email: { label: 'E-mail de contato', type: 'email', placeholder: '' },
+} as const;
 ---
 
 <BaseLayout title="Painel Administrativo | 678 Estudio" description="Gestão de catálogo e produtos do 678 Estudio">
@@ -65,6 +95,36 @@ const products = await getAllProducts();
         <p class="text-2xl font-bold text-ink mt-1">{categories.length}</p>
       </div>
     </div>
+
+    <section id="configuracoes-estudio" aria-labelledby="studio-settings-title" class="mb-8 scroll-mt-24 rounded-2xl border border-line bg-surface p-4 sm:p-6">
+      <h2 id="studio-settings-title" class="text-base font-semibold text-ink">Configurações do Estúdio</h2>
+      <p id="studio-settings-help" class="mt-2 text-sm text-ink-muted">
+        O WhatsApp principal recebe todos os pedidos de orçamento. Informe o código do país e o DDD. Deixe um campo em branco para desativar o canal.
+      </p>
+      {Astro.request.method === 'GET' && Astro.url.searchParams.get('contatos') === 'salvos' && (
+        <p role="status" class="mt-3 text-sm font-medium text-success">Configurações salvas.</p>
+      )}
+      <form method="post" action="/admin#configuracoes-estudio" class="mt-4" aria-describedby="studio-settings-help">
+        <div class="grid gap-4 sm:grid-cols-2">
+          {STUDIO_FIELDS.map(field => (
+            <div>
+              <label for={`studio-${field}`} class="mb-1.5 block text-sm font-medium text-ink-secondary">{fields[field].label}</label>
+              <input
+                id={`studio-${field}`} name={field} type={fields[field].type}
+                value={settings[field]} placeholder={fields[field].placeholder} maxlength="254"
+                aria-invalid={settingsErrors[field] ? 'true' : undefined}
+                aria-describedby={settingsErrors[field] ? `studio-${field}-error` : undefined}
+                class="min-h-11 w-full rounded-md border border-control bg-canvas px-3 py-2 text-sm text-ink placeholder:text-ink-muted focus:border-accent"
+              />
+              {settingsErrors[field] && <p id={`studio-${field}-error`} class="mt-1 text-xs text-danger">{settingsErrors[field]}</p>}
+            </div>
+          ))}
+        </div>
+        <button type="submit" class="mt-4 min-h-11 rounded-md bg-action px-4 text-sm font-semibold text-on-action hover:bg-action-hover">
+          Salvar configurações
+        </button>
+      </form>
+    </section>
 
     <!-- Products Table -->
     <div class="rounded-2xl border border-line bg-surface overflow-hidden shadow-xl">

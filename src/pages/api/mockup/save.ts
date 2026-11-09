@@ -3,6 +3,7 @@ import { randomUUID } from 'node:crypto';
 import { mkdir, readdir, writeFile } from 'node:fs/promises';
 import { getUploadPath, hasImageSignature, MAX_IMAGE_BYTES, MAX_MOCKUP_PAYLOAD_BYTES } from '../../../utils/uploadImages';
 import { getPublicOrigin } from '../../../utils/publicOrigin';
+import { getRequestStudioSettings } from '../../../db/studioSettings';
 
 export const prerender = false;
 
@@ -49,7 +50,7 @@ const payloadTooLarge = () =>
     headers: { Connection: 'close' },
   });
 
-export const POST: APIRoute = async ({ request, url }) => {
+export const POST: APIRoute = async ({ request, url, locals }) => {
   if (Number(request.headers.get('content-length')) > MAX_MOCKUP_PAYLOAD_BYTES) {
     return payloadTooLarge();
   }
@@ -131,7 +132,10 @@ export const POST: APIRoute = async ({ request, url }) => {
     const relativePath = `/uploads/${filename}`;
     const fullMockupUrl = `${origin}${relativePath}`;
 
-    return Response.json({ success: true, relativeUrl: relativePath, fullUrl: fullMockupUrl }, { status: 201 });
+    const { whatsapp } = await getRequestStudioSettings(locals);
+    return Response.json({
+      success: true, relativeUrl: relativePath, fullUrl: fullMockupUrl, whatsappAvailable: Boolean(whatsapp),
+    }, { status: 201 });
   } catch {
     return Response.json({ success: false, error: 'Falha ao salvar mockup temporário' }, { status: 500 });
   } finally {

@@ -13,6 +13,7 @@ const {
   title = '678 Estudio | Quadros, canecas e presentes personalizados',
   description = 'Explore quadros decorativos, canecas, papelaria e peças em madeira personalizadas pelo 678 Estudio. Solicite seu orçamento pelo WhatsApp.'
 } = Astro.props;
+Astro.response.headers.set('Cache-Control', 'no-store');
 ---
 
 <!doctype html>

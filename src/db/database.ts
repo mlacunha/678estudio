@@ -66,6 +66,16 @@ async function createSchemaAndSeed(client: Client): Promise<void> {
     )
   `);
 
+  await client.execute(`
+    CREATE TABLE IF NOT EXISTS site_settings (
+      id INTEGER PRIMARY KEY CHECK (id = 1),
+      whatsapp TEXT NOT NULL,
+      instagram TEXT NOT NULL,
+      facebook TEXT NOT NULL,
+      email TEXT NOT NULL
+    )
+  `);
+
   await seedInitialDataIfEmpty(client);
 }
 

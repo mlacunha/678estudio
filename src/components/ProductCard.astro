@@ -1,6 +1,7 @@
 ---
 import type { Product } from '../types/catalog';
-import { buildWhatsAppLink } from '../utils/whatsapp';
+import { getRequestStudioSettings } from '../db/studioSettings';
+import { buildWhatsAppQuotePath } from '../utils/whatsapp';
 
 interface Props {
   product: Product;
@@ -22,7 +23,8 @@ const demoImage = new Map([
 ]).get(product.imageUrl.match(/^\/images\/demo\/([\w-]+)\.jpg$/)?.[1] ?? '');
 const isIllustrative = product.isProvisional || Boolean(demoImage);
 
-const orderLink = buildWhatsAppLink({
+const { whatsapp } = await getRequestStudioSettings(Astro.locals);
+const orderLink = whatsapp && buildWhatsAppQuotePath({
   productName: product.name,
   categoryTitle: categoryTitle,
 });
@@ -77,7 +79,7 @@ const orderLink = buildWhatsAppLink({
         <span class="text-xs text-ink-muted font-medium">Personalizável</span>
       )}
 
-      <a
+      {orderLink && <a
         href={orderLink}
         target="_blank"
         rel="noopener noreferrer"
@@ -85,7 +87,7 @@ const orderLink = buildWhatsAppLink({
         class="min-h-11 inline-flex items-center gap-1.5 px-3 rounded-md text-xs font-semibold bg-surface-raised hover:bg-action hover:text-on-action text-ink motion-safe:transition-colors"
       >
         Orçar peça <span aria-hidden="true">↗</span>
-      </a>
+      </a>}
     </div>
   </div>
 </article>

@@ -1,4 +1,4 @@
-import { buildWhatsAppLink } from './whatsapp';
+import { buildWhatsAppQuotePath, WHATSAPP_UNAVAILABLE } from './whatsapp';
 
 export async function loadArtwork(file: File): Promise<HTMLImageElement> {
   const image = new Image();
@@ -51,7 +51,12 @@ export function setupMockupQuote(
       if (!response.ok || typeof data?.fullUrl !== 'string') throw new Error('Falha na exportação');
       if (requestRevision !== revision) return;
 
-      link.href = buildWhatsAppLink({
+      if (!data.whatsappAvailable) {
+        status.textContent = `Prévia pronta. ${WHATSAPP_UNAVAILABLE}`;
+        return;
+      }
+
+      link.href = buildWhatsAppQuotePath({
         customMessage: [
           'Olá, equipe 678 Estudio! Gostaria de um orçamento para a peça que personalizei no site.',
           `• Produto: *${productName}*`,

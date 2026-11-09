@@ -1,7 +1,9 @@
 ---
-import { buildWhatsAppLink } from '../utils/whatsapp';
+import { getRequestStudioSettings } from '../db/studioSettings';
+import { buildWhatsAppQuotePath, WHATSAPP_UNAVAILABLE } from '../utils/whatsapp';
 
-const directContactLink = buildWhatsAppLink({
+const { whatsapp } = await getRequestStudioSettings(Astro.locals);
+const directContactLink = whatsapp && buildWhatsAppQuotePath({
   customMessage: 'Olá! Gostaria de um atendimento personalizado para criar uma peça exclusiva com o 678 Estudio.'
 });
 ---
@@ -15,10 +17,12 @@ const directContactLink = buildWhatsAppLink({
     </h2>
 
     <p class="mt-4 text-sm sm:text-base text-ink-secondary max-w-xl mx-auto leading-relaxed">
-      Envie sua proposta ou referências pelo WhatsApp. A equipe do estúdio orienta você sobre materiais, personalização e prazos.
+      {directContactLink
+        ? 'Envie sua proposta ou referências pelo WhatsApp. A equipe do estúdio orienta você sobre materiais, personalização e prazos.'
+        : WHATSAPP_UNAVAILABLE}
     </p>
 
-    <div class="mt-6">
+    {directContactLink && <div class="mt-6">
       <a
         href={directContactLink}
         target="_blank"
@@ -27,7 +31,7 @@ const directContactLink = buildWhatsAppLink({
       >
         Falar pelo WhatsApp
       </a>
-    </div>
+    </div>}
 
   </div>
 </section>

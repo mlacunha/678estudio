@@ -2,7 +2,8 @@
 import type { ProductCategory } from '../types/catalog';
 import { getActiveProductsByCategory } from '../db/catalogRepository';
 import ProductCard from './ProductCard.astro';
-import { buildWhatsAppLink } from '../utils/whatsapp';
+import { getRequestStudioSettings } from '../db/studioSettings';
+import { buildWhatsAppQuotePath } from '../utils/whatsapp';
 
 interface Props {
   category: ProductCategory;
@@ -11,10 +12,16 @@ interface Props {
 const { category } = Astro.props;
 const products = await getActiveProductsByCategory(category.slug);
 
-const categoryQuoteLink = buildWhatsAppLink({
+const { whatsapp } = await getRequestStudioSettings(Astro.locals);
+const categoryQuoteLink = whatsapp && buildWhatsAppQuotePath({
   categoryTitle: category.title,
   customMessage: `Olá! Tenho interesse na linha de ${category.title} do 678 Estudio e gostaria de solicitar um orçamento.`
 });
+const customizer = category.slug === 'quadros'
+  ? { href: '/personalizar/quadro', label: 'Crie seu quadro' }
+  : category.slug === 'canecas'
+    ? { href: '/personalizar/caneca', label: 'Personalize sua caneca' }
+    : undefined;
 ---
 
 <section id={category.slug} aria-labelledby={`${category.slug}-title`} class="py-10 md:py-14 lg:py-16 border-b border-line" data-carousel>
@@ -30,10 +37,15 @@ const categoryQuoteLink = buildWhatsAppLink({
         </p>
       </div>
 
-      <div class="flex shrink-0 flex-wrap items-center gap-4">
-        <a href={categoryQuoteLink} target="_blank" rel="noopener noreferrer" class="inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-accent hover:text-accent-strong">
+      <div class="flex flex-wrap items-center gap-x-4 gap-y-2 md:justify-end">
+        {customizer && (
+          <a href={customizer.href} class="inline-flex min-h-11 items-center gap-2 rounded-md bg-action px-4 text-sm font-semibold text-on-action hover:bg-action-hover">
+            {customizer.label} <span aria-hidden="true">→</span>
+          </a>
+        )}
+        {categoryQuoteLink && <a href={categoryQuoteLink} target="_blank" rel="noopener noreferrer" class="inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-accent hover:text-accent-strong">
           Orçar esta linha <span aria-hidden="true">↗</span>
-        </a>
+        </a>}
         <div hidden data-carousel-controls>
           <div class="flex gap-2">
             <button type="button" class="carousel-button" data-carousel-prev aria-controls={`${category.slug}-produtos`} aria-label={`Produtos anteriores em ${category.title}`}>←</button>
@@ -50,7 +62,9 @@ const categoryQuoteLink = buildWhatsAppLink({
         ))}
       </div>
     ) : (
-      <p class="rounded-lg border border-line p-5 text-sm text-ink-secondary">Consulte os modelos disponíveis pelo WhatsApp.</p>
+      <p class="rounded-lg border border-line p-5 text-sm text-ink-secondary">
+        {categoryQuoteLink ? 'Consulte os modelos disponíveis pelo WhatsApp.' : 'Nenhum modelo disponível nesta linha no momento.'}
+      </p>
     )}
   </div>
 </section>

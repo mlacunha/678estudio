@@ -1,7 +1,9 @@
 ---
-import { buildWhatsAppLink } from '../utils/whatsapp';
+import { getRequestStudioSettings } from '../db/studioSettings';
+import { buildWhatsAppQuotePath } from '../utils/whatsapp';
 
-const consultationLink = buildWhatsAppLink({
+const { whatsapp } = await getRequestStudioSettings(Astro.locals);
+const consultationLink = whatsapp && buildWhatsAppQuotePath({
   customMessage: 'Olá! Gostaria de consultar a disponibilidade para um projeto exclusivo do 678 Estudio.'
 });
 ---
@@ -17,14 +19,14 @@ const consultationLink = buildWhatsAppLink({
         Quadros, canecas, papelaria e peças em madeira para presentear ou dar personalidade aos seus espaços.
       </p>
       <div class="mt-6 flex flex-wrap gap-3">
-        <a
+        {consultationLink && <a
           href={consultationLink}
           target="_blank"
           rel="noopener noreferrer"
           class="min-h-11 inline-flex items-center justify-center px-4 rounded-md bg-action hover:bg-action-hover text-on-action text-sm font-semibold motion-safe:transition-colors"
         >
           Orçar no WhatsApp
-        </a>
+        </a>}
         <a
           href="#colecoes"
           class="min-h-11 inline-flex items-center justify-center px-4 rounded-md border border-control hover:border-accent text-ink text-sm font-medium motion-safe:transition-colors"
