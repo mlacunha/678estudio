@@ -2,6 +2,7 @@
 import { getRequestStudioSettings } from '../db/studioSettings';
 import { buildWhatsAppQuotePath } from '../utils/whatsapp';
 import BrandMark from './BrandMark.astro';
+import CustomizerNav from './CustomizerNav.astro';
 
 const { whatsapp } = await getRequestStudioSettings(Astro.locals);
 const directContactLink = whatsapp && buildWhatsAppQuotePath({
@@ -29,12 +30,7 @@ const directContactLink = whatsapp && buildWhatsAppQuotePath({
       <a href="/#canecas" class="hover:text-accent motion-safe:transition-colors">Canecas</a>
       <a href="/#papelaria" class="hover:text-accent motion-safe:transition-colors">Agendas & Planners</a>
       <a href="/#artesanato" class="hover:text-accent motion-safe:transition-colors">Madeira & Especiais</a>
-      <a href="/personalizar/caneca" class="text-accent hover:text-accent-strong font-semibold motion-safe:transition-colors flex items-center gap-1">
-        <span>Caneca 3D</span>
-      </a>
-      <a href="/personalizar/quadro" class="text-accent hover:text-accent-strong font-semibold motion-safe:transition-colors flex items-center gap-1">
-        <span>Quadro no Ambiente</span>
-      </a>
+      <CustomizerNav />
     </nav>
 
     <div class="flex shrink-0 items-center gap-1.5 sm:gap-3">
@@ -90,14 +86,7 @@ const directContactLink = whatsapp && buildWhatsAppQuotePath({
     <a href="/#artesanato" class="min-h-11 flex items-center py-2 text-sm font-medium text-ink-secondary hover:text-accent border-b border-line/60">
       Artesanato em Madeira
     </a>
-    <div class="pt-2 pb-1 grid grid-cols-2 gap-2">
-      <a href="/personalizar/caneca" class="min-h-11 grid place-items-center p-2.5 rounded-md border border-accent/30 bg-accent/10 text-accent text-xs font-semibold text-center">
-        Simular Caneca 3D
-      </a>
-      <a href="/personalizar/quadro" class="min-h-11 grid place-items-center p-2.5 rounded-md border border-accent/30 bg-accent/10 text-accent text-xs font-semibold text-center">
-        Simular Quadro
-      </a>
-    </div>
+    <CustomizerNav mobile />
     {directContactLink && <a
       href={directContactLink}
       target="_blank"
@@ -110,7 +99,7 @@ const directContactLink = whatsapp && buildWhatsAppQuotePath({
 </header>
 
 <script>
-  function setupMobileMenu() {
+  function setupNavigation() {
     const toggleButton = document.getElementById('mobile-menu-toggle');
     const mobileMenu = document.getElementById('mobile-menu');
     const barsIcon = document.getElementById('menu-icon-bars');
@@ -120,12 +109,16 @@ const directContactLink = whatsapp && buildWhatsAppQuotePath({
 
     const btn = toggleButton;
     const menu = mobileMenu;
+    const header = btn.closest('header');
+    const mobileCustomizer = menu.querySelector<HTMLDetailsElement>('[data-customizer-nav]');
+    const desktopCustomizer = header?.querySelector<HTMLDetailsElement>('nav:not(#mobile-menu) [data-customizer-nav]');
 
     function setExpanded(expanded: boolean) {
       btn.setAttribute('aria-expanded', String(expanded));
       menu.classList.toggle('hidden', !expanded);
       barsIcon?.classList.toggle('hidden', expanded);
       closeIcon?.classList.toggle('hidden', !expanded);
+      if (!expanded && mobileCustomizer) mobileCustomizer.open = false;
     }
 
     btn.addEventListener('click', () => setExpanded(menu.classList.contains('hidden')));
@@ -134,15 +127,35 @@ const directContactLink = whatsapp && buildWhatsAppQuotePath({
       setExpanded(false);
       btn.focus({ preventScroll: true });
     });
-    btn.closest('header')?.addEventListener('keydown', (event) => {
-      if (event.key !== 'Escape' || menu.classList.contains('hidden')) return;
+    header?.addEventListener('keydown', (event) => {
+      if (event.key !== 'Escape') return;
+      const submenu = event.target instanceof Element
+        ? event.target.closest<HTMLDetailsElement>('[data-customizer-nav][open]')
+        : null;
+      if (submenu) {
+        event.preventDefault();
+        submenu.open = false;
+        submenu.querySelector('summary')?.focus();
+        return;
+      }
+      if (menu.classList.contains('hidden')) return;
+      event.preventDefault();
       setExpanded(false);
       btn.focus();
     });
+    if (desktopCustomizer) {
+      document.addEventListener('click', (event) => {
+        if (event.target instanceof Node && !desktopCustomizer.contains(event.target)) desktopCustomizer.open = false;
+      });
+      desktopCustomizer.addEventListener('focusout', (event) => {
+        if (event.relatedTarget instanceof Node && !desktopCustomizer.contains(event.relatedTarget)) desktopCustomizer.open = false;
+      });
+    }
     matchMedia('(min-width: 1280px)').addEventListener('change', ({ matches }) => {
       if (matches) setExpanded(false);
+      else if (desktopCustomizer) desktopCustomizer.open = false;
     });
   }
 
-  setupMobileMenu();
+  setupNavigation();
 </script>
