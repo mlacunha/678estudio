@@ -1,0 +1,551 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+
+export const prerender = false;
+---
+
+<BaseLayout
+  title="Personalizador de Quadros em Ambientes | 678 Estudio"
+  description="Simule seu quadro de 30 × 40 cm em dois ambientes ilustrados. Envie sua arte, ajuste o enquadramento e peça um orçamento pelo WhatsApp."
+>
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+    
+    <!-- Header da Página -->
+    <div class="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-line">
+      <div>
+        <div class="flex items-center gap-2 text-xs uppercase tracking-wider text-accent font-semibold mb-1">
+          <span>Simulação em ambiente</span>
+          <span>•</span>
+          <span class="whitespace-nowrap">30 × 40 cm</span>
+        </div>
+        <h1 class="text-2xl sm:text-3xl font-light text-ink">
+          Personalizador de <span class="font-normal text-accent">Quadros no Ambiente</span>
+        </h1>
+        <p class="mt-1 text-xs sm:text-sm text-ink-muted">
+          Veja como sua arte fica em um quadro de 30 × 40 cm, em duas cenas ilustradas.
+        </p>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <a
+          href="/#quadros"
+          class="inline-flex items-center gap-1.5 px-4 py-2 rounded-full border border-control hover:border-ink-muted bg-surface text-ink-secondary text-xs font-medium motion-safe:transition-colors"
+        >
+          <span>Voltar ao Catálogo</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- Grid do Simulador -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-8 items-start">
+      
+      <!-- Visualizador do Ambiente (Canvas / Preview) -->
+      <div class="customizer-preview min-w-0 lg:col-span-7">
+        <div class="relative w-full aspect-[16/11] bg-canvas rounded-2xl border border-line overflow-hidden">
+          
+          <!-- Elemento Canvas Principal que gera a composição -->
+          <canvas id="frame-stage-canvas" width="1600" height="1100" role="img" aria-label="Prévia do quadro de 30 × 40 cm no ambiente selecionado" class="w-full h-full block"></canvas>
+
+          <!-- Selo de Ambiente Atual -->
+          <div class="absolute top-4 left-4 pointer-events-none flex items-center gap-2 px-3 py-1.5 rounded-full bg-media-badge/95 backdrop-blur-md text-[11px] font-medium text-on-media">
+            <span class="w-2 h-2 rounded-full bg-on-media"></span>
+            <span id="badge-environment-name">Sala Contemporânea</span>
+          </div>
+
+          <div class="absolute top-4 right-4 pointer-events-none px-2.5 py-1 rounded text-[10px] uppercase tracking-wider font-semibold bg-media-badge/95 text-on-media">
+            30 × 40 cm
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Painel de Controles -->
+      <div class="min-w-0 lg:col-span-5 flex flex-col gap-4">
+        <div class="p-4 sm:p-6 rounded-2xl bg-surface border border-line space-y-4 sm:space-y-5">
+          <h2 class="text-base font-semibold text-ink pb-3 border-b border-line">
+            Personalizar Quadro
+          </h2>
+
+          <!-- Escolha do Ambiente -->
+          <div>
+            <label class="block text-xs uppercase tracking-wider text-ink-muted font-medium mb-2">
+              1. Selecionar Ambiente
+            </label>
+            <div class="grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                id="btn-env-living"
+                aria-pressed="true"
+                class="btn-env-select px-4 py-3 rounded-xl border border-accent bg-accent/10 text-accent text-xs font-semibold text-center motion-safe:transition-all"
+                data-env="living"
+              >
+                Sala Contemporânea
+              </button>
+              <button
+                type="button"
+                id="btn-env-office"
+                aria-pressed="false"
+                class="btn-env-select px-4 py-3 rounded-xl border border-line bg-canvas text-ink-secondary hover:border-control text-xs font-semibold text-center motion-safe:transition-all"
+                data-env="office"
+              >
+                Escritório Elegante
+              </button>
+            </div>
+          </div>
+
+          <!-- Estilo da Moldura -->
+          <div>
+            <label class="block text-xs uppercase tracking-wider text-ink-muted font-medium mb-2">
+              2. Acabamento da Moldura
+            </label>
+            <div class="grid grid-cols-3 gap-2">
+              <button
+                type="button"
+                aria-pressed="true"
+                class="btn-frame-style min-h-11 px-2 py-2 rounded-lg border border-accent bg-accent/10 text-accent text-[11px] font-semibold text-center"
+                data-frame="black"
+              >
+                Laca Preta
+              </button>
+              <button
+                type="button"
+                aria-pressed="false"
+                class="btn-frame-style min-h-11 px-2 py-2 rounded-lg border border-line bg-canvas text-ink-secondary hover:border-control text-[11px] font-semibold text-center"
+                data-frame="wood"
+              >
+                Nogueira
+              </button>
+              <button
+                type="button"
+                aria-pressed="false"
+                class="btn-frame-style min-h-11 px-2 py-2 rounded-lg border border-line bg-canvas text-ink-secondary hover:border-control text-[11px] font-semibold text-center"
+                data-frame="gold"
+              >
+                Ouro Nobre
+              </button>
+            </div>
+          </div>
+
+          <!-- Upload de Arte -->
+          <div>
+            <label class="block text-xs uppercase tracking-wider text-ink-muted font-medium mb-2">
+              3. Enviar Fotografia ou Arte
+            </label>
+            <label class="cursor-pointer min-h-11 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-surface-raised hover:bg-surface-hover border border-control text-ink-secondary text-xs font-semibold focus-within:outline focus-within:outline-2 focus-within:outline-accent">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+              </svg>
+              <span>Carregar Imagem (JPG ou PNG)</span>
+              <input type="file" id="input-frame-art" accept="image/*" class="sr-only" />
+            </label>
+            <p id="art-filename" data-art-status role="status" class="text-xs text-accent mt-1 break-all"></p>
+          </div>
+
+          <!-- Zoom da Arte -->
+          <div>
+            <div class="flex justify-between text-xs mb-1.5">
+              <label for="slider-frame-scale" class="text-ink-secondary font-medium">4. Zoom da imagem</label>
+              <span id="label-frame-scale" class="text-accent font-semibold">100%</span>
+            </div>
+            <input
+              type="range"
+              id="slider-frame-scale"
+              min="50"
+              max="250"
+              value="100"
+              disabled
+              class="w-full accent-accent h-7 cursor-pointer disabled:opacity-50"
+            />
+          </div>
+
+          <!-- Deslocamento Horizontal e Vertical -->
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <div class="flex justify-between text-xs mb-1">
+                <label for="slider-frame-x" class="text-ink-secondary">Posição horizontal</label>
+              </div>
+              <input
+                type="range"
+                id="slider-frame-x"
+                min="-300"
+                max="300"
+                value="0"
+                disabled
+                class="w-full accent-accent h-7 cursor-pointer disabled:opacity-50"
+              />
+            </div>
+            <div>
+              <div class="flex justify-between text-xs mb-1">
+                <label for="slider-frame-y" class="text-ink-secondary">Posição vertical</label>
+              </div>
+              <input
+                type="range"
+                id="slider-frame-y"
+                min="-300"
+                max="300"
+                value="0"
+                disabled
+                class="w-full accent-accent h-7 cursor-pointer disabled:opacity-50"
+              />
+            </div>
+          </div>
+
+          <!-- Botão de Orçamento -->
+          <div class="pt-4 border-t border-line space-y-3">
+            <button
+              id="btn-export-frame"
+              type="button"
+              class="w-full min-h-11 flex items-center justify-center gap-2 px-3 py-3 rounded-md bg-action hover:bg-action-hover text-on-action font-semibold text-sm disabled:opacity-50"
+            >
+              <span>Gerar prévia para orçamento</span>
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M12.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd" />
+              </svg>
+            </button>
+
+            <p id="frame-export-status" role="status" class="text-center text-xs text-accent"></p>
+            <a id="frame-whatsapp" data-whatsapp-quote hidden target="_blank" rel="noopener noreferrer" class="min-h-11 flex items-center justify-center rounded-md border border-accent px-3 text-sm font-semibold text-accent hover:bg-accent/10 [&[hidden]]:hidden">Abrir WhatsApp com a prévia ↗</a>
+          </div>
+        </div>
+
+        <!-- Ficha Técnica do Quadro -->
+        <div class="p-4 rounded-xl bg-canvas/60 border border-line text-xs text-ink-muted space-y-1.5">
+          <p><span class="text-ink-secondary font-semibold">• Formato Único:</span> 30 × 40 cm (Proporção Exata 3:4)</p>
+          <p><span class="text-ink-secondary font-semibold">• Moldura:</span> Madeira maciça com acabamento artesanal e paspatur chanfrado</p>
+          <p><span class="text-ink-secondary font-semibold">• Impressão:</span> Papel 100% algodão com tintas de pigmento mineral</p>
+          <p><span class="text-ink-secondary font-semibold">• Mockup:</span> O link da prévia será incluído na mensagem do WhatsApp.</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</BaseLayout>
+
+<script>
+  import { FRAME_DIMENSIONS } from '../../utils/customizer';
+  import { loadArtwork, setupMockupQuote } from '../../utils/customizerClient';
+  function initFrameCustomizer() {
+    const stageCanvas = document.getElementById('frame-stage-canvas') as HTMLCanvasElement | null;
+    const inputArt = document.getElementById('input-frame-art') as HTMLInputElement | null;
+    const sliderScale = document.getElementById('slider-frame-scale') as HTMLInputElement | null;
+    const sliderX = document.getElementById('slider-frame-x') as HTMLInputElement | null;
+    const sliderY = document.getElementById('slider-frame-y') as HTMLInputElement | null;
+    const labelScale = document.getElementById('label-frame-scale');
+    const badgeEnv = document.getElementById('badge-environment-name');
+    const artFilename = document.getElementById('art-filename');
+    const btnExport = document.querySelector<HTMLButtonElement>('#btn-export-frame');
+    const exportStatus = document.getElementById('frame-export-status');
+    const quoteLink = document.querySelector<HTMLAnchorElement>('#frame-whatsapp');
+
+    if (!stageCanvas) return;
+    const ctx = stageCanvas.getContext('2d');
+    if (!ctx) return;
+
+    let currentEnv: 'living' | 'office' = 'living';
+    let currentFrameColor = '#121316'; // Laca preta
+    let currentFrameBorder = '#2a2d33';
+    let frameFinish = 'Laca Preta';
+    let userArtImage: HTMLImageElement | null = null;
+    let artScale = 1;
+    const frameWidth = 450;
+    const frameHeight = frameWidth * FRAME_DIMENSIONS.heightCm / FRAME_DIMENSIONS.widthCm;
+    const artW = 330;
+    const artH = artW * FRAME_DIMENSIONS.heightCm / FRAME_DIMENSIONS.widthCm;
+    const environmentName = () => currentEnv === 'living' ? 'Sala Contemporânea' : 'Escritório Elegante';
+
+    function adjustPan(slider: HTMLInputElement | null, overflow: number) {
+      if (!slider) return 0;
+      const limit = Math.max(0, Math.floor(overflow / 2));
+      slider.min = String(-limit);
+      slider.max = String(limit);
+      slider.disabled = limit === 0;
+      return Number(slider.value);
+    }
+
+    // Renderiza a cena completa contextualizada
+    function renderScene() {
+      if (!ctx || !stageCanvas) return;
+      const W = stageCanvas.width;
+      const H = stageCanvas.height;
+
+      // 1. Desenha o Ambiente de Fundo
+      if (currentEnv === 'living') {
+        // Sala Contemporânea
+        // Parede grafite suave com iluminação pontual quente
+        const grad = ctx.createRadialGradient(W * 0.5, H * 0.35, 100, W * 0.5, H * 0.5, W * 0.7);
+        grad.addColorStop(0, '#b6a592');
+        grad.addColorStop(0.5, '#857767');
+        grad.addColorStop(1, '#5c5147');
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, W, H);
+
+        // Sofá e almofadas abaixo do quadro, com luz mais quente.
+        ctx.save();
+        ctx.shadowColor = '#352c2688';
+        ctx.shadowBlur = 38;
+        ctx.shadowOffsetY = -8;
+        const upholstery = ctx.createLinearGradient(0, 866, 0, H);
+        upholstery.addColorStop(0, '#d0bda6');
+        upholstery.addColorStop(1, '#a99078');
+        ctx.fillStyle = upholstery;
+        ctx.beginPath();
+        ctx.roundRect(200, 883, 1200, 287, 72);
+        ctx.fill();
+        ctx.restore();
+
+        ctx.strokeStyle = '#8b7562';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(800, 907);
+        ctx.lineTo(800, H);
+        ctx.stroke();
+
+        for (const [x, angle, color] of [[335, -0.12, '#6d7464'], [1195, 0.14, '#94674e']] as const) {
+          ctx.save();
+          ctx.translate(x, 970);
+          ctx.rotate(angle);
+          ctx.fillStyle = color;
+          ctx.beginPath();
+          ctx.roundRect(-95, -76, 190, 175, 30);
+          ctx.fill();
+          ctx.restore();
+        }
+      } else {
+        // Escritório Elegante
+        // Parede sóbria com feixe de luz lateral
+        const grad = ctx.createLinearGradient(0, 0, W, H);
+        grad.addColorStop(0, '#677078');
+        grad.addColorStop(0.6, '#3d454d');
+        grad.addColorStop(1, '#282f36');
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, W, H);
+
+        ctx.fillStyle = '#ffffff08';
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.lineTo(360, 0);
+        ctx.lineTo(755, 935);
+        ctx.lineTo(320, 935);
+        ctx.closePath();
+        ctx.fill();
+
+        // Mesa, luminária e livros como referências de ambiente.
+        ctx.fillStyle = '#584232';
+        ctx.fillRect(110, 942, 1380, 42);
+        ctx.fillStyle = '#3d2c23';
+        ctx.fillRect(155, 984, 1290, H - 984);
+        ctx.fillStyle = '#9c8768';
+        ctx.fillRect(110, 942, 1380, 4);
+
+        ctx.fillStyle = '#2a2828';
+        ctx.fillRect(280, 931, 143, 11);
+        ctx.fillRect(344, 750, 10, 181);
+        ctx.beginPath();
+        ctx.moveTo(302, 710);
+        ctx.lineTo(389, 710);
+        ctx.lineTo(429, 778);
+        ctx.lineTo(266, 778);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.fillStyle = '#687768';
+        ctx.fillRect(1170, 910, 186, 32);
+        ctx.fillStyle = '#d1bb9c';
+        ctx.fillRect(1154, 884, 190, 26);
+      }
+
+      // 2. Coordenadas do Quadro 30x40 cm (Proporção 3:4)
+      const frameX = (W - frameWidth) / 2;
+      const frameY = H * 0.18;
+
+      // Sombra projetada realista na parede
+      ctx.save();
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.65)';
+      ctx.shadowBlur = 45;
+      ctx.shadowOffsetX = 18;
+      ctx.shadowOffsetY = 24;
+
+      // Moldura Externa
+      ctx.fillStyle = currentFrameColor;
+      ctx.fillRect(frameX, frameY, frameWidth, frameHeight);
+      ctx.restore();
+
+      // Borda da Moldura
+      ctx.strokeStyle = currentFrameBorder;
+      ctx.lineWidth = 4;
+      ctx.strokeRect(frameX, frameY, frameWidth, frameHeight);
+
+      const matX = frameX + 38;
+      const matY = frameY + 38;
+      const matW = frameWidth - 76;
+      const matH = frameHeight - 76;
+      ctx.fillStyle = '#f4f0e8';
+      ctx.fillRect(matX, matY, matW, matH);
+      ctx.strokeStyle = '#00000055';
+      ctx.lineWidth = 5;
+      ctx.strokeRect(matX, matY, matW, matH);
+
+      const artX = frameX + (frameWidth - artW) / 2;
+      const artY = frameY + (frameHeight - artH) / 2;
+      ctx.strokeStyle = '#b9afa0';
+      ctx.lineWidth = 4;
+      ctx.strokeRect(artX - 2, artY - 2, artW + 4, artH + 4);
+
+      // Clip da Arte
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(artX, artY, artW, artH);
+      ctx.clip();
+
+      if (userArtImage) {
+        ctx.fillStyle = '#fffdf8';
+        ctx.fillRect(artX, artY, artW, artH);
+
+        const baseScale = Math.max(artW / userArtImage.naturalWidth, artH / userArtImage.naturalHeight);
+        const finalScale = baseScale * artScale;
+        const drawW = userArtImage.naturalWidth * finalScale;
+        const drawH = userArtImage.naturalHeight * finalScale;
+        const cx = artX + artW / 2 + adjustPan(sliderX, drawW - artW);
+        const cy = artY + artH / 2 + adjustPan(sliderY, drawH - artH);
+
+        ctx.drawImage(userArtImage, cx - drawW / 2, cy - drawH / 2, drawW, drawH);
+      } else {
+        // Arte geométrica autoral padrão 678 Estudio
+        ctx.fillStyle = '#141619';
+        ctx.fillRect(artX, artY, artW, artH);
+
+        ctx.strokeStyle = '#cca032';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.arc(artX + artW / 2, artY + artH * 0.42, 70, 0, Math.PI * 2);
+        ctx.stroke();
+
+        ctx.fillStyle = '#e5c05d';
+        ctx.beginPath();
+        ctx.moveTo(artX + artW * 0.3, artY + artH * 0.68);
+        ctx.lineTo(artX + artW * 0.7, artY + artH * 0.68);
+        ctx.lineTo(artX + artW * 0.5, artY + artH * 0.48);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.fillStyle = '#8a94a6';
+        ctx.font = '600 13px system-ui, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('678 Estudio • ARTE AUTORAL 30×40', artX + artW / 2, artY + artH * 0.85);
+      }
+
+      ctx.restore();
+
+      // Reflexo de vidro sutil no quadro
+      const glassGrad = ctx.createLinearGradient(frameX, frameY, frameX + frameWidth, frameY + frameHeight);
+      glassGrad.addColorStop(0, 'rgba(255, 255, 255, 0.08)');
+      glassGrad.addColorStop(0.35, 'rgba(255, 255, 255, 0.02)');
+      glassGrad.addColorStop(0.65, 'rgba(255, 255, 255, 0)');
+      glassGrad.addColorStop(1, 'rgba(255, 255, 255, 0.05)');
+      ctx.fillStyle = glassGrad;
+      ctx.fillRect(frameX, frameY, frameWidth, frameHeight);
+    }
+
+    renderScene();
+
+    const quote = btnExport && exportStatus && quoteLink
+      ? setupMockupQuote(btnExport, exportStatus, quoteLink, () => ({
+          imageBase64: stageCanvas.toDataURL('image/png'),
+          productName: 'Quadro Decorativo 30 × 40 cm',
+          details: ['• Ambiente: *' + environmentName() + '*', '• Moldura: *' + frameFinish + '*'].join('\n'),
+        }))
+      : undefined;
+
+    const updateScene = () => {
+      quote?.invalidate();
+      renderScene();
+    };
+
+    function selectOption(selector: string, selected: HTMLButtonElement) {
+      for (const button of document.querySelectorAll<HTMLButtonElement>(selector)) {
+        const active = button === selected;
+        button.setAttribute('aria-pressed', String(active));
+        for (const style of ['border-accent', 'bg-accent/10', 'text-accent']) {
+          button.classList.toggle(style, active);
+        }
+        for (const style of ['border-line', 'bg-canvas', 'text-ink-secondary']) {
+          button.classList.toggle(style, !active);
+        }
+      }
+    }
+
+    for (const button of document.querySelectorAll<HTMLButtonElement>('.btn-env-select')) {
+      button.addEventListener('click', () => {
+        currentEnv = button.dataset.env === 'office' ? 'office' : 'living';
+        selectOption('.btn-env-select', button);
+        if (badgeEnv) badgeEnv.textContent = environmentName();
+        updateScene();
+      });
+    }
+
+    const finishes = new Map([
+      ['black', ['#121316', '#2a2d33']],
+      ['wood', ['#503221', '#754e35']],
+      ['gold', ['#a8811d', '#cca032']],
+    ]);
+    for (const button of document.querySelectorAll<HTMLButtonElement>('.btn-frame-style')) {
+      button.addEventListener('click', () => {
+        const colors = finishes.get(button.dataset.frame ?? '');
+        if (!colors) return;
+        [currentFrameColor, currentFrameBorder] = colors;
+        frameFinish = button.textContent?.trim() ?? '';
+        selectOption('.btn-frame-style', button);
+        updateScene();
+      });
+    }
+
+    inputArt?.addEventListener('change', async () => {
+      const file = inputArt.files?.[0];
+      if (!file) return;
+      quote?.invalidate();
+      quote?.setArtworkPending(true);
+      if (artFilename) artFilename.textContent = 'Carregando imagem…';
+
+      try {
+        const image = await loadArtwork(file);
+        if (inputArt.files?.[0] !== file) return;
+        userArtImage = image;
+        artScale = 1;
+        if (sliderScale) {
+          sliderScale.value = '100';
+          sliderScale.disabled = false;
+        }
+        if (sliderX) sliderX.value = '0';
+        if (sliderY) sliderY.value = '0';
+        if (labelScale) labelScale.textContent = '100%';
+        if (artFilename) artFilename.textContent = file.name;
+        updateScene();
+      } catch {
+        if (inputArt.files?.[0] === file && artFilename) {
+          artFilename.textContent = 'Não foi possível abrir a imagem. A arte anterior foi mantida.';
+        }
+      } finally {
+        if (inputArt.files?.[0] === file) {
+          inputArt.value = '';
+          quote?.setArtworkPending(false);
+        }
+      }
+    });
+
+    sliderScale?.addEventListener('input', () => {
+      const zoom = Number(sliderScale.value);
+      artScale = zoom / 100;
+      if (labelScale) labelScale.textContent = zoom + '%';
+      updateScene();
+    });
+    sliderX?.addEventListener('input', updateScene);
+    sliderY?.addEventListener('input', updateScene);
+
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initFrameCustomizer);
+  } else {
+    initFrameCustomizer();
+  }
+</script>

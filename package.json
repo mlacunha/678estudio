@@ -1,0 +1,30 @@
+{
+  "name": "site678estudio",
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "astro dev",
+    "start": "astro dev",
+    "build": "astro build",
+    "check": "astro check",
+    "preview": "astro preview",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@astrojs/node": "^8.3.4",
+    "@astrojs/tailwind": "^5.1.5",
+    "@libsql/client": "^0.18.0",
+    "astro": "^4.16.18",
+    "better-sqlite3": "^9.6.0",
+    "tailwindcss": "^3.4.17",
+    "three": "^0.187.0",
+    "typescript": "^5.7.3"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.12",
+    "@types/better-sqlite3": "^9.6.0",
+    "@types/three": "^0.187.0",
+    "puppeteer-core": "^25.16.0",
+    "vitest": "^2.1.8"
+  }
+}

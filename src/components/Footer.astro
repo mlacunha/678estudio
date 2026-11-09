@@ -1,0 +1,34 @@
+---
+import BrandMark from './BrandMark.astro';
+
+const currentYear = new Date().getFullYear();
+---
+
+<footer class="bg-surface text-ink-muted text-xs border-t border-line py-12">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex flex-col md:flex-row items-center justify-between gap-6 text-center md:text-left">
+      <div>
+        <div class="flex items-center justify-center md:justify-start gap-2 text-ink font-semibold text-sm">
+          <BrandMark class="size-10" />
+          <span>678 Estudio</span>
+        </div>
+        <p class="mt-2 text-ink-muted max-w-sm">
+          Quadros decorativos, canecas premium, papelaria refinada e marcenaria artesanal com excelência e precisão.
+        </p>
+      </div>
+
+      <div class="flex flex-wrap justify-center gap-6 text-ink-secondary">
+        <a href="/#quadros" class="hover:text-accent motion-safe:transition-colors">Quadros</a>
+        <a href="/#canecas" class="hover:text-accent motion-safe:transition-colors">Canecas</a>
+        <a href="/#papelaria" class="hover:text-accent motion-safe:transition-colors">Agendas & Planners</a>
+        <a href="/#artesanato" class="hover:text-accent motion-safe:transition-colors">Madeira & Especiais</a>
+      </div>
+
+      <div class="flex items-center gap-4 text-ink-muted text-[11px]">
+        <span>&copy; {currentYear} 678 Estudio. Todos os direitos reservados.</span>
+        <a href="/admin" class="hover:text-accent text-ink-muted motion-safe:transition-colors">Admin</a>
+      </div>
+    </div>
+  </div>
+</footer>
+

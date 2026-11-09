@@ -1,0 +1,140 @@
+---
+import type { ProductCategory } from '../types/catalog';
+import { getActiveProductsByCategory } from '../db/catalogRepository';
+import ProductCard from './ProductCard.astro';
+import { buildWhatsAppLink } from '../utils/whatsapp';
+
+interface Props {
+  category: ProductCategory;
+}
+
+const { category } = Astro.props;
+const products = await getActiveProductsByCategory(category.slug);
+
+const categoryQuoteLink = buildWhatsAppLink({
+  categoryTitle: category.title,
+  customMessage: `Olá! Tenho interesse na linha de ${category.title} do 678 Estudio e gostaria de solicitar um orçamento.`
+});
+---
+
+<section id={category.slug} aria-labelledby={`${category.slug}-title`} class="py-10 md:py-14 lg:py-16 border-b border-line" data-carousel>
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex flex-col md:flex-row md:items-end justify-between gap-3 md:gap-8 mb-5">
+      <div>
+        <p class="editorial-kicker">{category.subtitle}</p>
+        <h2 id={`${category.slug}-title`} class="editorial-heading mt-2 text-4xl sm:text-5xl leading-tight">
+          {category.title}
+        </h2>
+        <p class="mt-2 text-sm text-ink-secondary max-w-2xl leading-relaxed">
+          {category.description}
+        </p>
+      </div>
+
+      <div class="flex shrink-0 flex-wrap items-center gap-4">
+        <a href={categoryQuoteLink} target="_blank" rel="noopener noreferrer" class="inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-accent hover:text-accent-strong">
+          Orçar esta linha <span aria-hidden="true">↗</span>
+        </a>
+        <div hidden data-carousel-controls>
+          <div class="flex gap-2">
+            <button type="button" class="carousel-button" data-carousel-prev aria-controls={`${category.slug}-produtos`} aria-label={`Produtos anteriores em ${category.title}`}>←</button>
+            <button type="button" class="carousel-button" data-carousel-next aria-controls={`${category.slug}-produtos`} aria-label={`Próximos produtos em ${category.title}`}>→</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {products.length > 0 ? (
+      <div id={`${category.slug}-produtos`} data-carousel-track role="group" aria-label={`Produtos de ${category.title}`} class="carousel-track">
+        {products.map((product) => (
+          <ProductCard product={product} categoryTitle={category.title} />
+        ))}
+      </div>
+    ) : (
+      <p class="rounded-lg border border-line p-5 text-sm text-ink-secondary">Consulte os modelos disponíveis pelo WhatsApp.</p>
+    )}
+  </div>
+</section>
+
+<style>
+  .carousel-track {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: min(82%, 23rem);
+    gap: 1rem;
+    overflow-x: auto;
+    padding: 4px 4px 0.75rem;
+    margin-inline: -4px;
+    scroll-padding-inline: 4px;
+    scroll-snap-type: x mandatory;
+    scrollbar-color: rgb(var(--color-control)) rgb(var(--color-surface-muted));
+    scrollbar-width: thin;
+  }
+
+  .carousel-track > :global(article) {
+    scroll-snap-align: start;
+  }
+
+  .carousel-button {
+    width: 2.75rem;
+    height: 2.75rem;
+    border: 1px solid rgb(var(--color-control));
+    border-radius: 0.375rem;
+    color: rgb(var(--color-accent));
+    font-size: 1.25rem;
+  }
+
+  .carousel-button:hover:enabled {
+    border-color: rgb(var(--color-accent));
+    background: rgb(var(--color-surface-muted));
+  }
+
+  .carousel-button:disabled {
+    opacity: 0.45;
+  }
+
+  @media (min-width: 640px) {
+    .carousel-track {
+      grid-auto-columns: 40%;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .carousel-track {
+      grid-auto-columns: calc((100% - 2rem) / 3);
+    }
+  }
+</style>
+
+<script>
+  for (const section of document.querySelectorAll('[data-carousel]')) {
+    const track = section.querySelector<HTMLElement>('[data-carousel-track]');
+    const controls = section.querySelector<HTMLElement>('[data-carousel-controls]');
+    const previous = section.querySelector<HTMLButtonElement>('[data-carousel-prev]');
+    const next = section.querySelector<HTMLButtonElement>('[data-carousel-next]');
+    const firstCard = track?.firstElementChild;
+    const secondCard = firstCard?.nextElementSibling;
+    if (!track || !controls || !previous || !next || !firstCard) continue;
+
+    const updateControls = () => {
+      const maxScroll = track.scrollWidth - track.clientWidth;
+      controls.hidden = maxScroll <= 1;
+      track.tabIndex = controls.hidden ? -1 : 0;
+      previous.disabled = track.scrollLeft <= 1;
+      next.disabled = track.scrollLeft >= maxScroll - 1;
+    };
+
+    const move = (direction: number) => {
+      const step = secondCard
+        ? secondCard.getBoundingClientRect().left - firstCard.getBoundingClientRect().left
+        : firstCard.getBoundingClientRect().width;
+      const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+      track.scrollBy({ left: direction * step, behavior: reducedMotion ? 'instant' : 'smooth' });
+    };
+
+    previous.addEventListener('click', () => move(-1));
+    next.addEventListener('click', () => move(1));
+    track.addEventListener('scroll', updateControls, { passive: true });
+    new ResizeObserver(updateControls).observe(track);
+    updateControls();
+  }
+</script>

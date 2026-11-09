@@ -1,0 +1,7 @@
+---
+import ErrorPage from '../components/ErrorPage.astro';
+
+export const prerender = false;
+---
+
+<ErrorPage status={500} title="Ocorreu um erro" description="Tente abrir a página novamente em instantes ou volte ao início." />

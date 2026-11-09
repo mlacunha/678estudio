@@ -1,0 +1,9 @@
+---
+interface Props {
+  class?: string;
+}
+
+const { class: size = 'size-12' } = Astro.props;
+---
+
+<img src="/images/brand/logo-678-estudio.webp" alt="" width="48" height="48" class:list={['rounded-full shrink-0', size]} />

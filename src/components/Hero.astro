@@ -1,0 +1,54 @@
+---
+import { buildWhatsAppLink } from '../utils/whatsapp';
+
+const consultationLink = buildWhatsAppLink({
+  customMessage: 'Olá! Gostaria de consultar a disponibilidade para um projeto exclusivo do 678 Estudio.'
+});
+---
+
+<section class="border-b border-line bg-surface py-10 md:py-14 lg:py-20" aria-labelledby="hero-title">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid items-center gap-7 md:grid-cols-2 md:gap-8 lg:gap-14">
+    <div>
+      <p class="editorial-kicker mb-4">Design &amp; personalização</p>
+      <h1 id="hero-title" class="editorial-heading text-[clamp(2.6rem,6vw,5.25rem)] leading-[0.99]">
+        Peças <em class="text-accent">personalizadas</em>
+      </h1>
+      <p class="mt-5 max-w-md text-base leading-relaxed text-ink-secondary">
+        Quadros, canecas, papelaria e peças em madeira para presentear ou dar personalidade aos seus espaços.
+      </p>
+      <div class="mt-6 flex flex-wrap gap-3">
+        <a
+          href={consultationLink}
+          target="_blank"
+          rel="noopener noreferrer"
+          class="min-h-11 inline-flex items-center justify-center px-4 rounded-md bg-action hover:bg-action-hover text-on-action text-sm font-semibold motion-safe:transition-colors"
+        >
+          Orçar no WhatsApp
+        </a>
+        <a
+          href="#colecoes"
+          class="min-h-11 inline-flex items-center justify-center px-4 rounded-md border border-control hover:border-accent text-ink text-sm font-medium motion-safe:transition-colors"
+        >
+          Ver coleções <span aria-hidden="true" class="ml-2 text-accent">↓</span>
+        </a>
+      </div>
+    </div>
+
+    <figure class="min-w-0">
+      <img
+        src="/images/demo/hero-1200.webp"
+        srcset="/images/demo/hero-720.webp 720w, /images/demo/hero-1200.webp 1200w"
+        sizes="(min-width: 1280px) 580px, (min-width: 768px) 46vw, calc(100vw - 2rem)"
+        alt="Caneca branca, quadro emoldurado, caderno e peça em madeira sobre um aparador"
+        width="1200"
+        height="800"
+        class="w-full aspect-[3/2] rounded-lg border border-line object-cover"
+        fetchpriority="high"
+      />
+      <figcaption class="mt-3 flex items-center gap-3 text-xs text-ink-muted">
+        <span class="h-px w-6 bg-action" aria-hidden="true"></span>
+        Imagem ilustrativa das quatro linhas
+      </figcaption>
+    </figure>
+  </div>
+</section>

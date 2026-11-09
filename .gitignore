@@ -1,0 +1,46 @@
+# Dependências, build e cache
+node_modules/
+/dist/
+/.astro/
+/.cache/
+/.vite/
+/coverage/
+.pnpm-store/
+*.tsbuildinfo
+
+# Ambiente e credenciais locais
+.env
+.env.*
+*.env
+.envrc
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+credentials*.json
+secrets*.json
+/.npmrc.local
+
+# Dados operacionais, arquivos de clientes e mockups
+*.db
+*.db-*
+*.sqlite
+*.sqlite-*
+*.sqlite3
+*.sqlite3-*
+/public/uploads/
+/assets-originais/678estudio.png
+
+# Logs e arquivos temporários
+*.log
+*.tmp
+*.temp
+*.swp
+*.bak
+/tmp/
+/temp/
+.DS_Store
+Thumbs.db
+Desktop.ini
+

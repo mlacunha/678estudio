@@ -1,0 +1,23 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Hero from '../components/Hero.astro';
+import CategorySection from '../components/CategorySection.astro';
+import WhatsAppCTA from '../components/WhatsAppCTA.astro';
+import { getActiveCategories } from '../db/catalogRepository';
+
+export const prerender = false;
+
+const categories = await getActiveCategories();
+---
+
+<BaseLayout>
+  <Hero />
+
+  <div id="colecoes">
+    {categories.map((category) => (
+      <CategorySection category={category} />
+    ))}
+  </div>
+
+  <WhatsAppCTA />
+</BaseLayout>
