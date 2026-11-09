@@ -1,9 +1,10 @@
-import { createClient, type Client } from '@libsql/client';
+import { createClient, type Client, type InStatement } from '@libsql/client';
 import fs from 'node:fs';
 import path from 'node:path';
 import { CATEGORIES, PRODUCTS } from '../data/mockCatalog';
 
 let dbClientInstance: Client | null = null;
+const initialization = new WeakMap<Client, Promise<void>>();
 
 export function getDatabasePath(): string {
   const dataDir = path.resolve(process.cwd(), 'data');
@@ -24,7 +25,19 @@ export function getDbClient(): Client {
   return dbClientInstance;
 }
 
-export async function initDatabase(client: Client = getDbClient()): Promise<void> {
+export function initDatabase(client: Client = getDbClient()): Promise<void> {
+  let pending = initialization.get(client);
+  if (!pending) {
+    pending = createSchemaAndSeed(client).catch((error) => {
+      initialization.delete(client);
+      throw error;
+    });
+    initialization.set(client, pending);
+  }
+  return pending;
+}
+
+async function createSchemaAndSeed(client: Client): Promise<void> {
   await client.execute(`
     CREATE TABLE IF NOT EXISTS categories (
       id TEXT PRIMARY KEY,
@@ -62,9 +75,10 @@ async function seedInitialDataIfEmpty(client: Client): Promise<void> {
 
   if (count > 0) return;
 
+  const statements: InStatement[] = [];
   for (let index = 0; index < CATEGORIES.length; index++) {
     const category = CATEGORIES[index];
-    await client.execute({
+    statements.push({
       sql: `INSERT INTO categories (id, slug, title, subtitle, description, badge, display_order, is_active)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
       args: [category.id, category.slug, category.title, category.subtitle, category.description, category.badge, index + 1, 1],
@@ -73,11 +87,12 @@ async function seedInitialDataIfEmpty(client: Client): Promise<void> {
 
   for (let index = 0; index < PRODUCTS.length; index++) {
     const prod = PRODUCTS[index];
-    await client.execute({
+    statements.push({
       sql: `INSERT INTO products (id, category_slug, name, tagline, description, featured_badge, image_url, display_order, is_active, is_provisional)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       args: [prod.id, prod.categorySlug, prod.name, prod.tagline, prod.description, prod.featuredBadge ?? null, prod.imageUrl, prod.order, prod.isActive ? 1 : 0, prod.isProvisional ? 1 : 0],
     });
   }
+  await client.batch(statements, 'write');
 }
 

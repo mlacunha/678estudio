@@ -71,7 +71,7 @@ pnpm install
 ```bash
 pnpm dev
 ```
-O site estará acessível em `http://localhost:4321` e o painel em `http://localhost:4321/admin`.
+O site estará acessível em `http://localhost:4321`. Para abrir o painel em `/admin`, defina `ADMIN_USERNAME` e `ADMIN_PASSWORD` no ambiente do processo.
 
 ### Executar Testes Unitários
 ```bash
@@ -98,4 +98,26 @@ pnpm build
 - [x] **Painel Administrativo (`/admin`):** Métricas, ordenação, visibilidade imediata, edição, exclusão e upload local de imagens sem rebuild.
 - [x] **API REST:** Endpoints `/api/categories`, `/api/products`, `/api/upload` e `/api/mockup/save`.
 - [x] **Personalizadores Interativos:** Caneca 3D em Three.js (20 × 9 cm com rotação 360°) e Quadro 30 × 40 cm em ambientes contextualizados (Sala e Escritório) com exportação direta para WhatsApp.
-- [x] **Testes Unitários:** 25 testes aprovados com 100% de cobertura de lógica de negócios.
+- [x] **Testes Unitários:** Utilitários, tema, catálogo e operações SQLite cobertos pela suíte Vitest.
+
+## 5. Deploy GitOps no Portainer
+
+O `compose.yaml` na raiz foi preparado para **Docker Standalone**. O GitHub Actions constrói e testa a imagem Linux para AMD64 e ARM64 e publica no GHCR a tag `sha-<commit>`. Quando a variável do repositório `PORTAINER_AUTO_DEPLOY` vale `true`, o workflow também atualiza a tag `stable` e pode chamar o webhook GitOps. O contêiner executa `node dist/server/entry.mjs` como usuário sem privilégios.
+
+1. Após revisar e publicar os arquivos no GitHub, aguarde o primeiro build de **Publicar imagem Docker**. Para usar essa imagem antes de habilitar a automação, informe sua tag `sha-<commit>` em `IMAGE_TAG`. Mantenha o pacote GHCR privado e confirme que a conta usada no Portainer pode lê-lo.
+2. No Portainer, cadastre `ghcr.io` como registro autenticado. Para puxar a imagem privada, use uma conta com acesso ao pacote e um PAT clássico com `read:packages`. Em **Stacks → Add stack → Git repository**, use `https://github.com/mlacunha/678estudio.git`, referência `refs/heads/main` e caminho `compose.yaml`. Nas credenciais Git, use o usuário e o PAT com leitura do repositório privado. As credenciais do Git e do registro têm finalidades distintas.
+3. Crie os diretórios persistentes no **host Docker**, fora da pasta que o Portainer clona. Garanta leitura e escrita para o UID/GID 1000 do contêiner. Se quiser aproveitar dados anteriores, copie o SQLite com o processo antigo parado e copie os uploads antes de iniciar a stack. Acompanhe backups dos dois diretórios.
+4. Preencha as variáveis abaixo. Em **GitOps updates**, selecione **Webhook** e habilite **Re-pull image** e **Force redeployment**. Quando quiser ativar o deploy automático, salve a URL HTTPS alcançável pelo runner como segredo `PORTAINER_WEBHOOK_URL` em **GitHub → Settings → Secrets and variables → Actions**, defina a variável de repositório `PORTAINER_AUTO_DEPLOY=true` e use `IMAGE_TAG=stable` no Portainer. Mantenha o webhook direto de push e o polling desativados para essa stack. Uma resposta HTTP 2xx confirma a aceitação da chamada. Consulte os eventos no Portainer para confirmar a recriação do contêiner.
+5. No **Cloudflare Tunnel existente**, use uma rota publicada para o domínio do site com origem `http://678estudio:4321`, ajustando a porta se necessário. O `cloudflared` e a aplicação precisam compartilhar a rede Docker informada. O Compose adere à rede existente e mantém a porta da aplicação interna.
+
+| Variável | Valor |
+|---|---|
+| `HOST` e `PORT` | `0.0.0.0` e `4321` por padrão. Use uma porta interna acima de 1023. |
+| `PUBLIC_ORIGIN` | Origem HTTPS pública, por exemplo `https://estudio.example.com`, sem subcaminho. Usada nos links de prévias e nas verificações de origem do painel. |
+| `ADMIN_USERNAME` e `ADMIN_PASSWORD` | Credenciais de HTTP Basic Auth, definidas no Portainer. O usuário não pode conter dois-pontos. |
+| `DATA_DIR` | Diretório absoluto do host, montado em `/app/data`. Contém `studio678.db`. |
+| `UPLOADS_DIR` | Diretório absoluto do host, montado em `/app/public/uploads`. O subdiretório `mockups/` usa o mesmo armazenamento. |
+| `TUNNEL_NETWORK` | Nome exato da rede Docker já usada pelo `cloudflared`. |
+| `IMAGE_TAG` | Opcional. Use `stable` para atualização automática ou `sha-<commit>` para manter uma revisão específica. |
+
+Mantenha uma única réplica para o SQLite e os limites locais de mockups. A geração pública aceita até 10 MB por PNG, 20 requisições válidas para processamento por janela de 60 segundos, uma em andamento e até 200 entradas no diretório de prévias. Os links de prévia são públicos para quem os possui. Se atingir a capacidade, remova os mockups antigos do diretório persistente conforme a política de retenção do estúdio.

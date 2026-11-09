@@ -1,5 +1,7 @@
 ---
 import ErrorPage from '../components/ErrorPage.astro';
+
+export const prerender = false;
 ---
 
 <ErrorPage status={404} title="Página não encontrada" description="O endereço pode ter mudado. Volte ao início para explorar o catálogo." />

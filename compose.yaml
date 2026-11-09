@@ -1,0 +1,42 @@
+services:
+  678estudio:
+    image: ghcr.io/mlacunha/678estudio:${IMAGE_TAG:-stable}
+    pull_policy: always
+    restart: unless-stopped
+    init: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    environment:
+      HOST: "${HOST:-0.0.0.0}"
+      PORT: "${PORT:-4321}"
+      PUBLIC_ORIGIN: "${PUBLIC_ORIGIN:?Informe a origem HTTPS pública}"
+      ADMIN_USERNAME: "${ADMIN_USERNAME:?Informe o usuário administrativo}"
+      ADMIN_PASSWORD: "${ADMIN_PASSWORD:?Informe a senha administrativa}"
+    volumes:
+      - type: bind
+        source: "${DATA_DIR:?Informe o diretório absoluto de dados}"
+        target: /app/data
+        bind:
+          create_host_path: false
+      - type: bind
+        source: "${UPLOADS_DIR:?Informe o diretório absoluto de uploads}"
+        target: /app/public/uploads
+        bind:
+          create_host_path: false
+    networks:
+      tunnel:
+        aliases:
+          - 678estudio
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:' + process.env.PORT + '/api/categories').then(r => { if (!r.ok) process.exitCode = 1 }).catch(() => { process.exitCode = 1 })"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+networks:
+  tunnel:
+    external: true
+    name: "${TUNNEL_NETWORK:?Informe a rede Docker existente do cloudflared}"

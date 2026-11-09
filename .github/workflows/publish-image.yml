@@ -1,0 +1,64 @@
+name: Publicar imagem Docker
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: 678estudio-image
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  publish:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: docker/setup-qemu-action@99012661954931238ded8c8b007157a8430204e1 # v4.4.0
+        with:
+          platforms: arm64
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+      - name: Construir e publicar no GHCR
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          printf '%s' "$GH_TOKEN" | docker login ghcr.io --username "$GITHUB_ACTOR" --password-stdin
+          image="ghcr.io/${GITHUB_REPOSITORY,,}"
+          docker buildx build --platform linux/amd64,linux/arm64 --push \
+            --label "org.opencontainers.image.source=https://github.com/$GITHUB_REPOSITORY" \
+            --label "org.opencontainers.image.revision=$GITHUB_SHA" \
+            --tag "$image:sha-$GITHUB_SHA" .
+      - name: Promover imagem e atualizar a stack
+        if: vars.PORTAINER_AUTO_DEPLOY == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PORTAINER_WEBHOOK_URL: ${{ secrets.PORTAINER_WEBHOOK_URL }}
+        run: |
+          image="ghcr.io/${GITHUB_REPOSITORY,,}"
+          latest_sha=$(gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/main" --jq '.object.sha')
+          if [[ "$latest_sha" != "$GITHUB_SHA" ]]; then
+            echo "A branch main avançou. O próximo build acionará o webhook."
+            exit 0
+          fi
+          docker buildx imagetools create --tag "$image:stable" "$image:sha-$GITHUB_SHA"
+          if [[ -z "$PORTAINER_WEBHOOK_URL" ]]; then
+            echo "Imagem stable publicada. Webhook ainda não configurado."
+            exit 0
+          fi
+          status=$(curl --proto '=https' --silent --output /dev/null --max-time 90 \
+            --write-out '%{http_code}' --request POST --url "$PORTAINER_WEBHOOK_URL") || {
+              echo "::error::Falha ao acionar o webhook do Portainer."
+              exit 1
+            }
+          if [[ "$status" != 2[0-9][0-9] ]]; then
+            echo "::error::O webhook respondeu com HTTP $status."
+            exit 1
+          fi

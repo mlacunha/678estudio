@@ -20,6 +20,18 @@ describe('Catalog Repository with SQLite', () => {
     testClient = createClient({ url: ':memory:' });
   });
 
+  it('shares initialization between simultaneous reads on a fresh database', async () => {
+    const [categories, products, frames] = await Promise.all([
+      getActiveCategories(testClient),
+      getAllProducts(testClient),
+      getActiveProductsByCategory('quadros', testClient),
+    ]);
+
+    expect(categories).toHaveLength(4);
+    expect(products).toHaveLength(9);
+    expect(frames).toHaveLength(3);
+  });
+
   describe('Categories Operations', () => {
     it('should retrieve active categories ordered by display_order', async () => {
       const categories = await getActiveCategories(testClient);

@@ -20,9 +20,16 @@ node_modules/
 *.pfx
 credentials*.json
 secrets*.json
-/.npmrc.local
+.npmrc
+.npmrc.local
+.netrc
+_netrc
+.pypirc
+.aws/
+.ssh/
 
 # Dados operacionais, arquivos de clientes e mockups
+/data/
 *.db
 *.db-*
 *.sqlite
