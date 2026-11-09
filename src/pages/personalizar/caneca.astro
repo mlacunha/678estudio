@@ -1,12 +1,14 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
+import { MUG_PRINT_DIMENSIONS, MUG_PRINT_WIDTHS } from '../../utils/customizer';
 
 export const prerender = false;
+const defaultMeasure = `${MUG_PRINT_DIMENSIONS.widthCm} × ${MUG_PRINT_DIMENSIONS.heightCm} cm`;
 ---
 
 <BaseLayout
   title="Personalizador 3D de Canecas | 678 Estudio"
-  description="Personalize sua caneca de cerâmica branca em 3D em tempo real. Área de 20x9cm com visualização 360° e orçamento direto via WhatsApp."
+  description="Personalize sua caneca de cerâmica branca em 3D. Escolha a área de impressão, gire em 360° e solicite orçamento pelo WhatsApp."
 >
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
     
@@ -22,7 +24,7 @@ export const prerender = false;
           Personalizador <span class="font-normal text-accent">3D de Caneca</span>
         </h1>
         <p class="mt-1 text-xs sm:text-sm text-ink-muted">
-          Arraste com o mouse ou toque para girar em 360°. Carregue sua arte e ajuste o enquadramento na área de 20 × 9 cm.
+          Arraste para girar em 360°. Escolha a área de impressão, carregue sua arte e ajuste o enquadramento.
         </p>
       </div>
 
@@ -57,21 +59,21 @@ export const prerender = false;
 
           <!-- Badge Modelo Base -->
           <div class="absolute top-4 right-4 pointer-events-none px-2.5 py-1 rounded text-[10px] uppercase tracking-wider font-semibold bg-media-badge/95 text-on-media">
-            Área 20 × 9 cm
+            Área <span data-mug-measure>{defaultMeasure}</span>
           </div>
         </div>
 
       </div>
 
-        <!-- Miniatura da Área Plana 20x9cm -->
+        <!-- Miniatura da área plana selecionada -->
         <div class="min-w-0 order-last lg:order-none lg:col-span-7 lg:col-start-1 lg:row-start-2 p-4 rounded-xl bg-surface/60 border border-line">
           <div class="flex flex-wrap items-center justify-between gap-1 mb-2">
             <span class="text-xs font-semibold text-ink-secondary uppercase tracking-wider">
-              Mapa Planificado da Estampa (20 × 9 cm)
+              Mapa Planificado da Estampa (<span data-mug-measure>{defaultMeasure}</span>)
             </span>
           </div>
-          <div class="relative w-full aspect-[20/9] bg-canvas rounded-lg overflow-hidden border border-line flex items-center justify-center">
-            <canvas id="mug-texture-canvas" width="2000" height="900" class="w-full h-full object-contain"></canvas>
+          <div class="w-full bg-canvas rounded-lg overflow-hidden border border-line">
+            <canvas id="mug-texture-canvas" width={MUG_PRINT_DIMENSIONS.widthCm * 100} height={MUG_PRINT_DIMENSIONS.heightCm * 100} class="block w-full h-auto"></canvas>
           </div>
         </div>
 
@@ -82,10 +84,24 @@ export const prerender = false;
             Ajustes de Personalização
           </h2>
 
+          <fieldset>
+            <legend class="mb-2 text-xs font-medium uppercase tracking-wider text-ink-muted">1. Área de impressão</legend>
+            <div class="grid grid-cols-3 gap-2">
+              {MUG_PRINT_WIDTHS.map(width => (
+                <label class="relative min-w-0 cursor-pointer">
+                  <input type="radio" name="mug-print-width" value={width} checked={width === MUG_PRINT_DIMENSIONS.widthCm} class="peer sr-only" />
+                  <span class="flex min-h-11 items-center justify-center whitespace-nowrap rounded-md border border-control px-1 text-xs font-semibold text-ink-secondary hover:border-accent peer-checked:border-accent peer-checked:bg-accent/10 peer-checked:text-accent peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-accent">
+                    {width} × {MUG_PRINT_DIMENSIONS.heightCm} cm
+                  </span>
+                </label>
+              ))}
+            </div>
+          </fieldset>
+
           <!-- Upload de Imagem -->
           <div>
             <label class="block text-xs uppercase tracking-wider text-ink-muted font-medium mb-2">
-              1. Enviar Arte ou Foto
+              2. Enviar Arte ou Foto
             </label>
             <div class="flex items-center gap-3">
               <label class="cursor-pointer flex-1 min-h-11 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-surface-raised hover:bg-surface-hover border border-control text-ink-secondary text-xs font-semibold focus-within:outline focus-within:outline-2 focus-within:outline-accent">
@@ -97,7 +113,7 @@ export const prerender = false;
               </label>
             </div>
             <p class="text-[11px] text-ink-muted mt-1.5">
-              Recomendamos imagens nítidas na proporção aproximada de 20:9 para melhor resolução.
+              Para preencher a faixa, use uma imagem nítida na proporção da área selecionada.
             </p>
             <p id="canvas-status" data-art-status role="status" class="mt-1 text-xs text-accent break-all">Arte padrão do estúdio</p>
           </div>
@@ -105,7 +121,7 @@ export const prerender = false;
           <!-- Slider de Escala / Zoom -->
           <div>
             <div class="flex justify-between text-xs mb-1.5">
-              <label for="slider-scale" class="text-ink-secondary font-medium">2. Escala da estampa</label>
+              <label for="slider-scale" class="text-ink-secondary font-medium">3. Escala da estampa</label>
               <span id="label-scale" class="text-accent font-semibold">100%</span>
             </div>
             <input
@@ -121,7 +137,7 @@ export const prerender = false;
           <!-- Slider de Deslocamento Horizontal -->
           <div>
             <div class="flex justify-between text-xs mb-1.5">
-              <label for="slider-pos-x" class="text-ink-secondary font-medium">3. Posição horizontal</label>
+              <label for="slider-pos-x" class="text-ink-secondary font-medium">4. Posição horizontal</label>
               <span id="label-pos-x" class="text-ink-secondary font-medium">Centro</span>
             </div>
             <input
@@ -137,7 +153,7 @@ export const prerender = false;
           <!-- Slider de Deslocamento Vertical -->
           <div>
             <div class="flex justify-between text-xs mb-1.5">
-              <label for="slider-pos-y" class="text-ink-secondary font-medium">4. Posição vertical</label>
+              <label for="slider-pos-y" class="text-ink-secondary font-medium">5. Posição vertical</label>
               <span id="label-pos-y" class="text-ink-secondary font-medium">Centro</span>
             </div>
             <input
@@ -191,7 +207,7 @@ export const prerender = false;
 
 <script>
   import * as THREE from 'three';
-  import { clampValue, MUG_PRINT_DIMENSIONS } from '../../utils/customizer';
+  import { clampValue, getMugPrintBand, MUG_PRINT_DIMENSIONS, MUG_PRINT_WIDTHS, type MugPrintWidth } from '../../utils/customizer';
   import { loadArtwork, setupMockupQuote } from '../../utils/customizerClient';
 
   function initMugCustomizer() {
@@ -209,6 +225,8 @@ export const prerender = false;
     const exportStatus = document.getElementById('export-status');
     const canvasStatus = document.getElementById('canvas-status');
     const quoteLink = document.querySelector<HTMLAnchorElement>('#mug-whatsapp');
+    const widthOptions = document.querySelectorAll<HTMLInputElement>('input[name="mug-print-width"]');
+    const measureLabels = document.querySelectorAll<HTMLElement>('[data-mug-measure]');
 
     if (!canvas3D || !canvasTex) return;
 
@@ -219,8 +237,9 @@ export const prerender = false;
     let scaleVal = 1;
     let offsetX = 0;
     let offsetY = 0;
+    let printWidth: MugPrintWidth = MUG_PRINT_DIMENSIONS.widthCm;
+    const measure = () => `${printWidth} × ${MUG_PRINT_DIMENSIONS.heightCm} cm`;
 
-    // Desenha textura padrão 20x9cm
     function drawTexture() {
       if (!ctx || !canvasTex) return;
       ctx.fillStyle = '#ffffff';
@@ -237,7 +256,7 @@ export const prerender = false;
         ctx.save();
         ctx.translate(canvasTex.width / 2 + offsetX, canvasTex.height / 2 + offsetY);
         ctx.scale(scaleVal, scaleVal);
-        ctx.translate(-canvasTex.width / 2, -canvasTex.height / 2);
+        ctx.translate(-1000, -450);
         // Estampa padrão do estúdio
         ctx.fillStyle = '#0c0d0e';
         ctx.fillRect(400, 150, 1200, 600);
@@ -300,9 +319,13 @@ export const prerender = false;
     shadow.position.set(0.1, -1.18, 0.05);
     scene.add(shadow);
 
-    const texture = new THREE.CanvasTexture(canvasTex);
-    texture.colorSpace = THREE.SRGBColorSpace;
-    texture.anisotropy = Math.min(8, renderer?.capabilities.getMaxAnisotropy() ?? 1);
+    const createTexture = () => {
+      const texture = new THREE.CanvasTexture(canvasTex);
+      texture.colorSpace = THREE.SRGBColorSpace;
+      texture.anisotropy = Math.min(8, renderer?.capabilities.getMaxAnisotropy() ?? 1);
+      return texture;
+    };
+    let texture = createTexture();
 
     const mug = new THREE.Group();
     mug.rotation.y = 0.62;
@@ -327,17 +350,12 @@ export const prerender = false;
     handle.rotation.z = -Math.PI / 2;
     handle.position.x = 0.93;
 
-    // Converte os 20 × 9 cm em um arco e uma altura na mesma escala.
-    // A faixa começa após a alça e deixa a cerâmica visível nas bordas.
-    const averageRadius = 0.97;
-    const unitsPerCm = 0.22;
-    const printHeight = MUG_PRINT_DIMENSIONS.heightCm * unitsPerCm;
-    const printArc = MUG_PRINT_DIMENSIONS.widthCm * unitsPerCm / averageRadius;
-    const thetaStart = Math.PI / 2 + (Math.PI * 2 - printArc) / 2;
-    addPart(
-      new THREE.CylinderGeometry(1, 0.946, printHeight, 96, 1, true, thetaStart, printArc),
-      new THREE.MeshStandardMaterial({ map: texture, roughness: 0.28 }),
-    );
+    const createPrintGeometry = () => {
+      const { height, thetaStart, thetaLength } = getMugPrintBand(printWidth);
+      return new THREE.CylinderGeometry(1, 0.946, height, 96, 1, true, thetaStart, thetaLength);
+    };
+    const printMaterial = new THREE.MeshStandardMaterial({ map: texture, roughness: 0.28 });
+    const printBand = addPart(createPrintGeometry(), printMaterial);
     scene.add(mug);
 
     const render = () => renderer?.render(scene, camera);
@@ -358,10 +376,20 @@ export const prerender = false;
             previewRenderer.setPixelRatio(1);
             previewRenderer.setSize(1600, 1100, false);
             render();
+            const exportCanvas = document.createElement('canvas');
+            exportCanvas.width = canvas3D.width;
+            exportCanvas.height = canvas3D.height;
+            const exportContext = exportCanvas.getContext('2d');
+            if (!exportContext) throw new Error('Canvas de exportação indisponível.');
+            exportContext.drawImage(canvas3D, 0, 0);
+            exportContext.font = '600 26px system-ui, sans-serif';
+            exportContext.fillStyle = '#ffffff';
+            exportContext.textAlign = 'center';
+            exportContext.fillText(`Área de impressão · ${measure()}`, exportCanvas.width / 2, exportCanvas.height - 46);
             return {
-              imageBase64: canvas3D.toDataURL('image/png'),
+              imageBase64: exportCanvas.toDataURL('image/png'),
               productName: 'Caneca Branca Signature 325 ml',
-              details: '• Área da estampa: 20 × 9 cm',
+              details: `• Área da estampa: ${measure()}`,
             };
           } finally {
             resizePreview();
@@ -421,6 +449,25 @@ export const prerender = false;
       quote?.invalidate();
       render();
     };
+
+    const updatePrintWidth = () => {
+      const selected = Array.from(widthOptions).find(option => option.checked);
+      const width = MUG_PRINT_WIDTHS.find(value => String(value) === selected?.value);
+      if (!width || width === printWidth) return;
+
+      printWidth = width;
+      canvasTex.width = width * 100;
+      // A textura já enviada ao WebGL precisa ser recriada ao mudar de dimensão.
+      texture.dispose();
+      texture = createTexture();
+      printMaterial.map = texture;
+      printBand.geometry.dispose();
+      printBand.geometry = createPrintGeometry();
+      for (const label of measureLabels) label.textContent = measure();
+      updateArtwork();
+    };
+    for (const option of widthOptions) option.addEventListener('change', updatePrintWidth);
+    updatePrintWidth();
 
     const resetControls = () => {
       if (sliderScale) sliderScale.value = '100';

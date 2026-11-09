@@ -3,10 +3,22 @@ export interface Dimensions {
   heightCm: number;
 }
 
-export const MUG_PRINT_DIMENSIONS: Dimensions = {
-  widthCm: 20,
+export const MUG_PRINT_WIDTHS = [20, 21, 22] as const;
+export type MugPrintWidth = (typeof MUG_PRINT_WIDTHS)[number];
+
+export const MUG_PRINT_DIMENSIONS = {
+  widthCm: 21,
   heightCm: 9,
-};
+} as const;
+
+export function getMugPrintBand(widthCm: MugPrintWidth) {
+  const unitsPerCm = 0.22;
+  const averageRadius = 0.97;
+  const thetaLength = widthCm * unitsPerCm / averageRadius;
+  // O centro da folga coincide com a alça no eixo +X (π/2).
+  const thetaStart = Math.PI / 2 + (Math.PI * 2 - thetaLength) / 2;
+  return { height: MUG_PRINT_DIMENSIONS.heightCm * unitsPerCm, thetaStart, thetaLength };
+}
 
 export const FRAME_DIMENSIONS: Dimensions = {
   widthCm: 30,
