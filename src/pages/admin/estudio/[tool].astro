@@ -1,0 +1,13 @@
+---
+import Mug from '../../../components/customizers/Mug.astro';
+import Frame from '../../../components/customizers/Frame.astro';
+import { getAllProducts } from '../../../db/catalogRepository';
+export const prerender = false;
+
+const tool = Astro.params.tool;
+if (tool !== 'caneca' && tool !== 'quadro') return Astro.redirect('/admin/estudio');
+const category = tool === 'caneca' ? 'canecas' : 'quadros';
+const products = (await getAllProducts()).filter(product => product.categorySlug === category);
+---
+
+{tool === 'caneca' ? <Mug studioProducts={products} /> : <Frame studioProducts={products} />}

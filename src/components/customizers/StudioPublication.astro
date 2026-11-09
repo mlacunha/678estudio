@@ -1,0 +1,41 @@
+---
+import type { Product } from '../../types/catalog';
+
+interface Props { products: Product[] }
+const { products } = Astro.props;
+---
+
+<form data-studio-publication method="post" action="/admin/estudio/publicar" class="space-y-3" aria-label="Publicação no catálogo">
+  <h3 class="text-xs font-semibold uppercase tracking-wider text-ink-muted">Publicação</h3>
+  <label class="block text-sm text-ink-secondary">
+    Produto do catálogo
+    <select required name="productId" class="mt-1 min-h-11 w-full rounded-md border border-control bg-canvas px-2 text-ink">
+      <option value="">Selecione um produto</option>
+      {products.map(product => <option value={product.id} data-image={product.imageUrl}>{product.name}{product.isActive ? '' : ' (oculto)'}</option>)}
+    </select>
+  </label>
+  {products.length === 0 && <p class="text-xs text-ink-muted">Cadastre um produto desta categoria no painel.</p>}
+  <button type="button" data-studio-generate disabled class="min-h-11 w-full rounded-md border border-accent px-3 text-sm font-semibold text-accent hover:bg-accent/10 disabled:opacity-50">
+    Gerar prévia WebP
+  </button>
+  <div data-studio-result hidden class="space-y-3 [&[hidden]]:hidden">
+    <div class="grid grid-cols-2 gap-2">
+      <figure>
+        <img data-studio-thumbnail alt="Miniatura otimizada" class="w-full rounded-md" />
+        <figcaption class="mt-1 text-xs text-ink-muted">Miniatura</figcaption>
+      </figure>
+      <figure>
+        <img data-studio-large alt="Mockup ampliado otimizado" class="w-full rounded-md" />
+        <figcaption class="mt-1 text-xs text-ink-muted">Imagem ampliada</figcaption>
+      </figure>
+    </div>
+    <label class="flex min-h-11 items-center gap-2 text-xs text-ink-secondary">
+      <input type="checkbox" name="confirmed" required class="size-4 shrink-0 accent-accent" />
+      Confirmo a substituição da imagem principal do produto selecionado.
+    </label>
+    <button type="submit" data-studio-save disabled class="min-h-11 w-full rounded-md bg-action px-3 text-sm font-semibold text-on-action hover:bg-action-hover disabled:opacity-50">
+      Salvar no catálogo
+    </button>
+  </div>
+  <p data-studio-status role="status" class="text-xs text-ink-secondary">Carregue uma arte para gerar a prévia.</p>
+</form>

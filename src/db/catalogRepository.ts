@@ -124,6 +124,15 @@ export async function toggleProductActive(id: string, isActive: boolean, client:
   });
 }
 
+export async function replaceProductImage(product: Product, imageUrl: string, client: Client = getDbClient()): Promise<boolean> {
+  await initDatabase(client);
+  const result = await client.execute({
+    sql: 'UPDATE products SET image_url = ? WHERE id = ? AND category_slug = ? AND image_url = ?',
+    args: [imageUrl, product.id, product.categorySlug, product.imageUrl],
+  });
+  return result.rowsAffected === 1;
+}
+
 export async function deleteProduct(id: string, client: Client = getDbClient()): Promise<void> {
   await initDatabase(client);
   await client.execute({

@@ -10,6 +10,7 @@ import {
   updateProduct,
   toggleProductActive,
   deleteProduct,
+  replaceProductImage,
 } from './catalogRepository';
 import type { Product } from '../types/catalog';
 
@@ -30,6 +31,14 @@ describe('Catalog Repository with SQLite', () => {
     expect(categories).toHaveLength(4);
     expect(products).toHaveLength(9);
     expect(frames).toHaveLength(3);
+  });
+
+  it('replaces only the image of the selected product and refuses stale replacements', async () => {
+    const product = (await getProductById('prod-c1', testClient))!;
+    const imageUrl = '/uploads/catalog-test.webp';
+    expect(await replaceProductImage(product, imageUrl, testClient)).toBe(true);
+    expect(await replaceProductImage(product, '/uploads/stale.webp', testClient)).toBe(false);
+    expect(await getProductById(product.id, testClient)).toEqual({ ...product, imageUrl });
   });
 
   describe('Categories Operations', () => {
