@@ -6,7 +6,7 @@ export const prerender = false;
 
 <BaseLayout
   title="Personalizador de Quadros em Ambientes | 678 Estudio"
-  description="Simule seu quadro de 30 × 40 cm em dois ambientes ilustrados. Envie sua arte, ajuste o enquadramento e peça um orçamento pelo WhatsApp."
+  description="Simule a sublimação da sua arte em madeira clara, com moldura preta de 30 × 40 cm, em dois ambientes ilustrados."
 >
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
     
@@ -22,7 +22,7 @@ export const prerender = false;
           Personalizador de <span class="font-normal text-accent">Quadros no Ambiente</span>
         </h1>
         <p class="mt-1 text-xs sm:text-sm text-ink-muted">
-          Veja como sua arte fica em um quadro de 30 × 40 cm, em duas cenas ilustradas.
+          Veja sua arte sublimada diretamente em madeira clara, com moldura preta de 30 × 40 cm.
         </p>
       </div>
 
@@ -93,43 +93,10 @@ export const prerender = false;
             </div>
           </div>
 
-          <!-- Estilo da Moldura -->
-          <div>
-            <label class="block text-xs uppercase tracking-wider text-ink-muted font-medium mb-2">
-              2. Acabamento da Moldura
-            </label>
-            <div class="grid grid-cols-3 gap-2">
-              <button
-                type="button"
-                aria-pressed="true"
-                class="btn-frame-style min-h-11 px-2 py-2 rounded-lg border border-accent bg-accent/10 text-accent text-[11px] font-semibold text-center"
-                data-frame="black"
-              >
-                Laca Preta
-              </button>
-              <button
-                type="button"
-                aria-pressed="false"
-                class="btn-frame-style min-h-11 px-2 py-2 rounded-lg border border-line bg-canvas text-ink-secondary hover:border-control text-[11px] font-semibold text-center"
-                data-frame="wood"
-              >
-                Nogueira
-              </button>
-              <button
-                type="button"
-                aria-pressed="false"
-                class="btn-frame-style min-h-11 px-2 py-2 rounded-lg border border-line bg-canvas text-ink-secondary hover:border-control text-[11px] font-semibold text-center"
-                data-frame="gold"
-              >
-                Ouro Nobre
-              </button>
-            </div>
-          </div>
-
           <!-- Upload de Arte -->
           <div>
             <label class="block text-xs uppercase tracking-wider text-ink-muted font-medium mb-2">
-              3. Enviar Fotografia ou Arte
+              2. Enviar Fotografia ou Arte
             </label>
             <label class="cursor-pointer min-h-11 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-surface-raised hover:bg-surface-hover border border-control text-ink-secondary text-xs font-semibold focus-within:outline focus-within:outline-2 focus-within:outline-accent">
               <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -144,7 +111,7 @@ export const prerender = false;
           <!-- Zoom da Arte -->
           <div>
             <div class="flex justify-between text-xs mb-1.5">
-              <label for="slider-frame-scale" class="text-ink-secondary font-medium">4. Zoom da imagem</label>
+              <label for="slider-frame-scale" class="text-ink-secondary font-medium">3. Zoom da imagem</label>
               <span id="label-frame-scale" class="text-accent font-semibold">100%</span>
             </div>
             <input
@@ -211,8 +178,8 @@ export const prerender = false;
         <!-- Ficha Técnica do Quadro -->
         <div class="p-4 rounded-xl bg-canvas/60 border border-line text-xs text-ink-muted space-y-1.5">
           <p><span class="text-ink-secondary font-semibold">• Formato Único:</span> 30 × 40 cm (Proporção Exata 3:4)</p>
-          <p><span class="text-ink-secondary font-semibold">• Moldura:</span> Madeira maciça com acabamento artesanal e paspatur chanfrado</p>
-          <p><span class="text-ink-secondary font-semibold">• Impressão:</span> Papel 100% algodão com tintas de pigmento mineral</p>
+          <p><span class="text-ink-secondary font-semibold">• Moldura:</span> Preta, com acabamento artesanal</p>
+          <p><span class="text-ink-secondary font-semibold">• Impressão:</span> Sublimação direta sobre madeira clara, com veios visíveis</p>
           <p><span class="text-ink-secondary font-semibold">• Mockup:</span> O link da prévia será incluído na mensagem do WhatsApp.</p>
         </div>
       </div>
@@ -224,6 +191,7 @@ export const prerender = false;
 <script>
   import { FRAME_DIMENSIONS } from '../../utils/customizer';
   import { loadArtwork, setupMockupQuote } from '../../utils/customizerClient';
+  import { createWoodSurface, sublimateArtwork, WOOD_PROFILES } from '../../utils/woodSublimation';
   function initFrameCustomizer() {
     const stageCanvas = document.getElementById('frame-stage-canvas') as HTMLCanvasElement | null;
     const inputArt = document.getElementById('input-frame-art') as HTMLInputElement | null;
@@ -242,15 +210,34 @@ export const prerender = false;
     if (!ctx) return;
 
     let currentEnv: 'living' | 'office' = 'living';
-    let currentFrameColor = '#121316'; // Laca preta
-    let currentFrameBorder = '#2a2d33';
-    let frameFinish = 'Laca Preta';
     let userArtImage: HTMLImageElement | null = null;
     let artScale = 1;
     const frameWidth = 450;
     const frameHeight = frameWidth * FRAME_DIMENSIONS.heightCm / FRAME_DIMENSIONS.widthCm;
-    const artW = 330;
-    const artH = artW * FRAME_DIMENSIONS.heightCm / FRAME_DIMENSIONS.widthCm;
+    const frameInset = 30;
+    const boardW = frameWidth - frameInset * 2;
+    const boardH = frameHeight - frameInset * 2;
+    // Proporções aproximadas da mancha impressa na foto de referência.
+    const artW = Math.round(boardW * 0.62);
+    const artH = Math.round(boardH * 0.89);
+    const artLeft = Math.floor((boardW - artW) / 2);
+    const artTop = Math.floor((boardH - artH) / 2);
+    const wood = createWoodSurface(boardW, boardH);
+    const substrate = new Uint8ClampedArray(artW * artH * 4);
+    for (let row = 0; row < artH; row++) {
+      const start = ((artTop + row) * boardW + artLeft) * 4;
+      substrate.set(wood.data.subarray(start, start + artW * 4), row * artW * 4);
+    }
+    const printCanvas = document.createElement('canvas');
+    printCanvas.width = artW;
+    printCanvas.height = artH;
+    const printBuffer = printCanvas.getContext('2d', { willReadFrequently: true });
+    if (!printBuffer) return;
+    const printContext = printBuffer;
+    const calibration = import.meta.env.DEV ? new URLSearchParams(location.search).get('textura') : null;
+    const profile = calibration === 'suave' ? WOOD_PROFILES.suave
+      : calibration === 'intensa' ? WOOD_PROFILES.intensa
+      : WOOD_PROFILES.intermediaria;
     const environmentName = () => currentEnv === 'living' ? 'Sala Contemporânea' : 'Escritório Elegante';
 
     function adjustPan(slider: HTMLInputElement | null, overflow: number) {
@@ -356,7 +343,7 @@ export const prerender = false;
 
       // 2. Coordenadas do Quadro 30x40 cm (Proporção 3:4)
       const frameX = (W - frameWidth) / 2;
-      const frameY = H * 0.18;
+      const frameY = Math.round(H * 0.18);
 
       // Sombra projetada realista na parede
       ctx.save();
@@ -366,84 +353,57 @@ export const prerender = false;
       ctx.shadowOffsetY = 24;
 
       // Moldura Externa
-      ctx.fillStyle = currentFrameColor;
+      ctx.fillStyle = '#121316';
       ctx.fillRect(frameX, frameY, frameWidth, frameHeight);
       ctx.restore();
 
       // Borda da Moldura
-      ctx.strokeStyle = currentFrameBorder;
+      ctx.strokeStyle = '#2a2d33';
       ctx.lineWidth = 4;
       ctx.strokeRect(frameX, frameY, frameWidth, frameHeight);
 
-      const matX = frameX + 38;
-      const matY = frameY + 38;
-      const matW = frameWidth - 76;
-      const matH = frameHeight - 76;
-      ctx.fillStyle = '#f4f0e8';
-      ctx.fillRect(matX, matY, matW, matH);
-      ctx.strokeStyle = '#00000055';
-      ctx.lineWidth = 5;
-      ctx.strokeRect(matX, matY, matW, matH);
+      const boardX = frameX + frameInset;
+      const boardY = frameY + frameInset;
+      ctx.putImageData(wood, boardX, boardY);
+      ctx.strokeStyle = '#18161088';
+      ctx.lineWidth = 3;
+      ctx.strokeRect(boardX, boardY, boardW, boardH);
 
-      const artX = frameX + (frameWidth - artW) / 2;
-      const artY = frameY + (frameHeight - artH) / 2;
-      ctx.strokeStyle = '#b9afa0';
-      ctx.lineWidth = 4;
-      ctx.strokeRect(artX - 2, artY - 2, artW + 4, artH + 4);
-
-      // Clip da Arte
-      ctx.save();
-      ctx.beginPath();
-      ctx.rect(artX, artY, artW, artH);
-      ctx.clip();
-
+      printContext.clearRect(0, 0, artW, artH);
       if (userArtImage) {
-        ctx.fillStyle = '#fffdf8';
-        ctx.fillRect(artX, artY, artW, artH);
-
         const baseScale = Math.max(artW / userArtImage.naturalWidth, artH / userArtImage.naturalHeight);
-        const finalScale = baseScale * artScale;
-        const drawW = userArtImage.naturalWidth * finalScale;
-        const drawH = userArtImage.naturalHeight * finalScale;
-        const cx = artX + artW / 2 + adjustPan(sliderX, drawW - artW);
-        const cy = artY + artH / 2 + adjustPan(sliderY, drawH - artH);
-
-        ctx.drawImage(userArtImage, cx - drawW / 2, cy - drawH / 2, drawW, drawH);
+        const drawW = userArtImage.naturalWidth * baseScale * artScale;
+        const drawH = userArtImage.naturalHeight * baseScale * artScale;
+        const x = (artW - drawW) / 2 + adjustPan(sliderX, drawW - artW);
+        const y = (artH - drawH) / 2 + adjustPan(sliderY, drawH - artH);
+        printContext.drawImage(userArtImage, x, y, drawW, drawH);
       } else {
-        // Arte geométrica autoral padrão 678 Estudio
-        ctx.fillStyle = '#141619';
-        ctx.fillRect(artX, artY, artW, artH);
+        printContext.fillStyle = '#24262b';
+        printContext.fillRect(0, 0, artW, artH);
 
-        ctx.strokeStyle = '#cca032';
-        ctx.lineWidth = 3;
-        ctx.beginPath();
-        ctx.arc(artX + artW / 2, artY + artH * 0.42, 70, 0, Math.PI * 2);
-        ctx.stroke();
+        printContext.strokeStyle = '#d3a64c';
+        printContext.lineWidth = 3;
+        printContext.beginPath();
+        printContext.arc(artW / 2, artH * 0.42, artW * 0.22, 0, Math.PI * 2);
+        printContext.stroke();
 
-        ctx.fillStyle = '#e5c05d';
-        ctx.beginPath();
-        ctx.moveTo(artX + artW * 0.3, artY + artH * 0.68);
-        ctx.lineTo(artX + artW * 0.7, artY + artH * 0.68);
-        ctx.lineTo(artX + artW * 0.5, artY + artH * 0.48);
-        ctx.closePath();
-        ctx.fill();
+        printContext.fillStyle = '#e5c05d';
+        printContext.beginPath();
+        printContext.moveTo(artW * 0.27, artH * 0.67);
+        printContext.lineTo(artW * 0.73, artH * 0.67);
+        printContext.lineTo(artW * 0.5, artH * 0.48);
+        printContext.closePath();
+        printContext.fill();
 
-        ctx.fillStyle = '#8a94a6';
-        ctx.font = '600 13px system-ui, sans-serif';
-        ctx.textAlign = 'center';
-        ctx.fillText('678 Estudio • ARTE AUTORAL 30×40', artX + artW / 2, artY + artH * 0.85);
+        printContext.fillStyle = '#d5d0c5';
+        printContext.font = '600 12px system-ui, sans-serif';
+        printContext.textAlign = 'center';
+        printContext.fillText('678 Estudio · ARTE DE EXEMPLO', artW / 2, artH * 0.85);
       }
 
-      ctx.restore();
-
-      // Reflexo de vidro sutil no quadro
-      const glassGrad = ctx.createLinearGradient(frameX, frameY, frameX + frameWidth, frameY + frameHeight);
-      glassGrad.addColorStop(0, 'rgba(255, 255, 255, 0.08)');
-      glassGrad.addColorStop(0.35, 'rgba(255, 255, 255, 0.02)');
-      glassGrad.addColorStop(0.65, 'rgba(255, 255, 255, 0)');
-      glassGrad.addColorStop(1, 'rgba(255, 255, 255, 0.05)');
-      ctx.fillStyle = glassGrad;
-      ctx.fillRect(frameX, frameY, frameWidth, frameHeight);
+      const print = printContext.getImageData(0, 0, artW, artH);
+      sublimateArtwork(print.data, substrate, profile);
+      ctx.putImageData(print, boardX + artLeft, boardY + artTop);
     }
 
     renderScene();
@@ -452,7 +412,7 @@ export const prerender = false;
       ? setupMockupQuote(btnExport, exportStatus, quoteLink, () => ({
           imageBase64: stageCanvas.toDataURL('image/png'),
           productName: 'Quadro Decorativo 30 × 40 cm',
-          details: ['• Ambiente: *' + environmentName() + '*', '• Moldura: *' + frameFinish + '*'].join('\n'),
+          details: ['• Ambiente: *' + environmentName() + '*', '• Sublimação em madeira clara · moldura preta'].join('\n'),
         }))
       : undefined;
 
@@ -479,22 +439,6 @@ export const prerender = false;
         currentEnv = button.dataset.env === 'office' ? 'office' : 'living';
         selectOption('.btn-env-select', button);
         if (badgeEnv) badgeEnv.textContent = environmentName();
-        updateScene();
-      });
-    }
-
-    const finishes = new Map([
-      ['black', ['#121316', '#2a2d33']],
-      ['wood', ['#503221', '#754e35']],
-      ['gold', ['#a8811d', '#cca032']],
-    ]);
-    for (const button of document.querySelectorAll<HTMLButtonElement>('.btn-frame-style')) {
-      button.addEventListener('click', () => {
-        const colors = finishes.get(button.dataset.frame ?? '');
-        if (!colors) return;
-        [currentFrameColor, currentFrameBorder] = colors;
-        frameFinish = button.textContent?.trim() ?? '';
-        selectOption('.btn-frame-style', button);
         updateScene();
       });
     }
