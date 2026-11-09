@@ -1,12 +1,13 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
+import { FRAME_COLORS, FRAME_MARGINS, FRAME_ORIENTATIONS } from '../../utils/frameLayout';
 
 export const prerender = false;
 ---
 
 <BaseLayout
   title="Personalizador de Quadros em Ambientes | 678 Estudio"
-  description="Simule a sublimação da sua arte em madeira clara, com moldura preta de 30 × 40 cm, em dois ambientes ilustrados."
+  description="Simule a sublimação da sua arte em madeira clara em dois ambientes. Escolha a orientação, as margens e a cor da moldura."
 >
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
     
@@ -16,13 +17,13 @@ export const prerender = false;
         <div class="flex items-center gap-2 text-xs uppercase tracking-wider text-accent font-semibold mb-1">
           <span>Simulação em ambiente</span>
           <span>•</span>
-          <span class="whitespace-nowrap">30 × 40 cm</span>
+          <span class="whitespace-nowrap" data-frame-measure>30 × 40 cm</span>
         </div>
         <h1 class="text-2xl sm:text-3xl font-light text-ink">
           Personalizador de <span class="font-normal text-accent">Quadros no Ambiente</span>
         </h1>
         <p class="mt-1 text-xs sm:text-sm text-ink-muted">
-          Veja sua arte sublimada diretamente em madeira clara, com moldura preta de 30 × 40 cm.
+          Veja sua arte sublimada em madeira clara. Ajuste a orientação, as margens e a cor da moldura.
         </p>
       </div>
 
@@ -53,7 +54,7 @@ export const prerender = false;
           </div>
 
           <div class="absolute top-4 right-4 pointer-events-none px-2.5 py-1 rounded text-[10px] uppercase tracking-wider font-semibold bg-media-badge/95 text-on-media">
-            30 × 40 cm
+            <span data-frame-measure>30 × 40 cm</span>
           </div>
         </div>
 
@@ -108,10 +109,61 @@ export const prerender = false;
             <p id="art-filename" data-art-status role="status" class="text-xs text-accent mt-1 break-all"></p>
           </div>
 
+          <fieldset>
+            <legend class="mb-2 text-xs font-medium uppercase tracking-wider text-ink-muted">3. Orientação</legend>
+            <div class="grid grid-cols-2 gap-2">
+              {Object.entries(FRAME_ORIENTATIONS).map(([value, { label, widthCm, heightCm }]) => (
+                <label class="relative cursor-pointer">
+                  <input type="radio" name="frame-orientation" value={value} checked={value === 'portrait'} class="peer sr-only" />
+                  <span class="flex min-h-11 flex-col items-center justify-center rounded-md border border-control px-1 py-1.5 text-xs font-semibold text-ink-secondary hover:border-accent peer-checked:border-accent peer-checked:bg-accent/10 peer-checked:text-accent peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-accent">
+                    {label}
+                    <span class="text-[11px] font-normal">{widthCm} × {heightCm} cm</span>
+                  </span>
+                </label>
+              ))}
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend class="text-xs font-medium uppercase tracking-wider text-ink-muted">4. Margens de madeira</legend>
+            <p class="mt-1 text-xs text-ink-muted">Medidas por lado, a partir da borda interna da moldura.</p>
+            <div class="mt-2 grid grid-cols-2 gap-4">
+              <div>
+                <div class="flex flex-wrap justify-between gap-x-1 text-xs">
+                  <label for="frame-margin-horizontal" class="font-medium text-ink-secondary">Horizontal</label>
+                  <output id="frame-margin-horizontal-value" for="frame-margin-horizontal" class="text-accent">{FRAME_MARGINS.horizontal} cm</output>
+                </div>
+                <input type="range" id="frame-margin-horizontal" min={FRAME_MARGINS.min} max={FRAME_MARGINS.max} step={FRAME_MARGINS.step} value={FRAME_MARGINS.horizontal} class="h-8 w-full cursor-pointer accent-accent" />
+              </div>
+              <div>
+                <div class="flex flex-wrap justify-between gap-x-1 text-xs">
+                  <label for="frame-margin-vertical" class="font-medium text-ink-secondary">Vertical</label>
+                  <output id="frame-margin-vertical-value" for="frame-margin-vertical" class="text-accent">{FRAME_MARGINS.vertical} cm</output>
+                </div>
+                <input type="range" id="frame-margin-vertical" min={FRAME_MARGINS.min} max={FRAME_MARGINS.max} step={FRAME_MARGINS.step} value={FRAME_MARGINS.vertical} class="h-8 w-full cursor-pointer accent-accent" />
+              </div>
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend class="mb-2 text-xs font-medium uppercase tracking-wider text-ink-muted">5. Cor da moldura</legend>
+            <div class="grid grid-cols-3 gap-2">
+              {Object.entries(FRAME_COLORS).map(([value, { label, fill }]) => (
+                <label class="relative cursor-pointer">
+                  <input type="radio" name="frame-color" value={value} checked={value === 'black'} class="peer sr-only" />
+                  <span class="flex min-h-11 flex-wrap items-center justify-center gap-x-1.5 rounded-md border border-control px-1 py-1 text-xs font-semibold text-ink-secondary hover:border-accent peer-checked:border-accent peer-checked:bg-accent/10 peer-checked:text-accent peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-accent">
+                    <span aria-hidden="true" class="size-3.5 rounded-full border border-control" style={{ backgroundColor: fill }}></span>
+                    {label}
+                  </span>
+                </label>
+              ))}
+            </div>
+          </fieldset>
+
           <!-- Zoom da Arte -->
           <div>
             <div class="flex justify-between text-xs mb-1.5">
-              <label for="slider-frame-scale" class="text-ink-secondary font-medium">3. Zoom da imagem</label>
+              <label for="slider-frame-scale" class="text-ink-secondary font-medium">6. Zoom da imagem</label>
               <span id="label-frame-scale" class="text-accent font-semibold">100%</span>
             </div>
             <input
@@ -129,7 +181,7 @@ export const prerender = false;
           <div class="grid grid-cols-2 gap-4">
             <div>
               <div class="flex justify-between text-xs mb-1">
-                <label for="slider-frame-x" class="text-ink-secondary">Posição horizontal</label>
+                <label for="slider-frame-x" class="text-ink-secondary">Recorte horizontal</label>
               </div>
               <input
                 type="range"
@@ -143,7 +195,7 @@ export const prerender = false;
             </div>
             <div>
               <div class="flex justify-between text-xs mb-1">
-                <label for="slider-frame-y" class="text-ink-secondary">Posição vertical</label>
+                <label for="slider-frame-y" class="text-ink-secondary">Recorte vertical</label>
               </div>
               <input
                 type="range"
@@ -177,8 +229,8 @@ export const prerender = false;
 
         <!-- Ficha Técnica do Quadro -->
         <div class="p-4 rounded-xl bg-canvas/60 border border-line text-xs text-ink-muted space-y-1.5">
-          <p><span class="text-ink-secondary font-semibold">• Formato Único:</span> 30 × 40 cm (Proporção Exata 3:4)</p>
-          <p><span class="text-ink-secondary font-semibold">• Moldura:</span> Preta, com acabamento artesanal</p>
+          <p><span class="text-ink-secondary font-semibold">• Tamanho único:</span> 30 × 40 cm, em retrato ou paisagem</p>
+          <p><span class="text-ink-secondary font-semibold">• Moldura:</span> Preta, branca ou marrom, com acabamento artesanal</p>
           <p><span class="text-ink-secondary font-semibold">• Impressão:</span> Sublimação direta sobre madeira clara, com veios visíveis</p>
           <p><span class="text-ink-secondary font-semibold">• Mockup:</span> O link da prévia será incluído na mensagem do WhatsApp.</p>
         </div>
@@ -189,7 +241,7 @@ export const prerender = false;
 </BaseLayout>
 
 <script>
-  import { FRAME_DIMENSIONS } from '../../utils/customizer';
+  import { FRAME_COLORS, FRAME_ORIENTATIONS, getFrameLayout } from '../../utils/frameLayout';
   import { loadArtwork, setupMockupQuote } from '../../utils/customizerClient';
   import { createWoodSurface, sublimateArtwork, WOOD_PROFILES } from '../../utils/woodSublimation';
   function initFrameCustomizer() {
@@ -204,33 +256,33 @@ export const prerender = false;
     const btnExport = document.querySelector<HTMLButtonElement>('#btn-export-frame');
     const exportStatus = document.getElementById('frame-export-status');
     const quoteLink = document.querySelector<HTMLAnchorElement>('#frame-whatsapp');
+    const marginHorizontal = document.querySelector<HTMLInputElement>('#frame-margin-horizontal');
+    const marginVertical = document.querySelector<HTMLInputElement>('#frame-margin-vertical');
+    const horizontalValue = document.getElementById('frame-margin-horizontal-value');
+    const verticalValue = document.getElementById('frame-margin-vertical-value');
+    const orientationOptions = Array.from(document.querySelectorAll<HTMLInputElement>('input[name="frame-orientation"]'));
+    const colorOptions = Array.from(document.querySelectorAll<HTMLInputElement>('input[name="frame-color"]'));
+    const measures = document.querySelectorAll('[data-frame-measure]');
 
-    if (!stageCanvas) return;
+    if (!stageCanvas || !marginHorizontal || !marginVertical) return;
     const ctx = stageCanvas.getContext('2d');
     if (!ctx) return;
 
     let currentEnv: 'living' | 'office' = 'living';
     let userArtImage: HTMLImageElement | null = null;
     let artScale = 1;
-    const frameWidth = 450;
-    const frameHeight = frameWidth * FRAME_DIMENSIONS.heightCm / FRAME_DIMENSIONS.widthCm;
-    const frameInset = 30;
-    const boardW = frameWidth - frameInset * 2;
-    const boardH = frameHeight - frameInset * 2;
-    // Proporções aproximadas da mancha impressa na foto de referência.
-    const artW = Math.round(boardW * 0.62);
-    const artH = Math.round(boardH * 0.89);
-    const artLeft = Math.floor((boardW - artW) / 2);
-    const artTop = Math.floor((boardH - artH) / 2);
-    const wood = createWoodSurface(boardW, boardH);
-    const substrate = new Uint8ClampedArray(artW * artH * 4);
-    for (let row = 0; row < artH; row++) {
-      const start = ((artTop + row) * boardW + artLeft) * 4;
-      substrate.set(wood.data.subarray(start, start + artW * 4), row * artW * 4);
-    }
+    const orientation = () => orientationOptions.find(option => option.checked)?.value === 'landscape' ? 'landscape' : 'portrait';
+    const frameColor = () => FRAME_COLORS[colorOptions.find(option => option.checked)?.value as keyof typeof FRAME_COLORS] ?? FRAME_COLORS.black;
+    const measure = () => {
+      const { widthCm, heightCm } = FRAME_ORIENTATIONS[orientation()];
+      return `${widthCm} × ${heightCm} cm`;
+    };
+    const marginText = (value: number) => `${value.toLocaleString('pt-BR')} cm`;
+    const readLayout = () => getFrameLayout(orientation(), marginHorizontal.valueAsNumber, marginVertical.valueAsNumber);
+    let layout = readLayout();
+    let wood = createWoodSurface(layout.boardW, layout.boardH);
+    let substrate: Uint8ClampedArray;
     const printCanvas = document.createElement('canvas');
-    printCanvas.width = artW;
-    printCanvas.height = artH;
     const printBuffer = printCanvas.getContext('2d', { willReadFrequently: true });
     if (!printBuffer) return;
     const printContext = printBuffer;
@@ -239,6 +291,21 @@ export const prerender = false;
       : calibration === 'intensa' ? WOOD_PROFILES.intensa
       : WOOD_PROFILES.intermediaria;
     const environmentName = () => currentEnv === 'living' ? 'Sala Contemporânea' : 'Escritório Elegante';
+
+    const preparePrint = () => {
+      const { boardW, artW, artH, artLeft, artTop } = layout;
+      printCanvas.width = artW;
+      printCanvas.height = artH;
+      substrate = new Uint8ClampedArray(artW * artH * 4);
+      for (let row = 0; row < artH; row++) {
+        const start = ((artTop + row) * boardW + artLeft) * 4;
+        substrate.set(wood.data.subarray(start, start + artW * 4), row * artW * 4);
+      }
+      for (const label of measures) label.textContent = measure();
+      stageCanvas.setAttribute('aria-label', `Prévia do quadro de ${measure()} no ambiente selecionado`);
+      if (horizontalValue) horizontalValue.textContent = marginText(marginHorizontal.valueAsNumber);
+      if (verticalValue) verticalValue.textContent = marginText(marginVertical.valueAsNumber);
+    };
 
     function adjustPan(slider: HTMLInputElement | null, overflow: number) {
       if (!slider) return 0;
@@ -341,9 +408,10 @@ export const prerender = false;
         ctx.fillRect(1154, 884, 190, 26);
       }
 
-      // 2. Coordenadas do Quadro 30x40 cm (Proporção 3:4)
-      const frameX = (W - frameWidth) / 2;
-      const frameY = Math.round(H * 0.18);
+      const { frameW, frameH, inset, boardW, boardH, artW, artH, artLeft, artTop } = layout;
+      const frameX = (W - frameW) / 2;
+      const frameY = Math.round(H * 0.18 + (Math.max(frameW, frameH) - frameH) / 2);
+      const color = frameColor();
 
       // Sombra projetada realista na parede
       ctx.save();
@@ -353,17 +421,17 @@ export const prerender = false;
       ctx.shadowOffsetY = 24;
 
       // Moldura Externa
-      ctx.fillStyle = '#121316';
-      ctx.fillRect(frameX, frameY, frameWidth, frameHeight);
+      ctx.fillStyle = color.fill;
+      ctx.fillRect(frameX, frameY, frameW, frameH);
       ctx.restore();
 
       // Borda da Moldura
-      ctx.strokeStyle = '#2a2d33';
+      ctx.strokeStyle = color.edge;
       ctx.lineWidth = 4;
-      ctx.strokeRect(frameX, frameY, frameWidth, frameHeight);
+      ctx.strokeRect(frameX, frameY, frameW, frameH);
 
-      const boardX = frameX + frameInset;
-      const boardY = frameY + frameInset;
+      const boardX = frameX + inset;
+      const boardY = frameY + inset;
       ctx.putImageData(wood, boardX, boardY);
       ctx.strokeStyle = '#18161088';
       ctx.lineWidth = 3;
@@ -406,13 +474,21 @@ export const prerender = false;
       ctx.putImageData(print, boardX + artLeft, boardY + artTop);
     }
 
+    preparePrint();
     renderScene();
 
     const quote = btnExport && exportStatus && quoteLink
       ? setupMockupQuote(btnExport, exportStatus, quoteLink, () => ({
           imageBase64: stageCanvas.toDataURL('image/png'),
-          productName: 'Quadro Decorativo 30 × 40 cm',
-          details: ['• Ambiente: *' + environmentName() + '*', '• Sublimação em madeira clara · moldura preta'].join('\n'),
+          productName: `Quadro Decorativo ${measure()}`,
+          details: [
+            `• Ambiente: *${environmentName()}*`,
+            `• Orientação: ${FRAME_ORIENTATIONS[orientation()].label}`,
+            `• Moldura: ${frameColor().label}`,
+            `• Margem horizontal: ${marginText(marginHorizontal.valueAsNumber)} por lado`,
+            `• Margem vertical: ${marginText(marginVertical.valueAsNumber)} por lado`,
+            '• Sublimação em madeira clara',
+          ].join('\n'),
         }))
       : undefined;
 
@@ -420,6 +496,22 @@ export const prerender = false;
       quote?.invalidate();
       renderScene();
     };
+
+    const updateLayout = () => {
+      const next = readLayout();
+      if (next.boardW !== layout.boardW || next.boardH !== layout.boardH) {
+        wood = createWoodSurface(next.boardW, next.boardH);
+      }
+      layout = next;
+      preparePrint();
+      if (sliderX) sliderX.value = '0';
+      if (sliderY) sliderY.value = '0';
+      updateScene();
+    };
+    for (const option of orientationOptions) option.addEventListener('change', updateLayout);
+    for (const option of colorOptions) option.addEventListener('change', updateScene);
+    marginHorizontal.addEventListener('input', updateLayout);
+    marginVertical.addEventListener('input', updateLayout);
 
     function selectOption(selector: string, selected: HTMLButtonElement) {
       for (const button of document.querySelectorAll<HTMLButtonElement>(selector)) {
