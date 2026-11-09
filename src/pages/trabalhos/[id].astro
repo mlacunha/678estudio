@@ -1,0 +1,44 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getGalleryWork } from '../../db/galleryRepository';
+import { GALLERY_ID, galleryPhotoUrl } from '../../utils/gallery';
+export const prerender = false;
+
+const id = Astro.params.id ?? '';
+const work = GALLERY_ID.test(id) ? await getGalleryWork(id) : undefined;
+if (!work) return new Response('Trabalho não encontrado.', { status: 404, headers: { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'no-store' } });
+const date = work.date && new Intl.DateTimeFormat('pt-BR', { timeZone: 'UTC', dateStyle: 'long' }).format(new Date(work.date));
+---
+
+<BaseLayout title={`${work.title} | Feito no Estúdio`} description={work.description || work.title}>
+  <article class="mx-auto max-w-5xl px-4 py-10 sm:px-6 lg:px-8">
+    <a href="/trabalhos" class="text-sm font-semibold text-accent hover:underline">← Todos os trabalhos</a>
+    <header class="mb-6 mt-5">
+      <p class="text-sm font-medium text-accent">{work.categoryTitle}{date && <> · <time datetime={work.date}>{date}</time></>}</p>
+      <h1 class="editorial-heading mt-2 break-words text-4xl sm:text-5xl">{work.title}</h1>
+      {work.description && <p class="mt-4 max-w-2xl whitespace-pre-line break-words text-ink-secondary">{work.description}</p>}
+      {work.instagram && <a href={work.instagram} target="_blank" rel="noopener noreferrer" class="mt-3 inline-flex min-h-11 items-center font-semibold text-accent hover:underline">Ver no Instagram ↗</a>}
+    </header>
+    <div class="space-y-6">
+      {work.photos.map((photo, index) => {
+        const thumb = galleryPhotoUrl(photo.id);
+        const large = galleryPhotoUrl(photo.id, 'large');
+        return (
+          <a href={large} target="_blank" rel="noopener noreferrer" class="block overflow-hidden rounded-lg border border-line bg-surface-muted">
+            <img
+              src={thumb}
+              srcset={photo.thumbWidth < photo.width ? `${thumb} ${photo.thumbWidth}w, ${large} ${photo.width}w` : undefined}
+              sizes="(min-width: 1024px) 960px, calc(100vw - 2rem)"
+              alt={`${work.title} · Fotografia ${index + 1}`}
+              width={photo.width}
+              height={photo.height}
+              loading={index ? 'lazy' : 'eager'}
+              decoding="async"
+              class="mx-auto block h-auto max-h-[80vh] w-full object-contain"
+            />
+          </a>
+        );
+      })}
+    </div>
+  </article>
+</BaseLayout>

@@ -1,0 +1,51 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import GalleryGrid from '../../components/GalleryGrid.astro';
+import { getAllCategories } from '../../db/catalogRepository';
+import { listPublishedWorks } from '../../db/galleryRepository';
+export const prerender = false;
+
+const categories = await getAllCategories();
+const filter = Astro.url.searchParams.get('categoria') ?? '';
+const category = categories.some(entry => entry.slug === filter) ? filter : '';
+const curated = Astro.url.searchParams.get('ordem') === 'estudio';
+const requested = Number(Astro.url.searchParams.get('pagina') ?? '1');
+const page = Number.isSafeInteger(requested) && requested >= 1 && requested <= 10000 ? requested : 1;
+const { works, hasNext } = await listPublishedWorks(category, page, curated);
+const pageUrl = (number: number) => {
+  const query = new URLSearchParams({ pagina: String(number) });
+  if (category) query.set('categoria', category);
+  if (curated) query.set('ordem', 'estudio');
+  return `/trabalhos?${query}`;
+};
+---
+
+<BaseLayout title="Feito no Estúdio | 678 Estudio" description="Conheça as peças que já produzimos no 678 Estudio.">
+  <section class="mx-auto max-w-7xl px-4 py-10 sm:px-6 md:py-14 lg:px-8">
+    <h1 class="editorial-heading text-5xl">Feito no Estúdio</h1>
+    <p class="mt-3 text-ink-secondary">Conheça algumas peças que já produzimos.</p>
+    <form method="get" action="/trabalhos" class="my-6 flex flex-wrap items-end gap-3 border-b border-line pb-5">
+      <label class="min-w-0 grow text-sm text-ink-secondary sm:grow-0">Categoria
+        <select name="categoria" class="mt-1 block min-h-11 w-full rounded-md border border-control bg-surface px-3 text-ink">
+          <option value="">Todas as categorias</option>
+          {categories.map(entry => <option value={entry.slug} selected={category === entry.slug}>{entry.title}</option>)}
+        </select>
+      </label>
+      <label class="min-w-0 grow text-sm text-ink-secondary sm:grow-0">Ordenar por
+        <select name="ordem" class="mt-1 block min-h-11 w-full rounded-md border border-control bg-surface px-3 text-ink">
+          <option value="recentes" selected={!curated}>Mais recentes</option>
+          <option value="estudio" selected={curated}>Ordem do Estúdio</option>
+        </select>
+      </label>
+      <button type="submit" class="min-h-11 rounded-md bg-action px-4 text-sm font-semibold text-on-action hover:bg-action-hover">Aplicar</button>
+    </form>
+    {works.length ? <GalleryGrid works={works} /> : <p class="rounded-lg border border-line bg-surface p-5 text-ink-secondary">Nenhum trabalho encontrado nesta seleção.</p>}
+    {(page > 1 || hasNext) && (
+      <nav aria-label="Paginação dos trabalhos" class="mt-7 flex flex-wrap items-center gap-4 text-sm">
+        {page > 1 && <a rel="prev" href={pageUrl(page - 1)} class="inline-flex min-h-11 items-center text-accent hover:underline">← Anterior</a>}
+        <span class="text-ink-muted">Página {page}</span>
+        {hasNext && <a rel="next" href={pageUrl(page + 1)} class="inline-flex min-h-11 items-center text-accent hover:underline">Próxima →</a>}
+      </nav>
+    )}
+  </section>
+</BaseLayout>

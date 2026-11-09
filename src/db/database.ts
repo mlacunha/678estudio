@@ -77,6 +77,22 @@ async function createSchemaAndSeed(client: Client): Promise<void> {
   `);
 
   await seedInitialDataIfEmpty(client);
+  await client.batch([
+    `CREATE TABLE IF NOT EXISTS gallery_works (
+      id TEXT PRIMARY KEY, title TEXT NOT NULL, description TEXT NOT NULL,
+      category_slug TEXT NOT NULL REFERENCES categories(slug), work_date TEXT,
+      instagram TEXT NOT NULL, published INTEGER NOT NULL, featured INTEGER NOT NULL,
+      display_order INTEGER NOT NULL, created_at TEXT NOT NULL, updated_at TEXT NOT NULL, published_at TEXT,
+      version INTEGER NOT NULL DEFAULT 1
+    )`,
+    `CREATE TABLE IF NOT EXISTS gallery_photos (
+      id TEXT PRIMARY KEY, work_id TEXT NOT NULL REFERENCES gallery_works(id),
+      position INTEGER NOT NULL, width INTEGER NOT NULL, height INTEGER NOT NULL,
+      thumb_width INTEGER NOT NULL, thumb_height INTEGER NOT NULL,
+      UNIQUE(work_id, position)
+    )`,
+    'CREATE INDEX IF NOT EXISTS gallery_public_order ON gallery_works (published, featured, display_order)',
+  ], 'write');
 }
 
 async function seedInitialDataIfEmpty(client: Client): Promise<void> {

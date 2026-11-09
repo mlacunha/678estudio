@@ -1,0 +1,28 @@
+---
+import type { GalleryCard } from '../db/galleryRepository';
+import { galleryPhotoUrl } from '../utils/gallery';
+interface Props { works: GalleryCard[] }
+const { works } = Astro.props;
+---
+
+<ul class="grid grid-cols-1 gap-4 min-[420px]:grid-cols-2 lg:grid-cols-3 lg:gap-6">
+  {works.map(({ id, title, categoryTitle, cover }) => (
+    <li class="min-w-0">
+      <a href={`/trabalhos/${id}`} class="group block h-full overflow-hidden rounded-lg border border-line bg-surface hover:border-accent">
+        <img
+          src={galleryPhotoUrl(cover.id)}
+          alt=""
+          width={cover.thumbWidth}
+          height={cover.thumbHeight}
+          class="aspect-[4/3] h-auto w-full bg-surface-muted object-cover"
+          loading="lazy"
+          decoding="async"
+        />
+        <div class="p-4">
+          <p class="text-xs font-medium text-ink-muted">{categoryTitle}</p>
+          <h3 class="mt-1 break-words text-base font-semibold text-ink group-hover:text-accent">{title}</h3>
+        </div>
+      </a>
+    </li>
+  ))}
+</ul>

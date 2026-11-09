@@ -6,11 +6,11 @@ vi.mock('astro:middleware', () => ({ defineMiddleware: (middleware: unknown) => 
 
 afterEach(() => vi.unstubAllEnvs());
 
-it('requires administrative credentials and rejects cross-origin writes to studio settings', async () => {
+it.each(['/admin', '/admin/trabalhos/gravar', '/admin/trabalhos/imagem/photo'])('protects administrative requests to %s', async (route) => {
   vi.stubEnv('ADMIN_USERNAME', 'test-admin');
   vi.stubEnv('ADMIN_PASSWORD', 'test-password');
   vi.stubEnv('PUBLIC_ORIGIN', 'https://example.test');
-  const url = new URL('https://example.test/admin');
+  const url = new URL(route, 'https://example.test');
   const next = vi.fn(async () => new Response(null, { status: 303 }));
   const submit = (headers: HeadersInit) => onRequest({
     url, request: new Request(url, { method: 'POST', headers }),

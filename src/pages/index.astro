@@ -3,11 +3,13 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import Hero from '../components/Hero.astro';
 import CategorySection from '../components/CategorySection.astro';
 import WhatsAppCTA from '../components/WhatsAppCTA.astro';
+import GalleryGrid from '../components/GalleryGrid.astro';
 import { getActiveCategories } from '../db/catalogRepository';
+import { listHomeWorks } from '../db/galleryRepository';
 
 export const prerender = false;
 
-const categories = await getActiveCategories();
+const [categories, works] = await Promise.all([getActiveCategories(), listHomeWorks()]);
 ---
 
 <BaseLayout>
@@ -19,5 +21,19 @@ const categories = await getActiveCategories();
     ))}
   </div>
 
+  {works.length > 0 && (
+    <section aria-labelledby="feito-no-estudio" class="border-b border-line bg-surface-muted py-12 md:py-16">
+      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div class="mb-6 flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <h2 id="feito-no-estudio" class="editorial-heading text-4xl">Feito no Estúdio</h2>
+            <p class="mt-2 text-sm text-ink-secondary">Conheça algumas peças que já produzimos.</p>
+          </div>
+          <a href="/trabalhos" class="inline-flex min-h-11 items-center rounded-md border border-accent px-4 text-sm font-semibold text-accent hover:bg-accent/10">Ver nossos trabalhos</a>
+        </div>
+        <GalleryGrid works={works} />
+      </div>
+    </section>
+  )}
   <WhatsAppCTA />
 </BaseLayout>

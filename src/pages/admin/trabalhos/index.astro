@@ -1,0 +1,33 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import { listAdminWorks } from '../../../db/galleryRepository';
+export const prerender = false;
+const works = await listAdminWorks();
+---
+
+<BaseLayout title="Trabalhos Realizados | 678 Estudio">
+  <section class="mx-auto max-w-5xl px-4 py-10 sm:px-6 lg:px-8">
+    <a href="/admin" class="text-sm font-semibold text-accent hover:underline">← Voltar ao painel</a>
+    <div class="mt-4 flex flex-wrap items-end justify-between gap-4">
+      <div>
+        <h1 class="editorial-heading text-4xl">Trabalhos Realizados</h1>
+        <p class="mt-2 text-sm text-ink-secondary">Organize as fotografias exibidas em Feito no Estúdio.</p>
+      </div>
+      <a href="/admin/trabalhos/novo" class="inline-flex min-h-11 items-center rounded-md bg-action px-4 text-sm font-semibold text-on-action hover:bg-action-hover">Novo trabalho</a>
+    </div>
+    {Astro.url.searchParams.get('excluido') === '1' && <p role="status" class="mt-5 text-sm text-success">Trabalho excluído.</p>}
+    {works.length ? (
+      <ul class="mt-6 divide-y divide-line rounded-lg border border-line bg-surface">
+        {works.map(work => (
+          <li class="flex flex-wrap items-center justify-between gap-3 p-4">
+            <div class="min-w-0">
+              <a href={`/admin/trabalhos/${work.id}`} class="break-words font-semibold text-ink hover:text-accent">{work.title}</a>
+              <p class="mt-1 text-sm text-ink-secondary">{work.categoryTitle} · {work.published ? 'Publicado' : 'Rascunho'}{work.featured ? ' · Destaque' : ''} · Ordem {work.order}</p>
+            </div>
+            <a href={`/admin/trabalhos/${work.id}`} aria-label={`Editar ${work.title}`} class="inline-flex min-h-11 items-center text-sm font-semibold text-accent hover:underline">Editar</a>
+          </li>
+        ))}
+      </ul>
+    ) : <p class="mt-6 rounded-lg border border-line bg-surface p-4 text-sm text-ink-secondary">Cadastre o primeiro trabalho para começar.</p>}
+  </section>
+</BaseLayout>

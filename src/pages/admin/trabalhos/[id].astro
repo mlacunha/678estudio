@@ -1,0 +1,186 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import { getAllCategories } from '../../../db/catalogRepository';
+import { getGalleryWork } from '../../../db/galleryRepository';
+import { GALLERY_ID, MAX_GALLERY_PHOTOS, galleryPhotoUrl } from '../../../utils/gallery';
+export const prerender = false;
+
+const id = Astro.params.id ?? '';
+const isNew = id === 'novo';
+if (!isNew && !GALLERY_ID.test(id)) return Astro.redirect('/admin/trabalhos');
+const [categories, work] = await Promise.all([getAllCategories(), isNew ? undefined : getGalleryWork(id, true)]);
+if (!isNew && !work) return Astro.redirect('/admin/trabalhos');
+const label = 'block text-sm font-medium text-ink-secondary';
+const input = 'mt-1 min-h-11 w-full rounded-md border border-control bg-canvas px-3 py-2 text-ink';
+---
+
+<BaseLayout title={`${isNew ? 'Novo trabalho' : 'Editar trabalho'} | 678 Estudio`}>
+  <section class="mx-auto max-w-5xl px-4 py-10 sm:px-6 lg:px-8">
+    <a href="/admin/trabalhos" class="text-sm font-semibold text-accent hover:underline">← Trabalhos Realizados</a>
+    <h1 class="editorial-heading mt-4 text-4xl">{isNew ? 'Novo trabalho' : 'Editar trabalho'}</h1>
+    <p id="work-status" role="status" class="my-4 text-sm font-medium text-accent">{Astro.url.searchParams.get('salvo') === '1' ? 'Trabalho salvo.' : ''}</p>
+    <form id="work-form" action="/admin/trabalhos/gravar" method="post" enctype="multipart/form-data" class="space-y-6">
+      <input type="hidden" name="id" value={work?.id ?? ''} />
+      <input type="hidden" name="version" value={work?.version ?? 0} />
+      <div class="grid gap-4 rounded-lg border border-line bg-surface p-4 sm:grid-cols-2 sm:p-6">
+        <label class={label}>Título<input required name="title" maxlength="120" class={input} value={work?.title} /></label>
+        <label class={label}>Categoria
+          <select name="category" required class={input}>
+            <option value="">Selecione</option>
+            {categories.map(category => <option value={category.slug} selected={work?.category === category.slug}>{category.title}</option>)}
+          </select>
+        </label>
+        <label class:list={[label, 'sm:col-span-2']}>Descrição <span class="font-normal text-ink-muted">(opcional)</span>
+          <textarea name="description" maxlength="2000" rows="3" class={input}>{work?.description ?? ''}</textarea>
+        </label>
+        <label class={label}>Data de realização ou publicação <span class="font-normal text-ink-muted">(opcional)</span>
+          <input type="date" name="date" class={input} value={work?.date} />
+        </label>
+        <label class={label}>Ordem <span class="font-normal text-ink-muted">(menor primeiro)</span>
+          <input type="number" name="order" min="0" max="9999" step="1" class={input} value={work?.order ?? 0} />
+        </label>
+        <label class:list={[label, 'sm:col-span-2']}>Publicação no Instagram <span class="font-normal text-ink-muted">(opcional)</span>
+          <input type="url" name="instagram" maxlength="512" class={input} value={work?.instagram} placeholder="https://www.instagram.com/p/…" />
+        </label>
+        <label class="flex min-h-11 items-center gap-2 text-sm text-ink"><input type="checkbox" name="published" checked={work?.published} class="size-4 accent-accent" /> Publicar na galeria</label>
+        <label class="flex min-h-11 items-center gap-2 text-sm text-ink"><input type="checkbox" name="featured" checked={work?.featured} class="size-4 accent-accent" /> Destacar na página inicial</label>
+      </div>
+      <fieldset class="rounded-lg border border-line bg-surface p-4 sm:p-6">
+        <legend class="px-1 font-semibold text-ink">Fotografias</legend>
+        <p class="mb-3 text-sm text-ink-secondary">Adicione até {MAX_GALLERY_PHOTOS} fotos JPG, PNG ou WebP, com até 10 MB por original. Escolha uma capa para publicar.</p>
+        <label class={label}>Adicionar fotografias
+          <input type="file" id="work-files" multiple accept="image/jpeg,image/png,image/webp" class:list={[input, 'text-sm file:mr-3 file:rounded file:border-0 file:bg-surface-raised file:px-3 file:py-2 file:text-accent']} />
+        </label>
+        <div id="work-photos" class="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+          {work?.photos.map((photo, index) => (
+            <div data-existing-photo={photo.id} class="min-w-0 rounded-md border border-line p-2">
+              <img src={galleryPhotoUrl(photo.id, 'thumb', true)} alt={`Fotografia ${index + 1}`} width={photo.thumbWidth} height={photo.thumbHeight} loading="lazy" class="aspect-square h-auto w-full rounded object-cover" />
+              <label class="flex min-h-9 items-center gap-1.5 text-xs text-ink"><input type="radio" name="cover" value={photo.id} checked={index === 0} class="accent-accent" /> Capa</label>
+              <label class="flex min-h-9 items-center gap-1.5 text-xs text-ink"><input type="checkbox" data-remove-photo class="accent-accent" /> Remover ao salvar</label>
+            </div>
+          ))}
+        </div>
+        <template id="work-new-photo">
+          <div data-new-photo class="min-w-0 rounded-md border border-line p-2">
+            <img alt="" loading="lazy" class="aspect-square w-full rounded object-cover" />
+            <p data-filename class="mt-1 truncate text-xs text-ink-secondary"></p>
+            <label class="flex min-h-9 items-center gap-1.5 text-xs text-ink"><input type="radio" name="cover" class="accent-accent" /> Capa</label>
+            <button type="button" data-discard-photo class="min-h-9 text-xs font-medium text-danger hover:underline">Retirar foto</button>
+          </div>
+        </template>
+      </fieldset>
+      <div class="flex flex-wrap gap-3">
+        <button type="submit" class="min-h-11 rounded-md bg-action px-4 text-sm font-semibold text-on-action hover:bg-action-hover disabled:opacity-50">Salvar trabalho</button>
+        {work && <button type="button" id="work-delete" class="min-h-11 rounded-md border border-danger px-4 text-sm font-semibold text-danger hover:underline">Excluir trabalho</button>}
+      </div>
+    </form>
+  </section>
+</BaseLayout>
+
+<script>
+  import { GALLERY_LARGE_SIZE, GALLERY_THUMB_SIZE, MAX_GALLERY_PHOTOS } from '../../../utils/gallery';
+  import { encodeWebp, isWebpSource, loadWebpSource } from '../../../utils/webpClient';
+
+  const form = document.querySelector<HTMLFormElement>('#work-form')!;
+  const status = document.querySelector<HTMLElement>('#work-status')!;
+  const photos = document.querySelector<HTMLElement>('#work-photos')!;
+  const fileInput = document.querySelector<HTMLInputElement>('#work-files')!;
+  const template = document.querySelector<HTMLTemplateElement>('#work-new-photo')!;
+  const save = form.querySelector<HTMLButtonElement>('[type="submit"]')!;
+  const removeWork = document.querySelector<HTMLButtonElement>('#work-delete');
+  const pending = new Map<HTMLElement, File>();
+  let nextPhoto = 0;
+  let busy = false;
+
+  function updateCover() {
+    const options = [...photos.querySelectorAll<HTMLInputElement>('input[name="cover"]:not(:disabled)')];
+    if (options.length && !options.some(option => option.checked)) options[0].checked = true;
+  }
+
+  photos.addEventListener('change', event => {
+    const checkbox = event.target;
+    if (!(checkbox instanceof HTMLInputElement) || !checkbox.hasAttribute('data-remove-photo')) return;
+    const cover = checkbox.closest('[data-existing-photo]')!.querySelector<HTMLInputElement>('[name="cover"]')!;
+    cover.disabled = checkbox.checked;
+    if (cover.disabled) cover.checked = false;
+    updateCover();
+  });
+
+  fileInput.addEventListener('change', () => {
+    const selected = [...(fileInput.files ?? [])];
+    fileInput.value = '';
+    const active = photos.querySelectorAll('input[name="cover"]:not(:disabled)').length;
+    if (active + selected.length > MAX_GALLERY_PHOTOS) {
+      status.textContent = 'Selecione até oito fotografias por trabalho.';
+      return;
+    }
+    if (selected.some(file => !isWebpSource(file))) {
+      status.textContent = 'Use arquivos JPG, PNG ou WebP de até 10 MB.';
+      return;
+    }
+    for (const file of selected) {
+      const card = template.content.firstElementChild!.cloneNode(true) as HTMLElement;
+      const image = card.querySelector('img')!;
+      const source = URL.createObjectURL(file);
+      image.src = source;
+      image.alt = file.name;
+      card.querySelector('[data-filename]')!.textContent = file.name;
+      card.querySelector<HTMLInputElement>('[name="cover"]')!.value = `pending:${nextPhoto++}`;
+      card.querySelector('button')!.addEventListener('click', () => {
+        URL.revokeObjectURL(source);
+        pending.delete(card);
+        card.remove();
+        updateCover();
+      });
+      pending.set(card, file);
+      photos.append(card);
+    }
+    status.textContent = '';
+    updateCover();
+  });
+
+  async function submit(intent: 'save' | 'delete') {
+    if (busy) return;
+    const removed = [...photos.querySelectorAll<HTMLInputElement>('[data-remove-photo]:checked')];
+    if (intent === 'delete' && !window.confirm('Excluir este trabalho e todas as suas fotografias?')) return;
+    if (intent === 'save' && removed.length && !window.confirm(`Excluir ${removed.length} fotografia(s) deste trabalho ao salvar?`)) return;
+
+    const data = new FormData(form);
+    data.set('intent', intent);
+    if (intent === 'delete' || removed.length) data.set('confirmation', 'on');
+    const chosenCover = data.get('cover');
+    const additions = [...pending];
+    for (const card of photos.querySelectorAll<HTMLElement>('[data-existing-photo]')) {
+      if (!card.querySelector<HTMLInputElement>('[data-remove-photo]')?.checked) data.append('retain', card.dataset.existingPhoto!);
+    }
+    busy = true;
+    save.disabled = true;
+    if (removeWork) removeWork.disabled = true;
+    for (const fieldset of form.querySelectorAll('fieldset')) fieldset.disabled = true;
+    status.textContent = intent === 'delete' ? 'Excluindo…' : 'Preparando e salvando…';
+    try {
+      if (intent === 'save') {
+        for (const [index, [card, file]] of additions.entries()) {
+          const image = await loadWebpSource(file);
+          const [thumb, large] = await Promise.all([encodeWebp(image, GALLERY_THUMB_SIZE), encodeWebp(image, GALLERY_LARGE_SIZE)]);
+          data.append('thumbnail', thumb, 'thumb.webp');
+          data.append('large', large, 'large.webp');
+          if (card.querySelector<HTMLInputElement>('[name="cover"]')!.value === chosenCover) data.set('cover', `new:${index}`);
+        }
+      }
+      const response = await fetch(form.action, { method: 'POST', body: data });
+      const result = await response.json().catch(() => null);
+      if (!response.ok || !result?.url) throw new Error(result?.error ?? 'Não foi possível concluir a operação.');
+      location.assign(result.url);
+    } catch (error) {
+      status.textContent = error instanceof Error && error.message ? error.message : 'Não foi possível preparar as fotografias.';
+      status.scrollIntoView({ block: 'nearest' });
+      busy = false;
+      save.disabled = false;
+      if (removeWork) removeWork.disabled = false;
+      for (const fieldset of form.querySelectorAll('fieldset')) fieldset.disabled = false;
+    }
+  }
+  form.addEventListener('submit', event => { event.preventDefault(); void submit('save'); });
+  removeWork?.addEventListener('click', () => { void submit('delete'); });
+</script>
