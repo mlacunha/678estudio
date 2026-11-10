@@ -6,7 +6,11 @@ vi.mock('astro:middleware', () => ({ defineMiddleware: (middleware: unknown) => 
 
 afterEach(() => vi.unstubAllEnvs());
 
-it.each(['/admin', '/admin/trabalhos/gravar', '/admin/trabalhos/imagem/photo'])('protects administrative requests to %s', async (route) => {
+it.each([
+  '/admin', '/admin/trabalhos/gravar', '/admin/trabalhos/imagem/photo', '/admin/agenda-classica.pdf',
+  '/admin/agendas', '/admin/agendas/uma-referencia/arquivo/original', '/admin/agendas/uma-referencia/arquivo/configuracao',
+  '/admin/backup', '/admin/backup/baixar', '/admin/backup/validar', '/admin/backup/restaurar',
+])('protects administrative requests to %s', async (route) => {
   vi.stubEnv('ADMIN_USERNAME', 'test-admin');
   vi.stubEnv('ADMIN_PASSWORD', 'test-password');
   vi.stubEnv('PUBLIC_ORIGIN', 'https://example.test');

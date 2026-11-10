@@ -1,6 +1,7 @@
 import { createHash, timingSafeEqual } from 'node:crypto';
 import { defineMiddleware } from 'astro:middleware';
 import { getPublicOrigin } from './utils/publicOrigin';
+import { serveDuringMaintenance } from './server/backup/maintenance';
 
 const digest = (value: string) => createHash('sha256').update(value).digest();
 
@@ -18,7 +19,8 @@ export const onRequest = defineMiddleware(async ({ request, url }, next) => {
     /^\/(admin|api\/products|api\/upload)(\/|$)/.test(pathname) ||
     (/^\/api\/categories\/?$/.test(pathname) && url.searchParams.get('all') === 'true');
 
-  if (!protectedRoute) return next();
+  const serve = () => serveDuringMaintenance(request, pathname, next);
+  if (!protectedRoute) return serve();
 
   const headers = { 'Cache-Control': 'no-store' };
   const { ADMIN_USERNAME: username, ADMIN_PASSWORD: password } = process.env;
@@ -40,7 +42,7 @@ export const onRequest = defineMiddleware(async ({ request, url }, next) => {
     return new Response('Origem não autorizada.', { status: 403, headers });
   }
 
-  const response = await next();
+  const response = await serve();
   response.headers.set('Cache-Control', 'no-store');
   return response;
 });

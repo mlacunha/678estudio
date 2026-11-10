@@ -1,0 +1,46 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import { listAgendaQuotes } from '../../../db/agendaQuotes';
+import { agendaQuoteLabels, formatAgendaQuoteDate, isAgendaReference } from '../../../server/agenda/quoteConfig';
+export const prerender = false;
+
+const reference = Astro.url.searchParams.get('referencia')?.trim().toLowerCase();
+if (reference && isAgendaReference(reference)) return Astro.redirect(`/admin/agendas/${reference}`, 303);
+const value = Number(Astro.url.searchParams.get('pagina') ?? '1');
+const page = Number.isSafeInteger(value) && value > 0 && value <= 100_000 ? value : 1;
+const { quotes, hasMore } = await listAgendaQuotes(page);
+---
+
+<BaseLayout title="Solicitações de agendas | 678 Estudio">
+  <section class="mx-auto max-w-5xl px-4 py-10 sm:px-6">
+    <a href="/admin" class="text-sm font-semibold text-accent hover:underline">← Voltar ao painel</a>
+    <h1 class="editorial-heading mt-4 text-4xl">Solicitações de agendas</h1>
+    <p class="mt-2 text-sm text-ink-secondary">Consulte as prévias e recupere os arquivos de produção.</p>
+    <form method="get" class="mt-6">
+      <label for="agenda-reference" class="block text-sm font-semibold">Abrir por referência</label>
+      <div class="mt-2 flex flex-wrap gap-2">
+        <input id="agenda-reference" name="referencia" type="text" required maxlength="36" value={reference}
+          class="min-h-11 w-full max-w-sm rounded-md border border-control bg-canvas px-3 text-sm" />
+        <button class="min-h-11 rounded-md bg-action px-4 text-sm font-semibold text-on-action hover:bg-action-hover">Consultar</button>
+      </div>
+      {reference && <p role="alert" class="mt-2 text-sm text-danger">Informe o código completo da referência.</p>}
+    </form>
+    {quotes.length ? (
+      <ul class="mt-6 divide-y divide-line rounded-xl border border-line bg-surface">
+        {quotes.map(quote => (
+          <li class="p-4">
+            <a class="block font-semibold text-accent hover:underline" href={`/admin/agendas/${quote.id}`}>
+              {quote.product} · {formatAgendaQuoteDate(quote.createdAt)}
+            </a>
+            <p class="mt-1 text-sm text-ink-secondary">{agendaQuoteLabels(quote.config).join(' · ')}</p>
+            <p class="mt-1 break-all font-mono text-xs text-ink-muted">{quote.id}</p>
+          </li>
+        ))}
+      </ul>
+    ) : <p class="mt-6 rounded-lg border border-line bg-surface p-4 text-sm text-ink-secondary">Nenhuma solicitação nesta página.</p>}
+    {(page > 1 || hasMore) && <nav class="mt-4 flex gap-4 text-sm font-semibold text-accent" aria-label="Páginas das solicitações">
+      {page > 1 && <a href={`?pagina=${page - 1}`}>← Anterior</a>}
+      {hasMore && <a href={`?pagina=${page + 1}`}>Próxima →</a>}
+    </nav>}
+  </section>
+</BaseLayout>

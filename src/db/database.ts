@@ -92,6 +92,17 @@ async function createSchemaAndSeed(client: Client): Promise<void> {
       UNIQUE(work_id, position)
     )`,
     'CREATE INDEX IF NOT EXISTS gallery_public_order ON gallery_works (published, featured, display_order)',
+    `CREATE TABLE IF NOT EXISTS agenda_quotes (
+      id TEXT PRIMARY KEY, draft_token TEXT NOT NULL UNIQUE, product TEXT NOT NULL,
+      created_at TEXT NOT NULL, status TEXT NOT NULL CHECK (status = 'requested'),
+      config_version INTEGER NOT NULL, config_json TEXT NOT NULL
+    )`,
+    `CREATE TABLE IF NOT EXISTS agenda_quote_assets (
+      quote_id TEXT NOT NULL REFERENCES agenda_quotes(id) ON DELETE CASCADE,
+      name TEXT NOT NULL CHECK (name IN ('original', 'logo', 'preview-1', 'preview-2', 'preview-3')),
+      mime TEXT NOT NULL, content BLOB NOT NULL, PRIMARY KEY (quote_id, name)
+    )`,
+    'CREATE INDEX IF NOT EXISTS agenda_quotes_created ON agenda_quotes (created_at DESC, id DESC)',
   ], 'write');
 }
 

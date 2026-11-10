@@ -90,6 +90,10 @@ pnpm build
 
 ---
 
+### Agenda Clássica
+
+O personalizador em `/personalizar/agenda` gera prévias dos miolos A5 e registra solicitações de orçamento pelo WhatsApp. O painel permite recuperar os arquivos e gerar o PDF de produção. Consulte o [guia da Agenda Clássica](docs/agenda-classica.md).
+
 ## 4. Status de Entrega
 
 - [x] **Fundação e Layout:** Logomarca oficial, temas claro e escuro com preferência local, hero editorial em duas colunas e navegação responsiva.
@@ -102,7 +106,9 @@ pnpm build
 
 ## 5. Deploy GitOps no Portainer
 
-O `compose.yaml` na raiz foi preparado para **Docker Standalone**. O GitHub Actions constrói e testa a imagem Linux para AMD64 e ARM64 e publica no GHCR a tag `sha-<commit>`. Quando a variável do repositório `PORTAINER_AUTO_DEPLOY` vale `true`, o workflow também atualiza a tag `stable` e pode chamar o webhook GitOps. O contêiner executa `node dist/server/entry.mjs` como usuário sem privilégios.
+O `compose.yaml` na raiz foi preparado para **Docker Standalone**. O GitHub Actions constrói e testa a imagem Linux para AMD64 e ARM64 e publica no GHCR a tag `sha-<commit>`. Quando a variável do repositório `PORTAINER_AUTO_DEPLOY` vale `true`, o workflow também atualiza a tag `stable` e pode chamar o webhook GitOps. O contêiner executa o supervisor de restauração e o servidor Astro como usuário sem privilégios. Veja o [procedimento de backup e restauração pelo painel](docs/backup.md).
+
+Para publicar somente a imagem por SHA em um push, inclua `[publish-only]` na mensagem do commit no topo de `main`. O workflow pula a etapa de promoção de `stable` e de acionamento do Portainer para esse push.
 
 1. Após revisar e publicar os arquivos no GitHub, aguarde o primeiro build de **Publicar imagem Docker**. Para usar essa imagem antes de habilitar a automação, informe sua tag `sha-<commit>` em `IMAGE_TAG`. Mantenha o pacote GHCR privado e confirme que a conta usada no Portainer pode lê-lo.
 2. No Portainer, cadastre `ghcr.io` como registro autenticado. Para puxar a imagem privada, use uma conta com acesso ao pacote e um PAT clássico com `read:packages`. Em **Stacks → Add stack → Git repository**, use `https://github.com/mlacunha/678estudio.git`, referência `refs/heads/main` e caminho `compose.yaml`. Nas credenciais Git, use o usuário e o PAT com leitura do repositório privado. As credenciais do Git e do registro têm finalidades distintas.
@@ -118,7 +124,7 @@ O `compose.yaml` na raiz foi preparado para **Docker Standalone**. O GitHub Acti
 | `HOST_BIND` | Endereço de bind no host. Padrão `127.0.0.1`. Use o IP local do servidor para acesso pela rede. |
 | `PUBLIC_ORIGIN` | Opcional. Deixe em branco para usar a origem da requisição durante os testes. Após configurar o domínio, informe a origem HTTPS pública, por exemplo `https://estudio.example.com`, sem subcaminho. |
 | `ADMIN_USERNAME` e `ADMIN_PASSWORD` | Credenciais de HTTP Basic Auth, definidas no Portainer. O usuário não pode conter dois-pontos. |
-| `DATA_DIR` | Diretório absoluto do host, montado em `/app/data`. Contém `studio678.db`. |
+| `DATA_DIR` | Diretório absoluto do host, montado em `/app/data`. Contém `studio678.db` e `gallery-photos/`. |
 | `UPLOADS_DIR` | Diretório absoluto do host, montado em `/app/public/uploads`. O subdiretório `mockups/` usa o mesmo armazenamento. |
 | `IMAGE_TAG` | Opcional. Use `stable` para atualização automática ou `sha-<commit>` para manter uma revisão específica. |
 

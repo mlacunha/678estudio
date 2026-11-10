@@ -1,0 +1,48 @@
+---
+import BaseLayout from '../../../../layouts/BaseLayout.astro';
+import AgendaQuotePreviews from '../../../../components/AgendaQuotePreviews.astro';
+import { getAgendaQuote } from '../../../../db/agendaQuotes';
+import { agendaQuoteLabels, agendaQuotePath, formatAgendaQuoteDate } from '../../../../server/agenda/quoteConfig';
+export const prerender = false;
+const quote = await getAgendaQuote(Astro.params.id ?? '');
+if (!quote) return new Response('Solicitação de agenda não encontrada.', { status: 404 });
+const { config } = quote;
+const files = `/admin/agendas/${quote.id}/arquivo`;
+const labelClass = 'text-xs font-semibold uppercase tracking-wider text-ink-muted';
+---
+
+<BaseLayout title="Produção da Agenda Clássica | 678 Estudio">
+  <section class="mx-auto max-w-5xl px-4 py-10 sm:px-6">
+    <a href="/admin/agendas" class="text-sm font-semibold text-accent hover:underline">← Voltar às solicitações</a>
+    <h1 class="editorial-heading mt-4 text-4xl">{quote.product}</h1>
+    <p class="mt-2 text-sm text-ink-secondary">Solicitado · {formatAgendaQuoteDate(quote.createdAt)}</p>
+    <p class="mt-2 break-all font-mono text-xs text-ink-muted">{quote.id}</p>
+    <div class="mt-6 rounded-xl border border-line bg-surface p-4 sm:p-6">
+      <h2 class="text-xl font-semibold">Especificações e produção</h2>
+      <dl class="mt-4 grid grid-cols-2 gap-4 md:grid-cols-4">
+        {agendaQuoteLabels(config).map((value, index) => (
+          <div><dt class={labelClass}>{['Ano', 'Formato', 'Layout', 'Estilo'][index]}</dt><dd class="mt-1 text-sm">{value}</dd></div>
+        ))}
+        <div><dt class={labelClass}>Cores {config.customColors ? 'personalizadas' : 'do estilo'}</dt><dd class="mt-1 font-mono text-sm">{config.colors.primary} / {config.colors.secondary}</dd></div>
+        <div><dt class={labelClass}>Marca-d’água</dt><dd class="mt-1 text-sm">{config.watermark ? 'Sim' : 'Não'}</dd></div>
+        <div class="min-w-0"><dt class={labelClass}>Logomarca</dt><dd class="mt-1 break-all text-sm">{config.logo?.originalName || 'Sem logomarca'}</dd></div>
+        <div><dt class={labelClass}>Esquema</dt><dd class="mt-1 text-sm">Versão {quote.configVersion}</dd></div>
+      </dl>
+      <div class="mt-6 flex flex-wrap items-center gap-3">
+        <form method="post" action={`/admin/agenda-classica.pdf?pedido=${quote.id}`}>
+          <button class="min-h-11 rounded-md bg-action px-4 text-sm font-semibold text-on-action hover:bg-action-hover">Gerar PDF completo</button>
+        </form>
+        <a class="p-2 text-sm font-semibold text-accent hover:underline" href={`${files}/configuracao`}>Baixar configuração JSON</a>
+        {config.logo && <>
+          <a class="p-2 text-sm font-semibold text-accent hover:underline" href={`${files}/original`}>Baixar original</a>
+          <a class="p-2 text-sm font-semibold text-accent hover:underline" href={`${files}/logo`}>Baixar PNG de produção</a>
+        </>}
+      </div>
+    </div>
+    <div class="mt-8 flex flex-wrap items-center justify-between gap-3">
+      <h2 class="text-xl font-semibold">Prévias salvas</h2>
+      <a href={agendaQuotePath(quote.id)} class="text-sm font-semibold text-accent hover:underline">Abrir referência do cliente</a>
+    </div>
+    <AgendaQuotePreviews id={quote.id} />
+  </section>
+</BaseLayout>

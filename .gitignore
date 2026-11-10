@@ -37,6 +37,7 @@ _netrc
 *.sqlite3
 *.sqlite3-*
 /public/uploads/
+/output/pdf/agenda-classica/
 /assets-originais/678estudio.png
 
 # Logs e arquivos temporários

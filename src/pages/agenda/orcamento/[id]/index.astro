@@ -1,0 +1,23 @@
+---
+import BaseLayout from '../../../../layouts/BaseLayout.astro';
+import AgendaQuotePreviews from '../../../../components/AgendaQuotePreviews.astro';
+import { getAgendaQuote } from '../../../../db/agendaQuotes';
+import { agendaQuoteLabels, formatAgendaQuoteDate } from '../../../../server/agenda/quoteConfig';
+export const prerender = false;
+const quote = await getAgendaQuote(Astro.params.id ?? '');
+if (!quote) return new Response('Referência de agenda não encontrada.', { status: 404, headers: { 'Cache-Control': 'no-store' } });
+Astro.response.headers.set('X-Robots-Tag', 'noindex, nofollow');
+Astro.response.headers.set('Referrer-Policy', 'no-referrer');
+---
+
+<BaseLayout title="Referência da Agenda Clássica | 678 Estudio">
+  <section class="mx-auto max-w-5xl px-4 py-10 sm:px-6">
+    <p class="mb-2 text-xs font-semibold uppercase tracking-[.2em] text-accent">Solicitação registrada</p>
+    <h1 class="editorial-heading text-4xl">{quote.product}</h1>
+    <p class="mt-3 text-ink-secondary">{agendaQuoteLabels(quote.config).join(' · ')}</p>
+    <p class="mt-2 text-sm text-ink-muted">Registrada em {formatAgendaQuoteDate(quote.createdAt)}.</p>
+    <p class="mt-4 break-all text-sm text-ink-secondary">Referência <strong class="font-mono text-ink">{quote.id}</strong></p>
+    <h2 class="mt-8 text-xl font-semibold">Prévias da solicitação</h2>
+    <AgendaQuotePreviews id={quote.id} />
+  </section>
+</BaseLayout>

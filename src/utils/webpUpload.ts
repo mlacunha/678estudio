@@ -2,24 +2,30 @@ import { getStudioWebpSize } from './studioWebp';
 
 export const MAX_FILE_BYTES = 1024 * 1024;
 
-export async function readBoundedForm(request: Request, contentType: string, maxBytes: number) {
+export async function readBoundedForm(request: Request, contentType: string, maxBytes: number, signal?: AbortSignal) {
   const reader = request.body?.getReader();
   if (!reader) return;
+  const cancel = () => { void reader.cancel().catch(() => {}); };
+  signal?.addEventListener('abort', cancel, { once: true });
   const parts: Uint8Array[] = [];
   let size = 0;
   try {
+    if (signal?.aborted) { cancel(); return; }
     while (true) {
       const { value, done } = await reader.read();
       if (done) break;
       size += value.byteLength;
       if (size > maxBytes) {
-        void reader.cancel().catch(() => {});
+        cancel();
         return;
       }
       parts.push(value);
     }
-    return await new Response(Uint8Array.from(Buffer.concat(parts, size)), { headers: { 'Content-Type': contentType } }).formData();
+    if (!signal?.aborted) {
+      return await new Response(Uint8Array.from(Buffer.concat(parts, size)), { headers: { 'Content-Type': contentType } }).formData();
+    }
   } finally {
+    signal?.removeEventListener('abort', cancel);
     reader.releaseLock();
   }
 }

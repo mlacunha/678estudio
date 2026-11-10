@@ -1,0 +1,140 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import { backupStatus, canRestore } from '../../../server/backup/http';
+
+export const prerender = false;
+const { candidate, result } = await backupStatus();
+const supervised = canRestore();
+const date = (value: string) => new Intl.DateTimeFormat('pt-BR', {
+  dateStyle: 'short', timeStyle: 'short', timeZone: 'America/Sao_Paulo',
+}).format(new Date(value));
+---
+
+<BaseLayout title="Backup | 678 Estudio">
+  <section class="mx-auto max-w-4xl px-4 py-10 sm:px-6">
+    <a href="/admin" class="text-sm font-semibold text-accent hover:underline">← Voltar ao painel</a>
+    <h1 class="editorial-heading mt-4 text-4xl">Backup</h1>
+    <p class="mt-2 text-sm text-ink-secondary">Baixe uma cópia dos dados do estúdio ou recupere um backup validado.</p>
+
+    {result && <div role="status" class:list={['mt-6 rounded-xl border border-line p-4', result.phase === 'committed' ? 'bg-success-surface text-success' : 'bg-surface-muted text-ink']}>
+      <p class="font-semibold">{result.message}</p>
+      <p class="mt-1 text-sm">Resultado registrado em {date(result.finishedAt)}.</p>
+    </div>}
+    <div class="mt-6 space-y-6">
+      <section class="rounded-xl border border-line bg-surface p-4 sm:p-6">
+        <h2 class="text-xl font-semibold">Baixar backup completo</h2>
+        <p class="mt-2 text-sm leading-relaxed text-ink-secondary">
+          O ZIP inclui banco de dados, catálogo, contatos, solicitações de agendas e seus arquivos,
+          fotos dos trabalhos, imagens enviadas e mockups. O manifesto registra a data e os hashes de integridade.
+        </p>
+        <p class="mt-2 text-sm text-ink-secondary">O arquivo contém dados de clientes. Guarde-o em local privado.</p>
+        <form method="post" action="/admin/backup/baixar" class="mt-4">
+          <button class="min-h-11 rounded-md bg-action px-4 text-sm font-semibold text-on-action hover:bg-action-hover">Gerar e baixar ZIP</button>
+        </form>
+      </section>
+
+      <section class="rounded-xl border border-line bg-surface p-4 sm:p-6">
+        <h2 class="text-xl font-semibold">Restaurar backup</h2>
+        <p class="mt-2 text-sm leading-relaxed text-ink-secondary">
+          Valide o ZIP antes de confirmar. A restauração substitui os dados atuais pela versão do arquivo
+          e interrompe brevemente o atendimento do site. Baixe um backup atual antes de prosseguir.
+        </p>
+        {!supervised && <p class="mt-3 text-sm font-medium text-danger">
+          A restauração está indisponível neste modo de execução. Inicie o site pelo processo supervisionado.
+        </p>}
+        <form id="backup-upload" class="mt-4 space-y-3">
+          <label for="backup-zip" class="block text-sm font-semibold">Arquivo ZIP do 678 Estudio · até 512 MiB</label>
+          <input id="backup-zip" name="zip" type="file" accept=".zip,application/zip" required
+            class="block w-full text-sm text-ink-secondary file:mr-2 file:rounded-md file:border-0 file:bg-surface-muted file:px-2 file:py-2 file:font-semibold file:text-ink" />
+          <button class="min-h-11 rounded-md border border-control px-4 text-sm font-semibold text-accent">Validar arquivo</button>
+        </form>
+        <p id="backup-progress" role="status" class="mt-3 text-sm font-medium text-ink-secondary"></p>
+        <p id="backup-error" role="alert" class="mt-3 text-sm font-medium text-danger"></p>
+        {candidate && <form id="backup-confirm" method="post" action="/admin/backup/restaurar" enctype="multipart/form-data"
+          class="mt-4 rounded-lg border border-line bg-surface-muted p-4">
+          <h3 class="font-semibold">Arquivo validado</h3>
+          <p class="mt-1 text-sm text-ink-secondary">
+            Criado em {date(candidate.createdAt)} · {candidate.files} arquivos · {(candidate.bytes / 1024 ** 2).toFixed(1)} MiB descompactados.
+          </p>
+          <input type="hidden" name="token" value={candidate.token} />
+          <label for="backup-confirmation" class="mt-4 block text-sm font-semibold">Digite RESTAURAR para confirmar a substituição dos dados.</label>
+          <input id="backup-confirmation" name="confirmacao" type="text" required pattern="RESTAURAR" maxlength="9" autocomplete="off" disabled={!supervised}
+            class="mt-2 block min-h-11 w-full max-w-xs rounded-md border border-control bg-canvas px-3 text-sm" />
+          <button type="submit" disabled={!supervised} class="mt-3 min-h-11 rounded-md bg-action px-4 text-sm font-semibold text-on-action disabled:opacity-50">
+            Restaurar e reiniciar o site
+          </button>
+        </form>}
+        <noscript><p class="mt-3 text-sm text-danger">Ative o JavaScript para validar o arquivo e acompanhar a restauração.</p></noscript>
+      </section>
+    </div>
+  </section>
+</BaseLayout>
+
+<script>
+  const upload = document.querySelector<HTMLFormElement>('#backup-upload');
+  const confirm = document.querySelector<HTMLFormElement>('#backup-confirm');
+  const file = document.querySelector<HTMLInputElement>('#backup-zip');
+  const progress = document.querySelector<HTMLElement>('#backup-progress');
+  const error = document.querySelector<HTMLElement>('#backup-error');
+  if (upload && file && progress && error) {
+    file.addEventListener('change', () => {
+      if (confirm) confirm.hidden = Boolean(file.files?.length);
+    });
+
+    upload.addEventListener('submit', async event => {
+      event.preventDefault();
+      const selected = file.files?.[0];
+      if (!selected) return;
+      error.textContent = '';
+      if (selected.size > 512 * 1024 * 1024) {
+        error.textContent = 'O ZIP excede o limite de 512 MiB.';
+        return;
+      }
+      const button = upload.querySelector<HTMLButtonElement>('button')!;
+      button.disabled = file.disabled = true;
+      progress.textContent = 'Enviando e verificando o ZIP…';
+      try {
+        const response = await fetch('/admin/backup/validar', {
+          method: 'POST', body: selected, headers: { 'Content-Type': 'application/zip' },
+        });
+        if (!response.ok) throw new Error((await response.json()).error);
+        location.reload();
+      } catch (failure) {
+        error.textContent = failure instanceof Error ? failure.message : 'Não foi possível validar o ZIP.';
+      } finally {
+        button.disabled = file.disabled = false;
+        progress.textContent = '';
+      }
+    });
+
+    confirm?.addEventListener('submit', async event => {
+      event.preventDefault();
+      const button = confirm.querySelector<HTMLButtonElement>('button')!;
+      if (button.disabled) return;
+      button.disabled = true;
+      error.textContent = '';
+      progress.textContent = 'Preparando a parada do site…';
+      try {
+        const response = await fetch(confirm.action, { method: 'POST', body: new FormData(confirm) });
+        if (response.status !== 202) throw new Error((await response.json()).error);
+      } catch (failure) {
+        error.textContent = failure instanceof Error ? failure.message : 'Não foi possível confirmar a restauração.';
+        progress.textContent = '';
+        button.disabled = false;
+        return;
+      }
+      file.disabled = true;
+      upload.querySelector<HTMLButtonElement>('button')!.disabled = true;
+      progress.textContent = 'Restauração iniciada. Aguarde a volta do site para consultar o resultado.';
+      for (let attempt = 0; attempt < 180; attempt++) {
+        await new Promise(resolve => setTimeout(resolve, 5_000));
+        const ready = await fetch(location.href, { cache: 'no-store' }).then(response => response.ok, () => false);
+        if (ready) {
+          location.reload();
+          return;
+        }
+      }
+      progress.textContent = 'O site ainda está indisponível. Reabra o painel mais tarde para consultar o resultado.';
+    });
+  }
+</script>

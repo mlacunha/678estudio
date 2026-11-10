@@ -36,8 +36,15 @@ jobs:
             --label "org.opencontainers.image.source=https://github.com/$GITHUB_REPOSITORY" \
             --label "org.opencontainers.image.revision=$GITHUB_SHA" \
             --tag "$image:sha-$GITHUB_SHA" .
+      - name: Verificar manifesto publicado
+        shell: bash
+        run: |
+          image="ghcr.io/${GITHUB_REPOSITORY,,}:sha-$GITHUB_SHA"
+          docker buildx imagetools inspect --raw "$image" |
+            jq -e '[.manifests[] | select(.platform.os == "linux") | .platform.architecture] | sort == ["amd64", "arm64"]'
+          docker buildx imagetools inspect "$image"
       - name: Promover imagem e atualizar a stack
-        if: vars.PORTAINER_AUTO_DEPLOY == 'true'
+        if: vars.PORTAINER_AUTO_DEPLOY == 'true' && !contains(github.event.head_commit.message || '', '[publish-only]')
         env:
           GH_TOKEN: ${{ github.token }}
           PORTAINER_WEBHOOK_URL: ${{ secrets.PORTAINER_WEBHOOK_URL }}
