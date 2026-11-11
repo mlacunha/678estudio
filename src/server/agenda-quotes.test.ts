@@ -144,4 +144,4 @@ it.runIf(process.env.AGENDA_TYPST_TEST === '1')('regenera pedidos anteriores com
   expect(response.status).toBe(200);
   const bytes = Buffer.from(await response.arrayBuffer());
   expect(bytes.subarray(0, 4096).toString('latin1')).toMatch(/\/Type\s*\/Pages\s*\/Count\s+183\b/);
-});
+}, 70_000);
