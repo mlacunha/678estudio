@@ -162,6 +162,32 @@ const fieldClass = 'w-full min-h-11 rounded-lg border border-control bg-canvas p
               <input id="planner-watermark" type="checkbox" name="watermark" value="true" disabled class="size-4 accent-accent" />
               Usar a logo como marca-d’água
             </label>
+
+            <label class="flex items-center gap-2 text-sm">
+              <input id="planner-custom-colors" type="checkbox" class="size-4 accent-accent" />
+              Usar minhas cores
+            </label>
+            <fieldset id="planner-colors" disabled hidden class="grid grid-cols-2 gap-3">
+              <label class="flex items-center gap-2 text-xs">
+                <input
+                  type="color"
+                  name="primary"
+                  value={plannerStyles.classic.primary}
+                  class="h-10 w-10 cursor-pointer rounded border border-control bg-canvas"
+                />
+                Principal
+              </label>
+              <label class="flex items-center gap-2 text-xs">
+                <input
+                  type="color"
+                  name="secondary"
+                  value={plannerStyles.classic.secondary}
+                  class="h-10 w-10 cursor-pointer rounded border border-control bg-canvas"
+                />
+                Destaque
+              </label>
+              <p class="col-span-2 text-xs text-ink-muted">Prefira tons escuros para manter o contraste no papel.</p>
+            </fieldset>
           </div>
 
           <button

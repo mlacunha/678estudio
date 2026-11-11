@@ -3,9 +3,12 @@ import { cp, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { promisify } from 'node:util';
+import { isAgendaColor } from '../agenda/classic.mjs';
 import { plannerModels, plannerModes, plannerStyles, plannerTypographies, plannerSections } from './options.mjs';
 
 const run = promisify(execFile);
+
+export const isPlannerColor = isAgendaColor;
 
 /**
  * @typedef {{
@@ -17,6 +20,7 @@ const run = promisify(execFile);
  *   typography?: 'modern' | 'geometric' | 'editorial',
  *   colors?: { primary: string, secondary: string, accent?: string },
  *   customColors?: boolean,
+ *   watermark?: boolean,
  *   personalizationName?: string,
  *   logo?: Buffer,
  *   template?: string,
@@ -40,6 +44,7 @@ export async function compilePlannerEssencial(config, options = {}) {
     typography = 'modern',
     colors,
     customColors = Boolean(colors),
+    watermark = false,
     personalizationName = '',
     logo,
     section = 'all',
@@ -57,6 +62,12 @@ export async function compilePlannerEssencial(config, options = {}) {
   if (!Object.hasOwn(plannerTypographies, typography)) {
     throw new RangeError(`Tipografia de planner inválida: ${typography}`);
   }
+  if (watermark && !logo) {
+    throw new RangeError('A marca-d’água exige uma logomarca válida.');
+  }
+  if (colors && (!isPlannerColor(colors.primary) || !isPlannerColor(colors.secondary))) {
+    throw new RangeError('Cores do planner com contraste insuficiente no papel.');
+  }
 
   const templates = resolve('src/server/planner/typst');
   const fontsPath = resolve(templates, 'fonts');
@@ -69,7 +80,14 @@ export async function compilePlannerEssencial(config, options = {}) {
       await writeFile(join(workspace, 'logo.png'), logo);
     }
 
-    const palette = colors ?? plannerStyles[/** @type {keyof typeof plannerStyles} */ (style)];
+    const stylePalette = plannerStyles[/** @type {keyof typeof plannerStyles} */ (style)];
+    const palette = colors
+      ? {
+          primary: colors.primary,
+          secondary: colors.secondary,
+          accent: customColors ? colors.secondary : (colors.accent || stylePalette.accent),
+        }
+      : stylePalette;
     const args = [
       'compile',
       '--root', root,
@@ -83,7 +101,7 @@ export async function compilePlannerEssencial(config, options = {}) {
       '--input', `typography=${typography}`,
       '--input', `primary=${palette.primary}`,
       '--input', `secondary=${palette.secondary}`,
-      '--input', `accent=${palette.accent || '#cca032'}`,
+      '--input', `accent=${palette.accent || palette.secondary}`,
       '--input', `section=${section}`,
     ];
 
@@ -95,6 +113,9 @@ export async function compilePlannerEssencial(config, options = {}) {
     }
     if (logo) {
       args.push('--input', 'logo=true');
+    }
+    if (watermark && logo) {
+      args.push('--input', 'watermark=true');
     }
 
     const outputFormat = options.format ?? (options.output?.endsWith('.png') ? 'png' : 'pdf');

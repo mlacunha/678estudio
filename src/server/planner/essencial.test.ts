@@ -1,5 +1,14 @@
+import { createClient } from '@libsql/client';
+import { randomUUID } from 'node:crypto';
+import sharp from 'sharp';
 import { describe, expect, it } from 'vitest';
-import { compilePlannerEssencial } from './essencial.mjs';
+import {
+  getPlannerQuote,
+  getPlannerQuoteAsset,
+  listPlannerQuotes,
+  savePlannerQuote,
+} from '../../db/plannerQuotes';
+import { compilePlannerEssencial, isPlannerColor } from './essencial.mjs';
 
 function countPdfPages(buffer: Buffer): number {
   const text = buffer.toString('binary');
@@ -179,5 +188,125 @@ describe('Motor de compilação Typst do Planner Essencial', () => {
     expect(pdfBuffer).toBeInstanceOf(Buffer);
     const pages = countPdfPages(pdfBuffer);
     expect(pages).toBe(184);
+  }, 60_000);
+
+  it('valida contraste de cores personalizadas e rejeita tons sem contraste no papel', async () => {
+    expect(isPlannerColor('#1e3a8a')).toBe(true);
+    expect(isPlannerColor('#7c2d12')).toBe(true);
+    expect(isPlannerColor('#ffffff')).toBe(false);
+    expect(isPlannerColor('#fef08a')).toBe(false);
+
+    await expect(
+      compilePlannerEssencial(
+        {
+          ...baseConfig,
+          colors: { primary: '#ffffff', secondary: '#fef08a' },
+          customColors: true,
+          section: 'abertura',
+        },
+        { format: 'png', pages: [1] }
+      )
+    ).rejects.toThrow();
+  });
+
+  it('renderiza logomarca na primeira página e marca-d’água real no miolo, mantendo fidelidade na regeneração administrativa', async () => {
+    const logoBuffer = await sharp({
+      create: {
+        width: 240,
+        height: 120,
+        channels: 4,
+        background: { r: 30, g: 58, b: 138, alpha: 1 },
+      },
+    })
+      .png()
+      .toBuffer();
+
+    // 1. Prévia da abertura com logo em destaque
+    const aberturaPng = await compilePlannerEssencial(
+      {
+        ...baseConfig,
+        logo: logoBuffer,
+        watermark: false,
+        section: 'abertura',
+      },
+      { format: 'png', pages: [1] }
+    );
+    expect(aberturaPng.length).toBeGreaterThan(1000);
+
+    // 2. Prévia de seção do miolo sem marca-d'água vs com marca-d'água
+    const financeiroSemWatermark = await compilePlannerEssencial(
+      {
+        ...baseConfig,
+        logo: logoBuffer,
+        watermark: false,
+        section: 'financeiro',
+      },
+      { format: 'png', pages: [1] }
+    );
+    const financeiroComWatermark = await compilePlannerEssencial(
+      {
+        ...baseConfig,
+        logo: logoBuffer,
+        watermark: true,
+        section: 'financeiro',
+      },
+      { format: 'png', pages: [1] }
+    );
+    expect(financeiroComWatermark.equals(financeiroSemWatermark)).toBe(false);
+
+    // 3. Fluxo completo simulado (pedido -> listagem administrativa -> recuperação -> PDF completo de 184 páginas)
+    const testDb = createClient({ url: ':memory:' });
+    try {
+      const draftToken = randomUUID();
+      const savedQuote = await savePlannerQuote(
+        draftToken,
+        {
+          template: 'planner-essencial-v1',
+          model: 'planner-essencial',
+          mode: 'dated',
+          year: 2027,
+          format: 'a5',
+          style: 'commercial',
+          typography: 'editorial',
+          colors: { primary: '#1e3a8a', secondary: '#7c2d12', accent: '#7c2d12' },
+          customColors: true,
+          watermark: true,
+          personalizationName: 'Estúdio Homologação 678',
+          logo: { originalName: 'marca-estudio.png', original: 'original', normalized: 'logo' },
+          sections: ['abertura', 'anual', 'mensal', 'semanal', 'habitos', 'financeiro', 'revisao', 'anotacoes'],
+        },
+        [
+          { name: 'original', mime: 'image/png', content: logoBuffer },
+          { name: 'logo', mime: 'image/png', content: logoBuffer },
+          { name: 'preview-abertura', mime: 'image/png', content: aberturaPng },
+          { name: 'preview-financeiro', mime: 'image/png', content: financeiroComWatermark },
+        ],
+        testDb
+      );
+
+      const adminList = await listPlannerQuotes(1, testDb);
+      expect(adminList.quotes.some((q) => q.id === savedQuote.id)).toBe(true);
+
+      const adminDetail = await getPlannerQuote(savedQuote.id, testDb);
+      expect(adminDetail?.config.customColors).toBe(true);
+      expect(adminDetail?.config.colors.primary).toBe('#1e3a8a');
+      expect(adminDetail?.config.watermark).toBe(true);
+
+      const savedLogo = await getPlannerQuoteAsset(savedQuote.id, 'logo', testDb);
+      expect(savedLogo).toBeDefined();
+
+      const regeneratedPdf = await compilePlannerEssencial(
+        {
+          ...adminDetail!.config,
+          logo: savedLogo!.content,
+        },
+        { format: 'pdf' }
+      );
+      expect(countPdfPages(regeneratedPdf)).toBe(184);
+      const pdfStr = regeneratedPdf.toString('binary');
+      expect(pdfStr.includes('DMSerifDisplay') || pdfStr.includes('DMSans')).toBe(true);
+    } finally {
+      testDb.close();
+    }
   }, 60_000);
 });

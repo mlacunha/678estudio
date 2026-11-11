@@ -28,6 +28,7 @@ export type PlannerQuoteConfig = {
   typography?: keyof typeof plannerTypographies;
   colors: { primary: string; secondary: string; accent: string };
   customColors: boolean;
+  watermark?: boolean;
   personalizationName?: string;
   logo: null | { originalName: string; original: 'original'; normalized: 'logo' };
   sections?: string[];

@@ -1,89 +1,175 @@
-#let rule-line(colors, height: 6mm) = {
+#let rule-line(colors, height: 5.5mm) = {
   block(width: 100%, height: height, above: 0pt, below: 0pt)[
-    #place(bottom, line(length: 100%, stroke: colors.lines + 0.3pt))
+    #place(bottom, line(length: 100%, stroke: colors.lines + 0.35pt))
   ]
 }
 
-#let dotted-line(colors, height: 6mm) = {
+#let dotted-line(colors, height: 5.5mm) = {
   block(width: 100%, height: height, above: 0pt, below: 0pt)[
-    #place(bottom, line(length: 100%, stroke: (paint: colors.lines, thickness: 0.4pt, dash: "dotted")))
+    #place(bottom, line(length: 100%, stroke: (paint: colors.lines, thickness: 0.45pt, dash: "dotted")))
+  ]
+}
+
+#let checkbox-line(colors, height: 5.4mm) = {
+  block(width: 100%, above: 0pt, below: 0pt)[
+    #grid(
+      columns: (3.8mm, 1fr),
+      gutter: 2mm,
+      align: horizon,
+      rect(width: 3.2mm, height: 3.2mm, stroke: colors.secondary + 0.5pt, radius: 0.5mm),
+      rule-line(colors, height: height),
+    )
   ]
 }
 
 #let section-header(title, colors, subtitle: none) = [
   #let h-font = if colors.at("headingFont", default: none) != none { colors.headingFont } else { auto }
-  #block(width: 100%, below: 4mm)[
-    #text(size: 16pt, weight: "bold", fill: colors.primary, font: h-font, title)
+  #block(width: 100%, below: 3mm)[
+    #text(size: 15pt, weight: "bold", fill: colors.primary, font: h-font, title)
     #if subtitle != none [
-      #h(4pt) · #text(size: 10pt, fill: colors.secondary, subtitle)
+      #h(4pt) · #text(size: 9.5pt, fill: colors.secondary, subtitle)
     ]
-    #v(1.5mm)
-    #line(length: 100%, stroke: colors.accent + 1pt)
+    #v(1.2mm)
+    #line(length: 100%, stroke: colors.accent + 0.9pt)
   ]
 ]
 
 // 1. Abertura e Identificação Pessoal
-#let section-abertura(colors, personalizationName: none, year: none, mode: "dated") = [
+#let section-abertura(colors, personalizationName: none, year: none, mode: "dated", hasLogo: false) = [
   #let h-font = if colors.at("headingFont", default: none) != none { colors.headingFont } else { auto }
-  #v(20mm)
-  #align(center)[
-    #text(size: 26pt, weight: "light", fill: colors.primary, font: h-font)[PLANNER] \
-    #text(size: 14pt, weight: "medium", fill: colors.accent, font: h-font)[ESSENCIAL]
+  #if hasLogo [
     #v(3mm)
+    #align(center)[
+      #block(width: 58mm, height: 24mm, inset: 1.5mm)[
+        #align(center + horizon)[
+          #image("../logo.png", width: 100%, height: 100%, fit: "contain")
+        ]
+      ]
+    ]
+    #v(2mm)
+  ] else [
+    #v(12mm)
+  ]
+  #align(center)[
+    #text(size: 24pt, weight: "light", fill: colors.primary, font: h-font)[PLANNER] \
+    #text(size: 13pt, weight: "medium", fill: colors.accent, font: h-font)[ESSENCIAL]
+    #v(2mm)
     #if mode == "dated" and year != none [
-      #text(size: 12pt, fill: colors.secondary)[Edição Oficial · #str(year)]
+      #text(size: 10.5pt, fill: colors.secondary)[Edição Oficial · #str(year)]
     ] else [
-      #text(size: 11pt, fill: colors.secondary)[Edição Permanente · Atemporal]
+      #text(size: 10.5pt, fill: colors.secondary)[Edição Permanente · Atemporal]
     ]
   ]
-  #v(18mm)
-  #block(stroke: colors.lines + 0.6pt, inset: 5mm, radius: 2mm, width: 100%)[
-    #text(size: 10pt, weight: "bold", fill: colors.primary)[Identificação do Proprietário]
-    #v(3mm)
-    #text(size: 8pt, fill: colors.secondary)[Nome Completo:]
+  #v(6mm)
+  #block(stroke: colors.lines + 0.6pt, inset: 4.5mm, radius: 2mm, width: 100%)[
+    #text(size: 9.5pt, weight: "bold", fill: colors.primary)[Identificação & Dados Pessoais]
+    #v(2mm)
+    #text(size: 8pt, fill: colors.secondary)[Nome / Identificação:]
     #if personalizationName != none and personalizationName != "" [
-      #text(size: 11pt, weight: "bold", fill: colors.primary)[ #personalizationName]
+      #text(size: 10.5pt, weight: "bold", fill: colors.primary)[ #personalizationName]
     ]
-    #rule-line(colors, height: 5mm)
-    #v(2mm)
-    #text(size: 8pt, fill: colors.secondary)[Telefone / WhatsApp:]
-    #rule-line(colors, height: 5mm)
-    #v(2mm)
-    #text(size: 8pt, fill: colors.secondary)[E-mail:]
-    #rule-line(colors, height: 5mm)
-    #v(2mm)
-    #text(size: 8pt, fill: colors.secondary)[Objetivo Principal do Período:]
-    #rule-line(colors, height: 5mm)
-    #rule-line(colors, height: 5mm)
+    #rule-line(colors, height: 5.2mm)
+    #v(1.5mm)
+    #grid(columns: (1fr, 1fr), gutter: 4mm,
+      [
+        #text(size: 8pt, fill: colors.secondary)[Telefone / WhatsApp:]
+        #rule-line(colors, height: 5.2mm)
+      ],
+      [
+        #text(size: 8pt, fill: colors.secondary)[E-mail:]
+        #rule-line(colors, height: 5.2mm)
+      ]
+    )
+    #v(1.5mm)
+    #grid(columns: (1fr, 1fr), gutter: 4mm,
+      [
+        #text(size: 8pt, fill: colors.secondary)[Cidade / UF:]
+        #rule-line(colors, height: 5.2mm)
+      ],
+      [
+        #text(size: 8pt, fill: colors.secondary)[Contato de Emergência:]
+        #rule-line(colors, height: 5.2mm)
+      ]
+    )
+    #v(1.5mm)
+    #text(size: 8pt, fill: colors.secondary)[Propósito & Direcionamento Principal do Período:]
+    #rule-line(colors, height: 5.5mm)
+    #rule-line(colors, height: 5.5mm)
+  ]
+  #v(4mm)
+  #block(stroke: colors.lines + 0.5pt, inset: 4mm, radius: 2mm, width: 100%)[
+    #text(size: 9pt, weight: "bold", fill: colors.accent)[Referências & Informações Importantes]
+    #for _ in range(4) { rule-line(colors, height: 5.5mm) }
   ]
 ]
 
 // 2. Planejamento Anual
 #let section-anual(colors, year: none, mode: "dated") = [
   #section-header("Planejamento Anual", colors, subtitle: if mode == "dated" and year != none { str(year) } else { "Metas & Visão" })
-  #text(size: 8pt, fill: colors.secondary)[Definição de objetivos macro e direcionamento estratégico]
-  #v(3mm)
-  #grid(columns: (1fr, 1fr), gutter: 4mm,
-    block(stroke: colors.lines + 0.4pt, inset: 3.5mm, radius: 1.5mm)[
-      #text(size: 9pt, weight: "bold", fill: colors.primary)[Objetivos Profissionais & Carreira]
-      #for _ in range(4) { rule-line(colors, height: 6mm) }
+  #text(size: 8pt, fill: colors.secondary)[Definição de objetivos macro, prioridades e entregas trimestrais]
+  #v(2mm)
+  #grid(columns: (1fr, 1fr), gutter: 3mm,
+    block(stroke: colors.lines + 0.4pt, inset: 2.8mm, radius: 1.5mm)[
+      #text(size: 8pt, weight: "bold", fill: colors.primary)[Objetivos Profissionais & Carreira]
+      #for _ in range(6) { rule-line(colors, height: 4.8mm) }
     ],
-    block(stroke: colors.lines + 0.4pt, inset: 3.5mm, radius: 1.5mm)[
-      #text(size: 9pt, weight: "bold", fill: colors.primary)[Objetivos Pessoais & Bem-Estar]
-      #for _ in range(4) { rule-line(colors, height: 6mm) }
+    block(stroke: colors.lines + 0.4pt, inset: 2.8mm, radius: 1.5mm)[
+      #text(size: 8pt, weight: "bold", fill: colors.primary)[Objetivos Pessoais & Saúde]
+      #for _ in range(6) { rule-line(colors, height: 4.8mm) }
     ],
-    block(stroke: colors.lines + 0.4pt, inset: 3.5mm, radius: 1.5mm)[
-      #text(size: 9pt, weight: "bold", fill: colors.primary)[Metas Financeiras do Ano]
-      #for _ in range(4) { rule-line(colors, height: 6mm) }
+    block(stroke: colors.lines + 0.4pt, inset: 2.8mm, radius: 1.5mm)[
+      #text(size: 8pt, weight: "bold", fill: colors.primary)[Metas Financeiras & Patrimônio]
+      #for _ in range(6) { rule-line(colors, height: 4.8mm) }
     ],
-    block(stroke: colors.lines + 0.4pt, inset: 3.5mm, radius: 1.5mm)[
-      #text(size: 9pt, weight: "bold", fill: colors.primary)[Projetos & Aprendizados]
-      #for _ in range(4) { rule-line(colors, height: 6mm) }
+    block(stroke: colors.lines + 0.4pt, inset: 2.8mm, radius: 1.5mm)[
+      #text(size: 8pt, weight: "bold", fill: colors.primary)[Projetos, Estudos & Viagens]
+      #for _ in range(6) { rule-line(colors, height: 4.8mm) }
     ]
   )
-  #v(4mm)
-  #text(size: 9pt, weight: "bold", fill: colors.primary)[Principais Entregas Trimestrais]
-  #for _ in range(3) { rule-line(colors, height: 6.5mm) }
+  #v(2.5mm)
+  #text(size: 8pt, weight: "bold", fill: colors.accent)[Marcos & Entregas Prioritárias por Trimestre]
+  #v(1mm)
+  #grid(columns: (1fr, 1fr), gutter: 3mm,
+    block(stroke: colors.lines + 0.35pt, inset: 2.2mm, radius: 1mm)[
+      #text(size: 7.5pt, weight: "bold", fill: colors.secondary)[1º Trimestre (Jan – Mar)]
+      #for _ in range(3) { dotted-line(colors, height: 4.8mm) }
+    ],
+    block(stroke: colors.lines + 0.35pt, inset: 2.2mm, radius: 1mm)[
+      #text(size: 7.5pt, weight: "bold", fill: colors.secondary)[2º Trimestre (Abr – Jun)]
+      #for _ in range(3) { dotted-line(colors, height: 4.8mm) }
+    ],
+    block(stroke: colors.lines + 0.35pt, inset: 2.2mm, radius: 1mm)[
+      #text(size: 7.5pt, weight: "bold", fill: colors.secondary)[3º Trimestre (Jul – Set)]
+      #for _ in range(3) { dotted-line(colors, height: 4.8mm) }
+    ],
+    block(stroke: colors.lines + 0.35pt, inset: 2.2mm, radius: 1mm)[
+      #text(size: 7.5pt, weight: "bold", fill: colors.secondary)[4º Trimestre (Out – Dez)]
+      #for _ in range(3) { dotted-line(colors, height: 4.8mm) }
+    ],
+  )
+]
+
+// 2B. Metas Anuais & Visão Estratégica (Página oposta ao Planejamento Anual)
+#let section-anual-metas(colors, year: 2027, mode: "dated") = [
+  #let title-ano = if mode == "dated" { "Metas Estratégicas " + str(year) } else { "Metas & Objetivos Anuais" }
+  #section-header(title-ano, colors, subtitle: "Direcionamento e Conquistas Prioritárias")
+  #v(1mm)
+  #block(stroke: colors.lines + 0.4pt, inset: 2.8mm, radius: 1.5mm, below: 2.5mm)[
+    #text(size: 8pt, weight: "bold", fill: colors.accent)[1. Desenvolvimento Pessoal, Saúde & Qualidade de Vida]
+    #for _ in range(5) { checkbox-line(colors, height: 4.9mm) }
+  ]
+  #block(stroke: colors.lines + 0.4pt, inset: 2.8mm, radius: 1.5mm, below: 2.5mm)[
+    #text(size: 8pt, weight: "bold", fill: colors.secondary)[2. Carreira, Negócios & Posicionamento Profissional]
+    #for _ in range(5) { checkbox-line(colors, height: 4.9mm) }
+  ]
+  #block(stroke: colors.lines + 0.4pt, inset: 2.8mm, radius: 1.5mm, below: 2.5mm)[
+    #text(size: 8pt, weight: "bold", fill: colors.primary)[3. Metas Financeiras, Poupança & Investimentos]
+    #for _ in range(5) { checkbox-line(colors, height: 4.9mm) }
+  ]
+  #block(stroke: colors.accent + 0.5pt, inset: 2.8mm, radius: 1.5mm)[
+    #text(size: 8pt, weight: "bold", fill: colors.primary)[4. Grandes Projetos, Estudos & Conquistas do Ano]
+    #for _ in range(5) { checkbox-line(colors, height: 4.9mm) }
+  ]
 ]
 
 // 3. Planejamento Mensal
@@ -91,21 +177,16 @@
   #section-header("Visão Mensal", colors, subtitle: monthName + if mode == "dated" and year != none { " · " + str(year) } else { "" })
   #grid(columns: (1.2fr, 1fr), gutter: 4mm,
     block[
-      #text(size: 9pt, weight: "bold", fill: colors.primary)[Prioridades Máximas do Mês]
-      #for i in range(1, 5) [
-        #grid(columns: (4mm, 1fr), gutter: 2mm, align: horizon,
-          rect(width: 3.5mm, height: 3.5mm, stroke: colors.secondary + 0.5pt, radius: 0.5mm),
-          rule-line(colors, height: 6mm)
-        )
-      ]
-      #v(3mm)
-      #text(size: 9pt, weight: "bold", fill: colors.primary)[Compromissos & Prazos Importantes]
-      #for _ in range(5) { rule-line(colors, height: 6mm) }
+      #text(size: 8.5pt, weight: "bold", fill: colors.primary)[Prioridades Máximas do Mês]
+      #for _ in range(6) { checkbox-line(colors, height: 5.3mm) }
+      #v(2.5mm)
+      #text(size: 8.5pt, weight: "bold", fill: colors.primary)[Compromissos & Datas-Chave]
+      #for _ in range(8) { rule-line(colors, height: 5.3mm) }
     ],
     block(stroke: colors.lines + 0.4pt, inset: 3mm, radius: 1.5mm)[
-      #text(size: 8.5pt, weight: "bold", fill: colors.secondary)[Mini Calendário do Mês]
-      #v(2mm)
-      #table(columns: (1fr,) * 7, inset: 2pt, align: center, stroke: none,
+      #text(size: 8pt, weight: "bold", fill: colors.secondary)[Referência Mensal]
+      #v(1.5mm)
+      #table(columns: (1fr,) * 7, inset: 1.8pt, align: center, stroke: none,
         text(size: 6pt, weight: "bold", fill: colors.accent)[S],
         text(size: 6pt, weight: "bold", fill: colors.accent)[T],
         text(size: 6pt, weight: "bold", fill: colors.accent)[Q],
@@ -113,16 +194,28 @@
         text(size: 6pt, weight: "bold", fill: colors.accent)[S],
         text(size: 6pt, weight: "bold", fill: colors.accent)[S],
         text(size: 6pt, weight: "bold", fill: colors.accent)[D],
-        ..range(35).map(idx => text(size: 6pt, fill: colors.primary)[#if idx < 30 { str(idx + 1) } else { "" }])
+        ..range(31).map(idx => text(size: 6pt, fill: colors.primary)[#str(idx + 1)])
       )
-      #v(3mm)
+      #v(2.5mm)
       #text(size: 8pt, weight: "bold", fill: colors.primary)[Foco & Intenção:]
-      #for _ in range(4) { dotted-line(colors, height: 5.5mm) }
+      #for _ in range(5) { dotted-line(colors, height: 5.1mm) }
+      #v(2mm)
+      #text(size: 8pt, weight: "bold", fill: colors.secondary)[Projetos em Curso:]
+      #for _ in range(4) { dotted-line(colors, height: 5.1mm) }
     ]
   )
+  #v(3mm)
+  #block(stroke: colors.lines + 0.4pt, inset: 3mm, radius: 1.5mm, width: 100%)[
+    #text(size: 8.5pt, weight: "bold", fill: colors.accent)[Plano de Ação & Entregas Importantes do Mês]
+    #v(1mm)
+    #grid(columns: (1fr, 1fr), column-gutter: 4mm,
+      [#for _ in range(5) { checkbox-line(colors, height: 5.2mm) }],
+      [#for _ in range(5) { checkbox-line(colors, height: 5.2mm) }],
+    )
+  ]
 ]
 
-// 4. Planejamento Semanal (Página Esquerda: Seg, Ter, Qua + Prioridades)
+// 4. Planejamento Semanal (Página Esquerda: Seg, Ter, Qua + Prioridades + Notas)
 #let section-semanal-left(colors, weekInfo: none, monthName: "Mês") = [
   #let week-title = if weekInfo != none and weekInfo.at("weekNumber", default: none) != none {
     "Semana " + str(weekInfo.weekNumber)
@@ -130,12 +223,11 @@
     "Semana"
   }
   #section-header(week-title, colors, subtitle: monthName + " · Foco & Início")
-  #block(stroke: colors.lines + 0.4pt, inset: 2.5mm, radius: 1.5mm, width: 100%, below: 3mm)[
-    #text(size: 8pt, weight: "bold", fill: colors.accent)[Prioridades da Semana (Top 3)]
-    #grid(columns: (4mm, 1fr), gutter: 2mm, align: horizon,
-      rect(width: 3mm, height: 3mm, stroke: colors.secondary + 0.5pt, radius: 0.5mm), rule-line(colors, height: 5mm),
-      rect(width: 3mm, height: 3mm, stroke: colors.secondary + 0.5pt, radius: 0.5mm), rule-line(colors, height: 5mm),
-      rect(width: 3mm, height: 3mm, stroke: colors.secondary + 0.5pt, radius: 0.5mm), rule-line(colors, height: 5mm),
+  #block(stroke: colors.lines + 0.4pt, inset: 2.5mm, radius: 1.5mm, width: 100%, below: 2.5mm)[
+    #text(size: 8pt, weight: "bold", fill: colors.accent)[Prioridades da Semana]
+    #grid(columns: (1fr, 1fr), column-gutter: 3mm,
+      [#for _ in range(2) { checkbox-line(colors, height: 5mm) }],
+      [#for _ in range(2) { checkbox-line(colors, height: 5mm) }],
     )
   ]
   #let left-days = if weekInfo != none and weekInfo.at("leftDays", default: none) != none {
@@ -153,14 +245,18 @@
     } else {
       dia.weekday + " [ ___ / ___ ]"
     }
-    #block(stroke: colors.lines + 0.3pt, inset: 2.5mm, radius: 1mm, width: 100%, below: 2.5mm)[
+    #block(stroke: colors.lines + 0.35pt, inset: 2.5mm, radius: 1mm, width: 100%, below: 2.2mm)[
       #text(size: 8.5pt, weight: "bold", fill: colors.primary, label)
-      #for _ in range(3) { dotted-line(colors, height: 5mm) }
+      #for _ in range(5) { dotted-line(colors, height: 5mm) }
     ]
+  ]
+  #block(stroke: colors.lines + 0.35pt, inset: 2.5mm, radius: 1mm, width: 100%)[
+    #text(size: 8pt, weight: "bold", fill: colors.secondary)[Lembretes, Contatos & Assuntos da Semana]
+    #for _ in range(3) { rule-line(colors, height: 5mm) }
   ]
 ]
 
-// 4. Planejamento Semanal (Página Direita: Qui, Sex, Sab, Dom + Tarefas)
+// 4. Planejamento Semanal (Página Direita: Qui, Sex, Sab, Dom + Tarefas & Notas)
 #let section-semanal-right(colors, weekInfo: none, monthName: "Mês") = [
   #let week-title = if weekInfo != none and weekInfo.at("weekNumber", default: none) != none {
     "Semana " + str(weekInfo.weekNumber)
@@ -189,9 +285,9 @@
     } else {
       dia.weekday + " [ ___ / ___ ]"
     }
-    #block(stroke: colors.lines + 0.3pt, inset: 2.5mm, radius: 1mm, width: 100%, below: 2mm)[
+    #block(stroke: colors.lines + 0.35pt, inset: 2.5mm, radius: 1mm, width: 100%, below: 2.2mm)[
       #text(size: 8.5pt, weight: "bold", fill: colors.primary, label)
-      #for _ in range(2) { dotted-line(colors, height: 5mm) }
+      #for _ in range(4) { dotted-line(colors, height: 5mm) }
     ]
   ]
 
@@ -206,223 +302,273 @@
     "Domingo [ ___ / ___ ]"
   }
 
-  #grid(columns: (1fr, 1fr), gutter: 2mm,
-    block(stroke: colors.lines + 0.3pt, inset: 2mm, radius: 1mm)[
+  #grid(columns: (1fr, 1fr), gutter: 2.5mm,
+    block(stroke: colors.lines + 0.35pt, inset: 2.2mm, radius: 1mm)[
       #text(size: 8pt, weight: "bold", fill: colors.primary, label-sab)
-      #for _ in range(2) { dotted-line(colors, height: 5mm) }
+      #for _ in range(4) { dotted-line(colors, height: 5mm) }
     ],
-    block(stroke: colors.lines + 0.3pt, inset: 2mm, radius: 1mm)[
+    block(stroke: colors.lines + 0.35pt, inset: 2.2mm, radius: 1mm)[
       #text(size: 8pt, weight: "bold", fill: colors.primary, label-dom)
-      #for _ in range(2) { dotted-line(colors, height: 5mm) }
+      #for _ in range(4) { dotted-line(colors, height: 5mm) }
     ]
   )
-  #v(2mm)
+  #v(2.2mm)
   #block(stroke: colors.lines + 0.4pt, inset: 2.5mm, radius: 1.5mm, width: 100%)[
-    #text(size: 8pt, weight: "bold", fill: colors.accent)[Tarefas & Pendências da Semana]
-    #for _ in range(3) [
-      #grid(columns: (3.5mm, 1fr), gutter: 2mm, align: horizon,
-        circle(radius: 1.5mm, stroke: colors.secondary + 0.5pt),
-        rule-line(colors, height: 4.5mm)
-      )
-    ]
+    #text(size: 8pt, weight: "bold", fill: colors.accent)[Checklist de Tarefas & Pendências da Semana]
+    #v(0.5mm)
+    #grid(columns: (1fr, 1fr), column-gutter: 3.5mm,
+      [#for _ in range(5) { checkbox-line(colors, height: 4.8mm) }],
+      [#for _ in range(5) { checkbox-line(colors, height: 4.8mm) }],
+    )
+    #v(1.5mm)
+    #text(size: 7.5pt, weight: "bold", fill: colors.secondary)[Notas & Balanço da Semana:]
+    #for _ in range(2) { rule-line(colors, height: 4.8mm) }
   ]
 ]
 
 // 5. Controle de Hábitos (Habit Tracker)
 #let section-habitos(monthName, colors, mode: "dated") = [
   #section-header("Controle de Hábitos", colors, subtitle: monthName)
-  #text(size: 8pt, fill: colors.secondary)[Acompanhamento diário de constância e disciplina (31 dias)]
+  #text(size: 8pt, fill: colors.secondary)[Acompanhamento diário de constância, disciplina e bem-estar (31 dias)]
   #v(2mm)
   #let habit-row(name) = (
-    text(size: 7.5pt, weight: "medium", fill: colors.primary, name),
-    ..range(31).map(_ => circle(radius: 1.3mm, stroke: colors.lines + 0.4pt))
+    align(left + horizon, text(size: 7pt, weight: "medium", fill: colors.primary, name)),
+    ..range(31).map(_ => circle(radius: 1.15mm, stroke: colors.lines + 0.4pt))
   )
   #table(
     columns: (28mm, ..(1fr,) * 31),
-    inset: 2pt,
+    inset: (x: 1.5pt, y: 3.2pt),
     align: center + horizon,
-    stroke: colors.lines + 0.2pt,
+    stroke: colors.lines + 0.25pt,
     table.header(
-      text(size: 7pt, weight: "bold", fill: colors.accent)[Hábito / Meta],
+      align(left + horizon, text(size: 7pt, weight: "bold", fill: colors.accent)[Hábito / Meta]),
       ..range(1, 32).map(d => text(size: 5pt, fill: colors.secondary)[#d])
     ),
-    ..habit-row("Leitura (20 min)"),
+    ..habit-row("Leitura / Estudo"),
     ..habit-row("Exercício Físico"),
     ..habit-row("Ingestão de Água"),
-    ..habit-row("Planejar Dia Seguinte"),
+    ..habit-row("Planejar o Dia"),
     ..habit-row("Sono Regular (8h)"),
-    ..habit-row("Sem Telas à Noite"),
-  )
-  #v(4mm)
-  #text(size: 8.5pt, weight: "bold", fill: colors.primary)[Avaliação de Progresso do Mês:]
-  #for _ in range(3) { rule-line(colors, height: 6mm) }
-]
-
-// 2. Metas Anuais & Visão Estratégica (Página oposta ao Planejamento Anual)
-#let section-anual-metas(colors, year: 2027, mode: "dated") = [
-  #let title-ano = if mode == "dated" { "Metas Estratégicas " + str(year) } else { "Metas & Objetivos Anuais" }
-  #section-header(title-ano, colors, subtitle: "Direcionamento e Conquistas Prioritárias")
-  #v(2mm)
-  #block(stroke: colors.lines + 0.4pt, inset: 3mm, radius: 1.5mm, below: 3.5mm)[
-    #text(size: 8.5pt, weight: "bold", fill: colors.accent)[1. Objetivos Pessoais & Bem-Estar]
-    #for _ in range(4) { rule-line(colors, height: 6mm) }
-  ]
-  #block(stroke: colors.lines + 0.4pt, inset: 3mm, radius: 1.5mm, below: 3.5mm)[
-    #text(size: 8.5pt, weight: "bold", fill: colors.secondary)[2. Objetivos Profissionais & Carreira]
-    #for _ in range(4) { rule-line(colors, height: 6mm) }
-  ]
-  #block(stroke: colors.lines + 0.4pt, inset: 3mm, radius: 1.5mm, below: 3.5mm)[
-    #text(size: 8.5pt, weight: "bold", fill: colors.primary)[3. Metas Financeiras & Investimentos do Ano]
-    #for _ in range(4) { rule-line(colors, height: 6mm) }
-  ]
-  #block(stroke: colors.accent + 0.5pt, inset: 3mm, radius: 1.5mm)[
-    #text(size: 8.5pt, weight: "bold", fill: colors.primary)[4. Projetos Especiais & Grandes Conquistas]
-    #for _ in range(4) { rule-line(colors, height: 6mm) }
-  ]
-]
-
-// 6. Controle Financeiro Completo (Página Única para prévias e legibilidade compacta)
-#let section-financeiro(monthName, colors, mode: "dated") = [
-  #section-header("Controle Financeiro", colors, subtitle: monthName)
-  #text(size: 8pt, fill: colors.secondary)[Gestão prática mensal de entradas, saídas e compromissos]
-  #v(2mm)
-  #text(size: 8pt, weight: "bold", fill: colors.accent)[1. Receitas & Entradas Previstas]
-  #table(
-    columns: (1fr, 22mm, 22mm),
-    inset: 3pt,
-    align: (left, right, right),
-    stroke: colors.lines + 0.3pt,
-    table.header([*Fonte / Descrição*], [*Previsto*], [*Realizado*]),
-    [Salário / Pró-labore], [], [],
-    [Projetos Extras / Comissões], [], [],
-    [Rendimentos / Outros], [], [],
-  )
-  #v(2mm)
-  #text(size: 8pt, weight: "bold", fill: colors.accent)[2. Despesas & Contas a Pagar / Pagas]
-  #table(
-    columns: (1fr, 20mm, 18mm, 15mm),
-    inset: 3pt,
-    align: (left, center, right, center),
-    stroke: colors.lines + 0.3pt,
-    table.header([*Descrição da Despesa*], [*Vencimento*], [*Valor (R\$)*], [*Pago?*]),
-    [Moradia / Aluguel / Condomínio], [], [], [ #rect(width: 2.5mm, height: 2.5mm, stroke: colors.secondary + 0.5pt) ],
-    [Energia / Água / Internet], [], [], [ #rect(width: 2.5mm, height: 2.5mm, stroke: colors.secondary + 0.5pt) ],
-    [Alimentação & Mercado], [], [], [ #rect(width: 2.5mm, height: 2.5mm, stroke: colors.secondary + 0.5pt) ],
-    [Transporte / Combustível], [], [], [ #rect(width: 2.5mm, height: 2.5mm, stroke: colors.secondary + 0.5pt) ],
-    [Saúde / Farmácia / Seguro], [], [], [ #rect(width: 2.5mm, height: 2.5mm, stroke: colors.secondary + 0.5pt) ],
-    [Cartão de Crédito / Parcelas], [], [], [ #rect(width: 2.5mm, height: 2.5mm, stroke: colors.secondary + 0.5pt) ],
-  )
-  #v(2mm)
-  #block(stroke: colors.accent + 0.6pt, inset: 2.5mm, radius: 1.5mm, fill: colors.lines.transparentize(85%))[
-    #grid(columns: (1fr, 1fr, 1fr), align: center,
-      [#text(size: 7.5pt, fill: colors.secondary)[Total Receitas:] \ #rule-line(colors, height: 4mm)],
-      [#text(size: 7.5pt, fill: colors.secondary)[Total Despesas:] \ #rule-line(colors, height: 4mm)],
-      [#text(size: 7.5pt, weight: "bold", fill: colors.primary)[Saldo Líquido:] \ #rule-line(colors, height: 4mm)]
-    )
-  ]
-]
-
-// 6. Controle Financeiro - Página Esquerda (Receitas & Despesas Fixas)
-#let section-financeiro-left(monthName, colors, mode: "dated") = [
-  #section-header("Controle Financeiro", colors, subtitle: monthName + " · Entradas & Despesas Fixas")
-  #v(1mm)
-  #text(size: 8pt, weight: "bold", fill: colors.accent)[1. Receitas & Fontes de Renda]
-  #table(
-    columns: (1fr, 24mm, 24mm),
-    inset: 3.5pt,
-    align: (left, right, right),
-    stroke: colors.lines + 0.3pt,
-    table.header([*Fonte de Receita*], [*Previsto R\$*], [*Realizado R\$*]),
-    [Salário / Remuneração Principal], [], [],
-    [Projetos Extras / Freelances], [], [],
-    [Rendimentos / Aluguéis / Outros], [], [],
-    [Receita Extra / Reembolsos], [], [],
-    [Outras Entradas], [], [],
+    ..habit-row("Alimentação Limpa"),
+    ..habit-row("Revisar Finanças"),
+    ..habit-row("Zero Telas à Noite"),
+    ..habit-row("Hábito Livre 1:"),
+    ..habit-row("Hábito Livre 2:"),
+    ..habit-row("Hábito Livre 3:"),
+    ..habit-row("Hábito Livre 4:"),
   )
   #v(3mm)
-  #text(size: 8pt, weight: "bold", fill: colors.accent)[2. Despesas Fixas & Moradia]
+  #grid(columns: (1fr, 1fr), gutter: 3.5mm,
+    block(stroke: colors.lines + 0.35pt, inset: 2.5mm, radius: 1mm)[
+      #text(size: 8pt, weight: "bold", fill: colors.secondary)[Rotina Matinal & Energia]
+      #for _ in range(4) { dotted-line(colors, height: 5mm) }
+    ],
+    block(stroke: colors.lines + 0.35pt, inset: 2.5mm, radius: 1mm)[
+      #text(size: 8pt, weight: "bold", fill: colors.secondary)[Rotina Noturna & Descanso]
+      #for _ in range(4) { dotted-line(colors, height: 5mm) }
+    ]
+  )
+  #v(3mm)
+  #block(stroke: colors.lines + 0.4pt, inset: 3mm, radius: 1.5mm, width: 100%)[
+    #text(size: 8pt, weight: "bold", fill: colors.primary)[Avaliação de Consistência & Ajustes do Mês]
+    #for _ in range(5) { rule-line(colors, height: 5.2mm) }
+  ]
+]
+
+#let pay-box(colors) = rect(width: 2.6mm, height: 2.6mm, stroke: colors.secondary + 0.5pt, radius: 0.4mm)
+#let empty-cell = [#v(3.2mm)]
+
+// 6. Controle Financeiro Completo (Visão consolidada para prévia da seção)
+#let section-financeiro(monthName, colors, mode: "dated") = [
+  #set text(size: 7.5pt)
+  #section-header("Controle Financeiro", colors, subtitle: monthName)
+  #text(size: 7.5pt, fill: colors.secondary)[Gestão mensal de receitas, despesas fixas, variáveis, metas e balanço]
+  #v(1.5mm)
+  #text(size: 8pt, weight: "bold", fill: colors.accent)[1. Receitas & Entradas do Mês]
   #table(
-    columns: (1fr, 22mm, 20mm, 15mm),
-    inset: 3.2pt,
-    align: (left, center, right, center),
+    columns: (1fr, 15mm, 20mm, 20mm),
+    inset: (x: 3pt, y: 2.7pt),
+    align: (left, center, right, right),
     stroke: colors.lines + 0.3pt,
-    table.header([*Despesa Fixa*], [*Vencimento*], [*Valor (R\$)*], [*Pago?*]),
-    [Moradia / Aluguel / Condomínio], [], [], [ #rect(width: 2.5mm, height: 2.5mm, stroke: colors.secondary + 0.5pt) ],
-    [Energia Elétrica / Gás], [], [], [ #rect(width: 2.5mm, height: 2.5mm, stroke: colors.secondary + 0.5pt) ],
-    [Água & Saneamento], [], [], [ #rect(width: 2.5mm, height: 2.5mm, stroke: colors.secondary + 0.5pt) ],
-    [Internet / TV / Telefonia], [], [], [ #rect(width: 2.5mm, height: 2.5mm, stroke: colors.secondary + 0.5pt) ],
-    [Saúde / Plano / Medicamentos], [], [], [ #rect(width: 2.5mm, height: 2.5mm, stroke: colors.secondary + 0.5pt) ],
-    [Educação / Cursos / Mensalidades], [], [], [ #rect(width: 2.5mm, height: 2.5mm, stroke: colors.secondary + 0.5pt) ],
-    [Seguros & Taxas Bancárias], [], [], [ #rect(width: 2.5mm, height: 2.5mm, stroke: colors.secondary + 0.5pt) ],
-    [Outros Compromissos Fixos], [], [], [ #rect(width: 2.5mm, height: 2.5mm, stroke: colors.secondary + 0.5pt) ],
+    table.header([*Fonte / Descrição*], [*Data*], [*Previsto*], [*Realizado*]),
+    [Salário / Pró-labore], [], [], [],
+    [Projetos Extras / Comissões], [], [], [],
+    [Rendimentos & Dividendos], [], [], [],
+    [#empty-cell], [], [], [],
+    [#empty-cell], [], [], [],
+  )
+  #v(2mm)
+  #text(size: 8pt, weight: "bold", fill: colors.accent)[2. Despesas Fixas, Variáveis & Contas a Pagar]
+  #table(
+    columns: (1fr, 15mm, 19mm, 19mm, 11mm),
+    inset: (x: 3pt, y: 2.7pt),
+    align: (left, center, right, right, center),
+    stroke: colors.lines + 0.3pt,
+    table.header([*Descrição da Despesa*], [*Venc.*], [*Previsto*], [*Realizado*], [*Pago*]),
+    [Moradia / Aluguel / Condomínio], [], [], [], [#pay-box(colors)],
+    [Energia / Água / Gás], [], [], [], [#pay-box(colors)],
+    [Internet / Telefonia / TV], [], [], [], [#pay-box(colors)],
+    [Alimentação & Supermercado], [], [], [], [#pay-box(colors)],
+    [Transporte & Combustível], [], [], [], [#pay-box(colors)],
+    [Saúde / Farmácia / Seguro], [], [], [], [#pay-box(colors)],
+    [Cartão de Crédito / Parcelas], [], [], [], [#pay-box(colors)],
+    [#empty-cell], [], [], [], [#pay-box(colors)],
+    [#empty-cell], [], [], [], [#pay-box(colors)],
+    [#empty-cell], [], [], [], [#pay-box(colors)],
+    [#empty-cell], [], [], [], [#pay-box(colors)],
+  )
+  #v(2mm)
+  #text(size: 8pt, weight: "bold", fill: colors.secondary)[3. Metas Financeiras & Reserva]
+  #table(
+    columns: (1fr, 22mm, 22mm),
+    inset: (x: 3pt, y: 2.7pt),
+    align: (left, right, right),
+    stroke: colors.lines + 0.3pt,
+    table.header([*Meta / Investimento*], [*Meta (R\$)*], [*Aporte (R\$)*]),
+    [Reserva de Emergência / Poupança], [], [],
+    [Investimentos / Objetivo Especial], [], [],
+    [#empty-cell], [], [],
+  )
+  #v(2mm)
+  #block(stroke: colors.accent + 0.6pt, inset: 2.5mm, radius: 1.5mm, fill: colors.lines.transparentize(85%))[
+    #grid(columns: (1fr, 1fr, 1fr, 1fr), gutter: 2mm, align: center,
+      [#text(size: 7pt, fill: colors.secondary)[Total Receitas] \ #rule-line(colors, height: 4.2mm)],
+      [#text(size: 7pt, fill: colors.secondary)[Total Fixas] \ #rule-line(colors, height: 4.2mm)],
+      [#text(size: 7pt, fill: colors.secondary)[Total Variáveis] \ #rule-line(colors, height: 4.2mm)],
+      [#text(size: 7pt, weight: "bold", fill: colors.primary)[Saldo Líquido] \ #rule-line(colors, height: 4.2mm)]
+    )
+  ]
+]
+
+// 6A. Controle Financeiro - Página Esquerda (Receitas, Despesas Fixas & Vencimentos)
+#let section-financeiro-left(monthName, colors, mode: "dated") = [
+  #set text(size: 7.5pt)
+  #section-header("Controle Financeiro", colors, subtitle: monthName + " · Entradas & Despesas Fixas")
+  #text(size: 8pt, weight: "bold", fill: colors.accent)[1. Receitas & Fontes de Renda]
+  #table(
+    columns: (1fr, 15mm, 21mm, 21mm),
+    inset: (x: 3pt, y: 2.9pt),
+    align: (left, center, right, right),
+    stroke: colors.lines + 0.3pt,
+    table.header([*Fonte de Receita / Descrição*], [*Data*], [*Previsto*], [*Realizado*]),
+    [Salário / Remuneração Principal], [], [], [],
+    [Projetos Extras & Comissões], [], [], [],
+    [Rendimentos & Dividendos], [], [], [],
+    [Reembolsos / Outras Entradas], [], [], [],
+    [#empty-cell], [], [], [],
+    [#empty-cell], [], [], [],
+    [#empty-cell], [], [], [],
+    [*Total de Receitas do Mês*], [], [], [],
+  )
+  #v(2.5mm)
+  #text(size: 8pt, weight: "bold", fill: colors.accent)[2. Despesas Fixas, Contas & Vencimentos]
+  #table(
+    columns: (1fr, 15mm, 19mm, 19mm, 11mm),
+    inset: (x: 3pt, y: 2.9pt),
+    align: (left, center, right, right, center),
+    stroke: colors.lines + 0.3pt,
+    table.header([*Despesa Fixa / Conta*], [*Venc.*], [*Previsto*], [*Pago (R\$)*], [*OK*]),
+    [Moradia / Aluguel / Financiamento], [], [], [], [#pay-box(colors)],
+    [Condomínio / IPTU / Taxas], [], [], [], [#pay-box(colors)],
+    [Energia Elétrica & Gás], [], [], [], [#pay-box(colors)],
+    [Água & Saneamento], [], [], [], [#pay-box(colors)],
+    [Internet / TV / Telefonia], [], [], [], [#pay-box(colors)],
+    [Saúde / Plano / Medicamentos], [], [], [], [#pay-box(colors)],
+    [Educação / Cursos / Idiomas], [], [], [], [#pay-box(colors)],
+    [Seguros & Taxas Bancárias], [], [], [], [#pay-box(colors)],
+    [Assinaturas & Serviços Fixos], [], [], [], [#pay-box(colors)],
+    [#empty-cell], [], [], [], [#pay-box(colors)],
+    [#empty-cell], [], [], [], [#pay-box(colors)],
+    [#empty-cell], [], [], [], [#pay-box(colors)],
+    [#empty-cell], [], [], [], [#pay-box(colors)],
+    [#empty-cell], [], [], [], [#pay-box(colors)],
+    [#empty-cell], [], [], [], [#pay-box(colors)],
+    [*Total de Despesas Fixas*], [], [], [], [],
   )
 ]
 
-// 6. Controle Financeiro - Página Direita (Despesas Variáveis, Metas & Balanço)
+// 6B. Controle Financeiro - Página Direita (Despesas Variáveis, Metas & Resumo Financeiro)
 #let section-financeiro-right(monthName, colors, mode: "dated") = [
-  #section-header("Controle Financeiro", colors, subtitle: monthName + " · Variáveis & Resumo")
-  #v(1mm)
+  #set text(size: 7.5pt)
+  #section-header("Controle Financeiro", colors, subtitle: monthName + " · Variáveis, Metas & Balanço")
   #text(size: 8pt, weight: "bold", fill: colors.accent)[3. Despesas Variáveis & Cartões de Crédito]
   #table(
-    columns: (1fr, 22mm, 20mm, 15mm),
-    inset: 3.2pt,
-    align: (left, center, right, center),
+    columns: (1fr, 15mm, 19mm, 19mm, 11mm),
+    inset: (x: 3pt, y: 2.8pt),
+    align: (left, center, right, right, center),
     stroke: colors.lines + 0.3pt,
-    table.header([*Despesa / Categoria*], [*Vencimento*], [*Valor (R\$)*], [*Pago?*]),
-    [Alimentação & Supermercado], [], [], [ #rect(width: 2.5mm, height: 2.5mm, stroke: colors.secondary + 0.5pt) ],
-    [Transporte / Combustível / Uber], [], [], [ #rect(width: 2.5mm, height: 2.5mm, stroke: colors.secondary + 0.5pt) ],
-    [Cartão de Crédito - Fatura 1], [], [], [ #rect(width: 2.5mm, height: 2.5mm, stroke: colors.secondary + 0.5pt) ],
-    [Cartão de Crédito - Fatura 2], [], [], [ #rect(width: 2.5mm, height: 2.5mm, stroke: colors.secondary + 0.5pt) ],
-    [Lazer / Restaurantes / Passeios], [], [], [ #rect(width: 2.5mm, height: 2.5mm, stroke: colors.secondary + 0.5pt) ],
-    [Vestuário & Cuidados Pessoais], [], [], [ #rect(width: 2.5mm, height: 2.5mm, stroke: colors.secondary + 0.5pt) ],
-    [Assinaturas & Serviços Digitais], [], [], [ #rect(width: 2.5mm, height: 2.5mm, stroke: colors.secondary + 0.5pt) ],
-    [Imprevistos / Manutenção], [], [], [ #rect(width: 2.5mm, height: 2.5mm, stroke: colors.secondary + 0.5pt) ],
+    table.header([*Despesa Variável / Lançamento*], [*Data*], [*Previsto*], [*Realizado*], [*OK*]),
+    [Alimentação & Supermercado], [], [], [], [#pay-box(colors)],
+    [Transporte & Combustível], [], [], [], [#pay-box(colors)],
+    [Cartão de Crédito · Fatura 1], [], [], [], [#pay-box(colors)],
+    [Cartão de Crédito · Fatura 2], [], [], [], [#pay-box(colors)],
+    [Lazer, Restaurantes & Cultura], [], [], [], [#pay-box(colors)],
+    [Vestuário & Cuidados Pessoais], [], [], [], [#pay-box(colors)],
+    [Casa, Manutenção & Imprevistos], [], [], [], [#pay-box(colors)],
+    [Presentes, Doações & Família], [], [], [], [#pay-box(colors)],
+    [#empty-cell], [], [], [], [#pay-box(colors)],
+    [#empty-cell], [], [], [], [#pay-box(colors)],
+    [#empty-cell], [], [], [], [#pay-box(colors)],
+    [#empty-cell], [], [], [], [#pay-box(colors)],
+    [*Total de Despesas Variáveis*], [], [], [], [],
   )
-  #v(2.5mm)
-  #text(size: 8pt, weight: "bold", fill: colors.secondary)[4. Metas de Economia & Investimentos]
+  #v(2mm)
+  #text(size: 8pt, weight: "bold", fill: colors.secondary)[4. Metas Financeiras, Poupança & Investimentos]
   #table(
-    columns: (1fr, 24mm, 24mm),
-    inset: 3pt,
-    align: (left, right, right),
+    columns: (1fr, 20mm, 20mm, 14mm),
+    inset: (x: 3pt, y: 2.8pt),
+    align: (left, right, right, center),
     stroke: colors.lines + 0.3pt,
-    table.header([*Meta Financeira*], [*Meta R\$*], [*Aporte R\$*]),
-    [Reserva de Emergência], [], [],
-    [Aportes de Investimento / Poupança], [], [],
+    table.header([*Meta / Reserva / Investimento*], [*Meta*], [*Aporte*], [*OK*]),
+    [Reserva de Emergência], [], [], [#pay-box(colors)],
+    [Carteira de Investimentos], [], [], [#pay-box(colors)],
+    [Projetos de Curto Prazo], [], [], [#pay-box(colors)],
+    [#empty-cell], [], [], [#pay-box(colors)],
+    [#empty-cell], [], [], [#pay-box(colors)],
   )
-  #v(2.5mm)
+  #v(2mm)
   #block(stroke: colors.accent + 0.6pt, inset: 2.5mm, radius: 1.5mm, fill: colors.lines.transparentize(85%))[
-    #grid(columns: (1fr, 1fr, 1fr), align: center,
-      [#text(size: 7.5pt, fill: colors.secondary)[Total Receitas:] \ #rule-line(colors, height: 4.5mm)],
-      [#text(size: 7.5pt, fill: colors.secondary)[Total Despesas:] \ #rule-line(colors, height: 4.5mm)],
-      [#text(size: 7.5pt, weight: "bold", fill: colors.primary)[Saldo Líquido:] \ #rule-line(colors, height: 4.5mm)]
+    #text(size: 7.5pt, weight: "bold", fill: colors.primary)[5. Resumo Financeiro do Mês]
+    #v(1mm)
+    #grid(columns: (1fr, 1fr, 1fr, 1fr), gutter: 2.5mm, align: center,
+      [#text(size: 7pt, fill: colors.secondary)[(+) Receitas] \ #rule-line(colors, height: 4.2mm)],
+      [#text(size: 7pt, fill: colors.secondary)[(-) Desp. Fixas] \ #rule-line(colors, height: 4.2mm)],
+      [#text(size: 7pt, fill: colors.secondary)[(-) Variáveis] \ #rule-line(colors, height: 4.2mm)],
+      [#text(size: 7pt, weight: "bold", fill: colors.primary)[(=) Saldo Final] \ #rule-line(colors, height: 4.2mm)]
     )
+    #v(1mm)
+    #text(size: 7pt, fill: colors.secondary)[Notas & Ajustes Orçamentários:]
+    #rule-line(colors, height: 4.2mm)
   ]
 ]
 
 // 7. Revisão Mensal
 #let section-revisao(monthName, colors, mode: "dated") = [
   #section-header("Revisão Mensal", colors, subtitle: monthName + " · Balanço")
-  #text(size: 8pt, fill: colors.secondary)[Análise de desempenho, aprendizados e calibragem para o próximo ciclo]
-  #v(3mm)
-  #block(stroke: colors.lines + 0.4pt, inset: 3mm, radius: 1.5mm, below: 3mm)[
-    #text(size: 8.5pt, weight: "bold", fill: colors.primary)[Principais Vitórias & Metas Concluídas]
-    #for _ in range(3) { rule-line(colors, height: 5.5mm) }
+  #text(size: 8pt, fill: colors.secondary)[Análise de conquistas, aprendizados e calibragem para o próximo ciclo]
+  #v(2mm)
+  #block(stroke: colors.lines + 0.4pt, inset: 3mm, radius: 1.5mm, below: 2.5mm)[
+    #text(size: 8pt, weight: "bold", fill: colors.primary)[1. Principais Conquistas & Metas Realizadas]
+    #for _ in range(5) { rule-line(colors, height: 5mm) }
   ]
-  #block(stroke: colors.lines + 0.4pt, inset: 3mm, radius: 1.5mm, below: 3mm)[
-    #text(size: 8.5pt, weight: "bold", fill: colors.primary)[Pendências & Dificuldades Encontradas]
-    #for _ in range(3) { rule-line(colors, height: 5.5mm) }
+  #block(stroke: colors.lines + 0.4pt, inset: 3mm, radius: 1.5mm, below: 2.5mm)[
+    #text(size: 8pt, weight: "bold", fill: colors.primary)[2. Desafios, Pendências & Pontos de Atenção]
+    #for _ in range(5) { rule-line(colors, height: 5mm) }
   ]
-  #block(stroke: colors.lines + 0.4pt, inset: 3mm, radius: 1.5mm)[
-    #text(size: 8.5pt, weight: "bold", fill: colors.primary)[Lições Aprendidas & Ajustes para o Próximo Mês]
-    #for _ in range(4) { rule-line(colors, height: 5.5mm) }
+  #block(stroke: colors.lines + 0.4pt, inset: 3mm, radius: 1.5mm, below: 2.5mm)[
+    #text(size: 8pt, weight: "bold", fill: colors.secondary)[3. Aprendizados, Destaques & Momentos de Gratidão]
+    #for _ in range(5) { rule-line(colors, height: 5mm) }
+  ]
+  #block(stroke: colors.accent + 0.5pt, inset: 3mm, radius: 1.5mm)[
+    #text(size: 8pt, weight: "bold", fill: colors.primary)[4. Ajustes & Direcionamento para o Próximo Mês]
+    #for _ in range(5) { rule-line(colors, height: 5mm) }
   ]
 ]
 
 // 8. Anotações Livres
 #let section-anotacoes(colors, title: "Anotações & Ideias") = [
   #section-header(title, colors)
-  #text(size: 8pt, fill: colors.secondary)[Espaço livre para registros, insights e reflexões]
+  #text(size: 8pt, fill: colors.secondary)[Espaço livre para registros, insights, projetos e reflexões]
   #v(2mm)
-  #for _ in range(18) { dotted-line(colors, height: 6.5mm) }
+  #for _ in range(24) { dotted-line(colors, height: 6mm) }
 ]
-

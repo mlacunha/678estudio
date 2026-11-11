@@ -6,7 +6,8 @@
     "src/pages/personalizar/planner.astro",
     "src/scripts/plannerCustomizer.ts",
     "src/pages/api/planner/**",
-    "src/pages/admin/planners/**",
+    "src/pages/admin/**",
+    "src/pages/planner/**",
     "src/db/plannerQuotes*",
     "src/db/database.ts",
     "src/data/stationery.ts"

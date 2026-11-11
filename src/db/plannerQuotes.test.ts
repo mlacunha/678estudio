@@ -83,16 +83,41 @@ describe('Planner Quotes Repository', () => {
     expect(previewAsset?.content.toString()).toBe('fake-preview-financeiro');
   });
 
-  it('should list quotes with pagination', async () => {
+  it('should list quotes with pagination and preserve custom colors, typography and watermark', async () => {
     const token1 = randomUUID();
     const token2 = randomUUID();
 
     await savePlannerQuote(token1, sampleConfig, [], mocked.client);
-    await savePlannerQuote(token2, { ...sampleConfig, mode: 'undated' }, [], mocked.client);
+    await savePlannerQuote(
+      token2,
+      {
+        ...sampleConfig,
+        mode: 'undated',
+        typography: 'editorial',
+        colors: { primary: '#1e3a8a', secondary: '#7c2d12', accent: '#7c2d12' },
+        customColors: true,
+        watermark: true,
+      },
+      [
+        { name: 'original', mime: 'image/png', content: Buffer.from('orig-logo') },
+        { name: 'logo', mime: 'image/png', content: Buffer.from('norm-logo') },
+      ],
+      mocked.client
+    );
 
     const result = await listPlannerQuotes(1, mocked.client);
     expect(result.quotes.length).toBe(2);
     expect(result.totalPages).toBe(1);
+
+    const customQuote = result.quotes.find((q) => q.config.customColors);
+    expect(customQuote).toBeDefined();
+    expect(customQuote?.config.colors.primary).toBe('#1e3a8a');
+    expect(customQuote?.config.colors.secondary).toBe('#7c2d12');
+    expect(customQuote?.config.typography).toBe('editorial');
+    expect(customQuote?.config.watermark).toBe(true);
+
+    const origAsset = await getPlannerQuoteAsset(customQuote!.id, 'original', mocked.client);
+    expect(origAsset?.content.toString()).toBe('orig-logo');
   });
 });
 

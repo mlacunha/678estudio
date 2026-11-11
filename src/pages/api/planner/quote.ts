@@ -53,12 +53,17 @@ export const POST: APIRoute = async ({ request, url, locals }) => {
     const { whatsapp } = await getRequestStudioSettings(locals);
     const [model, mode, style, typography, format] = plannerQuoteLabels(quote.config);
 
+    const colorsText = quote.config.customColors
+      ? `personalizadas (${quote.config.colors.primary} e ${quote.config.colors.secondary})`
+      : `padrão do estilo (${quote.config.colors.primary} e ${quote.config.colors.secondary})`;
+
     const message = [
       `Olá, equipe 678 Estudio! Gostaria de um orçamento para o *${quote.product}*.`,
       `Modelo: ${model} · Formato: ${format}`,
       `Modalidade: ${mode} · Estilo: ${style} · Tipografia: ${typography}`,
+      `Cores: ${colorsText}`,
       `Nome personalizado: ${quote.config.personalizationName ?? 'não informado'}`,
-      `Logomarca: ${quote.config.logo ? 'sim' : 'não'}`,
+      `Logomarca: ${quote.config.logo ? 'sim' : 'não'} · Marca-d’água: ${quote.config.watermark ? 'sim' : 'não'}`,
       `Referência e prévias: ${new URL(referencePath, origin).href}`,
     ].join('\n');
 

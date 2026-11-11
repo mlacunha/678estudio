@@ -4,6 +4,7 @@ import { getPlannerQuote } from '../../../../db/plannerQuotes';
 import {
   formatPlannerQuoteDate,
   plannerQuoteLabels,
+  plannerQuotePath,
 } from '../../../../server/planner/quoteConfig';
 import { plannerSections } from '../../../../server/planner/options.mjs';
 
@@ -40,12 +41,22 @@ const labelClass = 'text-xs font-semibold uppercase tracking-wider text-ink-mute
           <dd class="mt-1 text-sm font-medium">{config.personalizationName || 'Não informada'}</dd>
         </div>
         <div>
-          <dt class={labelClass}>Paleta do estilo</dt>
-          <dd class="mt-1 font-mono text-xs">{config.colors.primary} / {config.colors.secondary} / {config.colors.accent}</dd>
+          <dt class={labelClass}>Cores {config.customColors ? 'personalizadas' : 'do estilo'}</dt>
+          <dd class="mt-1 flex items-center gap-1.5 font-mono text-xs">
+            <span class="inline-block size-3.5 rounded border border-line" style={`background:${config.colors.primary}`} />
+            <span>{config.colors.primary}</span>
+            <span>/</span>
+            <span class="inline-block size-3.5 rounded border border-line" style={`background:${config.colors.secondary}`} />
+            <span>{config.colors.secondary}</span>
+          </dd>
         </div>
         <div class="min-w-0">
           <dt class={labelClass}>Logomarca</dt>
           <dd class="mt-1 break-all text-sm font-medium">{config.logo?.originalName || 'Sem logomarca'}</dd>
+        </div>
+        <div>
+          <dt class={labelClass}>Marca-d’água</dt>
+          <dd class="mt-1 text-sm font-medium">{config.watermark ? 'Sim' : 'Não'}</dd>
         </div>
         <div>
           <dt class={labelClass}>Template Typst</dt>
@@ -79,7 +90,9 @@ const labelClass = 'text-xs font-semibold uppercase tracking-wider text-ink-mute
     <div class="mt-8">
       <div class="flex flex-wrap items-center justify-between gap-3">
         <h2 class="text-xl font-semibold">Prévias reais salvas no banco</h2>
-        <span class="text-xs text-ink-muted">8 seções renderizadas pelo motor Typst</span>
+        <a href={plannerQuotePath(quote.id)} class="text-sm font-semibold text-accent hover:underline">
+          Abrir referência do cliente
+        </a>
       </div>
 
       <div class="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">

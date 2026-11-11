@@ -25,6 +25,8 @@ export function initPlannerCustomizer(): void {
   const logo = document.querySelector<HTMLInputElement>('#planner-logo')!;
   const removeLogo = document.querySelector<HTMLButtonElement>('#planner-remove-logo')!;
   const watermark = document.querySelector<HTMLInputElement>('#planner-watermark')!;
+  const customColors = document.querySelector<HTMLInputElement>('#planner-custom-colors')!;
+  const colors = document.querySelector<HTMLFieldSetElement>('#planner-colors')!;
   const submit = document.querySelector<HTMLButtonElement>('#planner-submit')!;
   const error = document.querySelector<HTMLParagraphElement>('#planner-error')!;
   const modeDetail = document.querySelector<HTMLParagraphElement>('#planner-mode-detail')!;
@@ -84,6 +86,9 @@ export function initPlannerCustomizer(): void {
           field.value = value;
         }
       }
+      if (customColors) {
+        customColors.checked = Boolean(stored.primary && stored.secondary);
+      }
       const ref = sessionStorage.getItem('678-planner-referencia');
       if (ref) showReference(ref);
     } catch {
@@ -114,6 +119,16 @@ export function initPlannerCustomizer(): void {
       if (!hasLogo) watermark.checked = false;
     }
     if (removeLogo) removeLogo.hidden = !hasLogo;
+
+    if (colors && customColors) {
+      colors.disabled = colors.hidden = !customColors.checked;
+      if (!customColors.checked) {
+        const primaryInput = form.elements.namedItem('primary') as HTMLInputElement | null;
+        const secondaryInput = form.elements.namedItem('secondary') as HTMLInputElement | null;
+        if (primaryInput) primaryInput.value = style.primary;
+        if (secondaryInput) secondaryInput.value = style.secondary;
+      }
+    }
   }
 
   function showModalPage(index: number): void {

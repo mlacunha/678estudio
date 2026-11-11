@@ -21,6 +21,9 @@
 #let personalization-name = sys.inputs.at("personalization_name", default: "")
 #let single-section = sys.inputs.at("section", default: "all")
 
+#let has-logo = "logo" in sys.inputs
+#let has-watermark = "watermark" in sys.inputs and has-logo
+
 #let primary = rgb(sys.inputs.at("primary", default: "#1f2937"))
 #let secondary = rgb(sys.inputs.at("secondary", default: "#2563eb"))
 #let accent = rgb(sys.inputs.at("accent", default: "#cca032"))
@@ -42,14 +45,27 @@
   headingFont: font-heading,
 )
 
+#let watermark-bg = if has-watermark [
+  #place(center + horizon, rotate(-22deg, image("logo.png", width: 62mm, height: 62mm, fit: "contain")))
+  #place(top + left, rect(width: 100%, height: 100%, fill: white.transparentize(12%), stroke: none))
+] else { none }
+
 #set document(title: "Planner Essencial", author: "678 Estudio")
 #set text(lang: "pt", region: "BR", font: font-body, size: 9pt, fill: colors.primary)
 #set page(
   paper: "a5",
   margin: (top: 15mm, bottom: 15mm, inside: 20mm, outside: 12mm),
+  background: if single-section == "abertura" or single-section == "all" { none } else { watermark-bg },
   footer: context grid(
     columns: (1fr, auto), align: horizon,
-    text(size: 7pt, fill: colors.secondary)[Planner Essencial · 678 Estudio],
+    if has-logo and counter(page).get().first() > 1 {
+      grid(columns: (auto, auto), column-gutter: 5pt, align: horizon,
+        image("logo.png", width: 18mm, height: 4.5mm, fit: "contain"),
+        text(size: 6.5pt, fill: colors.secondary)[· Planner Essencial · 678 Estudio]
+      )
+    } else {
+      text(size: 7pt, fill: colors.secondary)[Planner Essencial · 678 Estudio]
+    },
     text(size: 7pt, fill: colors.primary)[#counter(page).display()],
   ),
 )
@@ -63,7 +79,7 @@
 
 // Renderização Direcionada por Seção (para Prévias Rápidas em <200ms) ou Completa
 #if single-section == "abertura" [
-  #section-abertura(colors, personalizationName: personalization-name, year: year, mode: mode)
+  #section-abertura(colors, personalizationName: personalization-name, year: year, mode: mode, hasLogo: has-logo)
 ] else if single-section == "anual" [
   #section-anual(colors, year: year, mode: mode)
 ] else if single-section == "mensal" [
@@ -84,9 +100,12 @@
 ] else [
   // Documento Completo: Sequência Editorial com Paridade Rigorosa
 
-  // Página 1 (Ímpar / Frente / Direita): Abertura e Identificação
-  #section-abertura(colors, personalizationName: personalization-name, year: year, mode: mode)
+  // Página 1 (Ímpar / Frente / Direita): Abertura e Identificação (com logo principal em destaque)
+  #section-abertura(colors, personalizationName: personalization-name, year: year, mode: mode, hasLogo: has-logo)
   #pagebreak()
+
+  // Ativa a marca-d'água (quando selecionada) para todas as páginas do miolo a partir da Página 2
+  #set page(background: watermark-bg)
 
   // Página 2 (Par / Verso / Esquerda): Planejamento Anual
   #section-anual(colors, year: year, mode: mode)
