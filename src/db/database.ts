@@ -104,6 +104,8 @@ async function createSchemaAndSeed(client: Client): Promise<void> {
     )`,
     'CREATE INDEX IF NOT EXISTS agenda_quotes_created ON agenda_quotes (created_at DESC, id DESC)',
   ], 'write');
+  await migrateStationery(client);
+
 }
 
 async function seedInitialDataIfEmpty(client: Client): Promise<void> {
@@ -133,3 +135,38 @@ async function seedInitialDataIfEmpty(client: Client): Promise<void> {
   await client.batch(statements, 'write');
 }
 
+
+// Transactional and versioned: old rows and uploaded images remain recoverable.
+export async function migrateStationery(client: Client): Promise<void> {
+  await client.execute('CREATE TABLE IF NOT EXISTS schema_migrations (id TEXT PRIMARY KEY)');
+  const tx = await client.transaction('write');
+  try {
+    const applied = await tx.execute("SELECT id FROM schema_migrations WHERE id = 'stationery-families-v2'");
+    if (!applied.rows.length) {
+      await tx.execute("UPDATE categories SET title = 'Papelaria Personalizada' WHERE slug = 'papelaria'");
+      const families = [
+        ['family-agendas', 'Agendas', 'Agenda Clássica: um dia por página, dois dias por página ou semanal. Estilos Clássico, Comercial e Feminino.', '%Agenda%', 1],
+        ['family-planners', 'Planners', 'Planner Essencial em preparação: planejamento anual, mensal e semanal, metas, finanças, hábitos, revisão mensal e anotações. Estilos Clássico, Comercial e Feminino.', '%Planner%', 2],
+        ['family-cadernos', 'Cadernos Personalizados', 'Em preparação: miolos pautado, pontilhado, quadriculado e branco. Estilos Clássico, Comercial e Feminino.', '%Caderno%', 3],
+      ] as const;
+      for (const [id, name, description, match, order] of families) {
+        await tx.execute({
+          sql: `INSERT OR IGNORE INTO products (id, category_slug, name, tagline, description, image_url, display_order, is_active, is_provisional)
+            VALUES (?, 'papelaria', ?, ?, ?, COALESCE((SELECT image_url FROM products WHERE category_slug = 'papelaria' AND id NOT LIKE 'family-%' ORDER BY (name LIKE ?) DESC, is_provisional ASC, display_order LIMIT 1), '/images/demo/planner-executivo.jpg'), ?, 1, COALESCE((SELECT is_provisional FROM products WHERE category_slug = 'papelaria' AND id NOT LIKE 'family-%' ORDER BY (name LIKE ?) DESC, is_provisional ASC, display_order LIMIT 1), 1))`,
+          args: [id, name, name, description, match, order, match],
+        });
+      }
+      await tx.execute("UPDATE products SET is_active = 0 WHERE category_slug = 'papelaria' AND id NOT IN ('family-agendas', 'family-planners', 'family-cadernos')");
+      await tx.execute(`CREATE TABLE agenda_quote_assets_v2 (
+        quote_id TEXT NOT NULL REFERENCES agenda_quotes(id) ON DELETE CASCADE,
+        name TEXT NOT NULL CHECK (name IN ('original', 'logo', 'preview-1', 'preview-2', 'preview-3', 'preview-4', 'preview-5', 'preview-6', 'preview-7', 'preview-8')),
+        mime TEXT NOT NULL, content BLOB NOT NULL, PRIMARY KEY (quote_id, name))`);
+      await tx.execute('INSERT INTO agenda_quote_assets_v2 SELECT * FROM agenda_quote_assets');
+      await tx.execute('DROP TABLE agenda_quote_assets');
+      await tx.execute('ALTER TABLE agenda_quote_assets_v2 RENAME TO agenda_quote_assets');
+      await tx.execute("INSERT INTO schema_migrations VALUES ('stationery-families-v2')");
+    }
+    await tx.commit();
+  } catch (error) { await tx.rollback(); throw error; }
+  finally { tx.close(); }
+}

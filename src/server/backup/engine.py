@@ -174,7 +174,10 @@ def verify_database(path, names=None):
         objects = db.execute("SELECT name, type, sql FROM sqlite_schema WHERE name NOT GLOB 'sqlite_*'").fetchall()
         check(all(kind in ("table", "index") and not re.match(r"^\s*CREATE\s+VIRTUAL\b", sql or "", re.I)
                   for _, kind, sql in objects), "O SQLite contém objetos incompatíveis.")
-        check({name for name, kind, _ in objects if kind == "table"} == SCHEMA.keys(), "Esquema do SQLite incompatível.")
+        tables = {name for name, kind, _ in objects if kind == "table"}
+        check(set(SCHEMA) <= tables <= set(SCHEMA) | {"schema_migrations"}, "Esquema do SQLite incompatível.")
+        if "schema_migrations" in tables:
+            check({row[1] for row in db.execute('PRAGMA table_info("schema_migrations")')} == {"id"}, "Tabela de migrações incompatível.")
         for table, columns in SCHEMA.items():
             existing = {row[1] for row in db.execute(f'PRAGMA table_info("{table}")')}
             check(set(columns.split()) <= existing, "Esquema do SQLite incompleto.")

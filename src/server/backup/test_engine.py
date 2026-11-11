@@ -69,6 +69,23 @@ class BackupTest(unittest.TestCase):
         with closing(sqlite3.connect(self.db)) as db:
             return db.execute("SELECT content FROM agenda_quote_assets").fetchone()[0]
 
+    def test_restore_migrated_database_and_all_preview_assets(self):
+        with closing(sqlite3.connect(self.db)) as db:
+            db.execute("CREATE TABLE schema_migrations (id TEXT PRIMARY KEY)")
+            db.execute("INSERT INTO schema_migrations VALUES ('stationery-families-v2')")
+            for page in range(1, 9):
+                db.execute("INSERT INTO agenda_quote_assets VALUES ('agenda', ?, 'image/png', ?)",
+                           (f"preview-{page}", bytes([page])))
+            db.commit()
+        self.prepare()
+        self.change_live()
+        engine.offline(self.root)
+        self.assertEqual(self.read_status(), "committed")
+        with closing(sqlite3.connect(self.db)) as db:
+            self.assertEqual(db.execute("SELECT id FROM schema_migrations").fetchone()[0], "stationery-families-v2")
+            for page in range(1, 9):
+                self.assertEqual(db.execute("SELECT content FROM agenda_quote_assets WHERE name = ?", (f"preview-{page}",)).fetchone()[0], bytes([page]))
+
     def test_snapshot_open_database_with_uncommitted_changes(self):
         with closing(sqlite3.connect(self.db)) as live:
             live.execute("UPDATE agenda_quote_assets SET content = ?", (b"uncommitted",))

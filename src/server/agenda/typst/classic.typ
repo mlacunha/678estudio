@@ -16,7 +16,7 @@
 )
 #let has-logo = "logo" in sys.inputs
 #let has-watermark = "watermark" in sys.inputs
-#let preview-limit = int(sys.inputs.at("preview-limit", default: "366"))
+#let preview-limit = int(sys.inputs.at("preview-limit", default: "400"))
 #let title = "Agenda Clássica " + str(year)
 #set document(title: title, author: "678 Estudio")
 #set text(lang: "pt", region: "BR", font: style.font-sans, size: style.body)
@@ -54,6 +54,18 @@
   is_weekend: date.weekday() >= 6,
 )
 
+#import "lib/sections.typ": opening, annual-calendar, personal-data, monthly-plan, finance, notes
+#opening(year, colors, style)
+#pagebreak()
+#annual-calendar(year, months, colors, style)
+#pagebreak()
+#personal-data(colors, style)
+#pagebreak()
+#for month in range(1, 13) {
+  monthly-plan(year, month, months.at(month - 1), colors, style)
+  pagebreak()
+}
+
 #if agenda-layout == "daily-1dpp" {
   for i in range(calc.min(day-count, preview-limit)) {
     daily-1dpp(day-info(date-at(i)), colors: colors, style: style)
@@ -86,3 +98,7 @@
 } else {
   panic("Layout desconhecido")
 }
+
+#finance(colors, style)
+#pagebreak()
+#notes(colors, style)

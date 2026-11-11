@@ -25,7 +25,7 @@ export const POST: APIRoute = async ({ url }) => {
     if (quoteId !== null) {
       const quote = await getAgendaQuote(quoteId);
       if (!quote) return new Response('Solicitação de agenda não encontrada.', { status: 404 });
-      if (quote.configVersion !== agendaConfigVersion || quote.config.template !== 'agenda-classica-v1') {
+      if (quote.configVersion !== agendaConfigVersion || !['agenda-classica-v1', 'agenda-classica-v2'].includes(quote.config.template)) {
         return new Response('Versão da configuração indisponível para geração.', { status: 409 });
       }
       const logo = quote.config.logo ? await getAgendaQuoteAsset(quote.id, quote.config.logo.normalized) : undefined;

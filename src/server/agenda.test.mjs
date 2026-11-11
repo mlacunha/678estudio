@@ -34,7 +34,7 @@ describe.runIf(process.env.AGENDA_TYPST_TEST === '1')('compilação local com Ty
     expect(pdf.subarray(0, 5).toString()).toBe('%PDF-');
     // Na saída da versão fixada do Typst, a árvore de páginas é um objeto em texto.
     const count = pdf.subarray(0, 4096).toString('latin1').match(/\/Type\s*\/Pages\s*\/Count\s+(\d+)/);
-    expect(Number(count?.[1])).toBe(pages);
+    expect(Number(count?.[1])).toBe(pages + 17);
   }, 70_000);
 
   it('exporta somente as páginas solicitadas para prévia', async () => {
@@ -64,9 +64,9 @@ describe.runIf(process.env.AGENDA_TYPST_TEST === '1')('compilação local com Ty
       const config = { year: 2028, layout, style, format: 'a5' };
       const pdf = await compileClassicAgenda(config);
       const count = pdf.subarray(0, 4096).toString('latin1').match(/\/Type\s*\/Pages\s*\/Count\s+(\d+)/);
-      expect(Number(count?.[1])).toBe(pages);
+      expect(Number(count?.[1])).toBe(pages + 17);
       const images = await renderAgendaPreview(config);
-      expect(images.map(image => image.page)).toEqual([1, 2, 3]);
+      expect(images.map(image => image.page)).toEqual([1, 2, 3, 4, 5, 6, 7, 8]);
       outputs.push(images[0].src);
     }
     expect(new Set(outputs).size).toBe(3);

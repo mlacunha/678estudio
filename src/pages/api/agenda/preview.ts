@@ -73,13 +73,14 @@ export const POST: APIRoute = async ({ request, url }) => {
 
     const palette = agendaStyles[style as QuoteConfig['style']];
     const config: QuoteConfig = {
-      template: 'agenda-classica-v1', year, layout: layout as QuoteConfig['layout'],
+      template: 'agenda-classica-v2', year, layout: layout as QuoteConfig['layout'],
       format: format as QuoteConfig['format'], style: style as QuoteConfig['style'],
       colors: colors ?? { primary: palette.primary, secondary: palette.secondary },
       customColors: Boolean(colors), watermark,
       logo: logo && logoFile ? { originalName: logoFile.name.slice(0, 255), original: 'original', normalized: 'logo' } : null,
     };
     const images = await renderAgendaPreview({ ...config, logo: logo?.normalized });
+    config.previews = images.map(({ page, pdfPage, section }) => ({ page, pdfPage, section }));
     const assets: QuoteAsset[] = images.map(({ page, src }) => ({
       name: `preview-${page}` as PreviewName, mime: 'image/png',
       content: Buffer.from(src.slice('data:image/png;base64,'.length), 'base64'),

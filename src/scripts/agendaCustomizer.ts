@@ -1,6 +1,6 @@
 import { agendaFormats, agendaLayouts, agendaLogoTypes, agendaStyles, maxAgendaLogoBytes } from '../server/agenda/options.mjs';
 
-type Preview = { page: number; src: string };
+type Preview = { page: number; pdfPage: number; section: string; src: string };
 
 export function initAgendaCustomizer() {
   const form = document.querySelector<HTMLFormElement>('#agenda-form')!;
@@ -80,10 +80,10 @@ export function initAgendaCustomizer() {
   function showPage(index: number) {
     if (index < 0 || index >= images.length) return;
     current = index;
-    const { page, src } = images[index];
-    title.textContent = `Página ${page} de ${images.length}`;
+    const { pdfPage, section, src } = images[index];
+    title.textContent = `${section} · Página ${pdfPage} · ${index + 1}/${images.length}`;
     enlarged.src = src;
-    enlarged.alt = `Prévia ampliada da página ${page} da agenda`;
+    enlarged.alt = `Prévia ampliada da página ${pdfPage} da agenda`;
     prev.disabled = index === 0;
     next.disabled = index === images.length - 1;
     viewport.scrollTo(0, 0);
@@ -205,7 +205,7 @@ export function initAgendaCustomizer() {
     status.textContent = 'Gerando páginas da sua agenda…';
     submit.textContent = 'Gerando prévias…';
     const abort = new AbortController();
-    const timer = window.setTimeout(() => abort.abort(), 30_000);
+    const timer = window.setTimeout(() => abort.abort(), 90_000);
     try {
       const response = await fetch(form.action, { method: 'POST', body: data, signal: abort.signal });
       const payload = await response.json();
@@ -224,17 +224,17 @@ export function initAgendaCustomizer() {
       summary.textContent = `${data.get('year')} · ${layout.label} · ${format.label} · ${style.label}`;
       summary.hidden = false;
       placeholder.hidden = true;
-      gallery.replaceChildren(...images.map(({ page, src }, index) => {
+      gallery.replaceChildren(...images.map(({ pdfPage, section, src }, index) => {
         const button = document.createElement('button');
         button.type = 'button';
         button.className = 'min-w-0 rounded-xl border border-line bg-surface-muted p-2 text-left hover:border-accent';
-        button.setAttribute('aria-label', `Ampliar página ${page}`);
+        button.setAttribute('aria-label', `Ampliar ${section}, página ${pdfPage}`);
         const image = new Image();
         image.src = src;
-        image.alt = `Prévia da página ${page} da agenda`;
+        image.alt = `Prévia da página ${pdfPage} da agenda`;
         image.className = 'block aspect-[148/210] w-full bg-white object-contain';
         const label = document.createElement('span');
-        label.textContent = `Página ${page} · Ampliar`;
+        label.textContent = `${section} · Página ${pdfPage} · Ampliar`;
         label.className = 'mt-2 block px-1 text-xs font-medium text-ink-secondary';
         button.append(image, label);
         button.addEventListener('click', () => { showPage(index); dialog.showModal(); });

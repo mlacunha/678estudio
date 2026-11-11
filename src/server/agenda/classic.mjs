@@ -8,10 +8,22 @@ import { agendaFormats, agendaLayouts, agendaStyles } from './options.mjs';
 const run = promisify(execFile);
 
 export const classicLayouts = Object.keys(agendaLayouts);
-const previewPages = [1, 2, 3];
+export function agendaPreviewSections({ year, layout }) {
+  const start = new Date(Date.UTC(year, 0, 1));
+  const days = (new Date(Date.UTC(year + 1, 0, 1)) - start) / 86400000;
+  const weekday = (start.getUTCDay() + 6) % 7;
+  const count = layout === 'daily-1dpp' ? days : layout === 'daily-2dpp' ? Math.ceil(days / 2) : Math.ceil((days + weekday) / 7);
+  /** @type {[number, string][]} */
+  const sections = [
+    [1, 'Abertura'], [2, 'Calendário anual'], [3, 'Dados pessoais'], [4, 'Planejamento mensal'],
+    [16, layout === 'weekly' ? 'Layout semanal' : 'Layout diário'], [17, 'Continuação do layout'],
+    [16 + count, 'Controle financeiro'], [17 + count, 'Anotações'],
+  ];
+  return sections.map(([pdfPage, section], index) => ({ page: index + 1, pdfPage, section }));
+}
 
 /** @typedef {{ layout: string, year: number, style?: string, format?: string,
- * colors?: { primary: string, secondary: string }, customColors?: boolean, logo?: Buffer, watermark?: boolean }} AgendaConfig */
+ * colors?: { primary: string, secondary: string }, customColors?: boolean, logo?: Buffer, watermark?: boolean, template?: string }} AgendaConfig */
 
 /** @param {unknown} color */
 export function isAgendaColor(color) {
@@ -37,6 +49,7 @@ export async function compileClassicAgenda(config, preview) {
   const { layout, year, style = 'classic', format = 'a5', colors, customColors = Boolean(colors), logo, watermark } = config;
   if (!isClassicAgendaConfig(layout, year) || !Object.hasOwn(agendaStyles, style)
     || !Object.hasOwn(agendaFormats, format) || (watermark && !logo)
+    || (config.template !== undefined && !['agenda-classica-v1', 'agenda-classica-v2'].includes(config.template))
     || (colors && (!isAgendaColor(colors.primary) || !isAgendaColor(colors.secondary)))) {
     throw new RangeError('Configuração de agenda inválida.');
   }
@@ -63,7 +76,7 @@ export async function compileClassicAgenda(config, preview) {
     if (preview?.prefix) args.push('--input', `preview-limit=${Math.max(...preview.pages)}`);
     if (preview) args.push('--format', 'png', '--pages', preview.pages.join(','));
     else args.push('--format', 'pdf');
-    args.push(resolve(root, 'classic.typ'), preview?.output ?? '-');
+    args.push(resolve(root, config.template === 'agenda-classica-v1' ? 'classic-v1.typ' : 'classic.typ'), preview?.output ?? '-');
 
     const { stdout, stderr } = await run(process.env.TYPST_BINARY || 'typst', args, {
       encoding: 'buffer',
@@ -82,10 +95,13 @@ export async function compileClassicAgenda(config, preview) {
 export async function renderAgendaPreview(config) {
   const directory = await mkdtemp(join(tmpdir(), '678-agenda-preview-'));
   try {
-    await compileClassicAgenda(config, { pages: previewPages, output: join(directory, 'page-{p}.png'), prefix: true });
-    return await Promise.all(previewPages.map(async page => {
-      const image = await readFile(join(directory, `page-${page}.png`));
-      return { page, src: `data:image/png;base64,${image.toString('base64')}` };
+    const sections = config.template === 'agenda-classica-v1'
+      ? [1, 2, 3].map(page => ({ page, pdfPage: page, section: 'Layout da agenda' }))
+      : agendaPreviewSections(config);
+    await compileClassicAgenda(config, { pages: sections.map(item => item.pdfPage), output: join(directory, 'page-{p}.png') });
+    return await Promise.all(sections.map(async item => {
+      const image = await readFile(join(directory, `page-${item.pdfPage}.png`));
+      return { ...item, src: `data:image/png;base64,${image.toString('base64')}` };
     }));
   } finally {
     await rm(directory, { recursive: true, force: true });

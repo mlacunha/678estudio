@@ -61,7 +61,7 @@ it('normaliza a logo e devolve somente imagens com cache desabilitado', async ()
   form.set('watermark', 'true');
   form.set('primary', '#095c39');
   form.set('secondary', '#403287');
-  const images = [{ page: 1, src: 'data:image/png;base64,teste' }];
+  const images = [{ page: 1, pdfPage: 1, section: 'Abertura', src: 'data:image/png;base64,teste' }];
   render.mockResolvedValue(images);
   const response = await post(form);
   expect(response.status).toBe(200);

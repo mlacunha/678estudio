@@ -43,6 +43,6 @@ const labelClass = 'text-xs font-semibold uppercase tracking-wider text-ink-mute
       <h2 class="text-xl font-semibold">Prévias salvas</h2>
       <a href={agendaQuotePath(quote.id)} class="text-sm font-semibold text-accent hover:underline">Abrir referência do cliente</a>
     </div>
-    <AgendaQuotePreviews id={quote.id} />
+    <AgendaQuotePreviews id={quote.id} config={quote.config} />
   </section>
 </BaseLayout>

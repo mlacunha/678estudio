@@ -105,7 +105,7 @@ it('reverte a solicitação inteira se um arquivo falhar no lote', async () => {
   expect((await requestQuote(token)).status).toBe(410);
 });
 
-it.runIf(process.env.AGENDA_TYPST_TEST === '1')('associa as três prévias exatas e regenera o PDF anual com a logo salva', async () => {
+it.runIf(process.env.AGENDA_TYPST_TEST === '1')('associa as oito prévias exatas e regenera o PDF anual com a logo salva', async () => {
   const original = await sharp({ create: { width: 250, height: 100, channels: 3, background: '#aa2356' } }).jpeg().toBuffer();
   const form = new FormData();
   for (const [key, value] of Object.entries({
@@ -124,15 +124,24 @@ it.runIf(process.env.AGENDA_TYPST_TEST === '1')('associa as três prévias exata
       expect(png.headers.get('Content-Type')).toBe('image/png');
       expect(Buffer.from(await png.arrayBuffer())).toEqual(Buffer.from(src.split(',')[1], 'base64'));
     }
-    expect(images).toHaveLength(3);
+    expect(images).toHaveLength(8);
     const result = await pdf(context(`/admin/agenda-classica.pdf?pedido=${id}`));
     expect(result.status).toBe(200);
     const annual = Buffer.from(await result.arrayBuffer());
     expect(annual.subarray(0, 5).toString()).toBe('%PDF-');
-    expect(annual.subarray(0, 4096).toString('latin1')).toMatch(/\/Type\s*\/Pages\s*\/Count\s+183\b/);
+    expect(annual.subarray(0, 4096).toString('latin1')).toMatch(/\/Type\s*\/Pages\s*\/Count\s+200\b/);
     expect(annual.includes(Buffer.from('/Subtype/Image'))).toBe(true);
-    expect((await getAgendaQuote(id))?.config).toEqual(config);
+    expect((await getAgendaQuote(id))?.config).toEqual({ ...config, template: 'agenda-classica-v2', previews: images.map(({ page, pdfPage, section }: { page: number; pdfPage: number; section: string }) => ({ page, pdfPage, section })) });
   } finally {
     discardAgendaDraft(draft);
   }
 }, 120_000);
+
+it.runIf(process.env.AGENDA_TYPST_TEST === '1')('regenera pedidos anteriores com o template original de 183 páginas', async () => {
+  const old = { ...config, logo: null, watermark: false };
+  const saved = await saveAgendaQuote(randomUUID(), old, []);
+  const response = await pdf(context(`/admin/agenda-classica.pdf?pedido=${saved.id}`));
+  expect(response.status).toBe(200);
+  const bytes = Buffer.from(await response.arrayBuffer());
+  expect(bytes.subarray(0, 4096).toString('latin1')).toMatch(/\/Type\s*\/Pages\s*\/Count\s+183\b/);
+});

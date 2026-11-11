@@ -1,16 +1,16 @@
 ---
-import { agendaQuotePath, previewNumbers } from '../server/agenda/quoteConfig';
-interface Props { id: string }
-const { id } = Astro.props;
+import { agendaQuotePath, type QuoteConfig } from '../server/agenda/quoteConfig';
+interface Props { id: string; config: QuoteConfig }
+const { id, config } = Astro.props;
 ---
 
 <div class="mt-4 grid gap-4 sm:grid-cols-3">
-  {previewNumbers.map(page => {
+  {(config.previews ?? [1, 2, 3].map(page => ({ page, pdfPage: page, section: 'Página' }))).map(({ page, pdfPage, section }) => {
     const href = `${agendaQuotePath(id)}/previa/${page}`;
     return (
       <a href={href} target="_blank" rel="noopener noreferrer" class="block min-w-0 rounded-xl border border-line bg-surface p-2 hover:border-accent">
-        <img src={href} alt={`Prévia da página ${page}`} width="839" height="1191" class="block h-auto w-full bg-white object-contain" />
-        <span class="mt-2 block px-1 text-sm text-ink-secondary">Página {page} · Ampliar</span>
+        <img src={href} alt={`${section} · Página ${pdfPage}`} width="839" height="1191" class="block h-auto w-full bg-white object-contain" />
+        <span class="mt-2 block px-1 text-sm text-ink-secondary">{section} · Página {pdfPage} · Ampliar</span>
       </a>
     );
   })}

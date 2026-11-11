@@ -2,11 +2,12 @@ import { agendaFormats, agendaLayouts, agendaStyles } from './options.mjs';
 
 export const agendaProduct = 'Agenda Clássica';
 export const agendaConfigVersion = 1;
-export const previewNumbers = [1, 2, 3] as const;
+export const previewNumbers = [1, 2, 3, 4, 5, 6, 7, 8] as const;
 export const isAgendaReference = (value: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/.test(value);
 
 export type QuoteConfig = {
-  template: 'agenda-classica-v1';
+  template: 'agenda-classica-v1' | 'agenda-classica-v2';
+  previews?: { page: number; pdfPage: number; section: string }[];
   year: number;
   format: keyof typeof agendaFormats;
   layout: keyof typeof agendaLayouts;

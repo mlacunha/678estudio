@@ -1,3 +1,4 @@
+import { initDatabase, migrateStationery } from './database';
 import { describe, it, expect, beforeEach } from 'vitest';
 import { createClient, type Client } from '@libsql/client';
 import {
@@ -29,7 +30,7 @@ describe('Catalog Repository with SQLite', () => {
     ]);
 
     expect(categories).toHaveLength(4);
-    expect(products).toHaveLength(9);
+    expect(products).toHaveLength(12);
     expect(frames).toHaveLength(3);
   });
 
@@ -135,3 +136,27 @@ describe('Catalog Repository with SQLite', () => {
   });
 });
 
+
+ it('migrates stationery once, retaining archived images and quote assets', async () => {
+   const client = createClient({ url: ':memory:' });
+   try {
+     await initDatabase(client);
+     // Recreate the prior state to exercise the migration with administrator data.
+     await client.execute("DELETE FROM schema_migrations WHERE id = 'stationery-families-v2'");
+     await client.execute("DELETE FROM products WHERE id LIKE 'family-%'");
+     await client.execute("UPDATE products SET image_url = '/uploads/admin-original.webp', is_active = 1, is_provisional = 0 WHERE id = 'prod-p1'");
+     await client.execute("INSERT INTO agenda_quotes VALUES ('old', 'old-draft', 'Agenda Clássica', '2026-01-01', 'requested', 1, '{}')");
+     await client.execute("INSERT INTO agenda_quote_assets VALUES ('old', 'preview-1', 'image/png', X'010203')");
+     await migrateStationery(client);
+     const active = await getActiveProductsByCategory('papelaria', client);
+     expect(active.map(p => p.name)).toEqual(['Agendas', 'Planners', 'Cadernos Personalizados']);
+     expect((await getProductById('prod-p1', client))).toMatchObject({ isActive: false, imageUrl: '/uploads/admin-original.webp' });
+     expect(active[1].imageUrl).toBe('/uploads/admin-original.webp');
+     expect(active[1].isProvisional).toBe(false);
+     await client.execute("UPDATE products SET image_url = '/uploads/family-custom.webp' WHERE id = 'family-agendas'");
+     await migrateStationery(client);
+     expect((await getProductById('family-agendas', client))?.imageUrl).toBe('/uploads/family-custom.webp');
+     expect((await client.execute('SELECT hex(content) AS bytes FROM agenda_quote_assets')).rows[0].bytes).toBe('010203');
+     await client.execute("INSERT INTO agenda_quote_assets VALUES ('old', 'preview-8', 'image/png', X'04')");
+   } finally { client.close(); }
+ });

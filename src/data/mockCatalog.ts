@@ -20,7 +20,7 @@ export const CATEGORIES: ProductCategory[] = [
   {
     id: 'cat-papelaria',
     slug: 'papelaria',
-    title: 'Agendas & Planners',
+    title: 'Papelaria Personalizada',
     subtitle: 'Papelaria Fina & Organização',
     description: 'Encadernação artesanal em capa dura com detalhes em hot-stamping metálico, miolo em papel de alta gramatura e fitas marcadoras.',
     badge: 'Edições Limitadas',
