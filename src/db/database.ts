@@ -103,6 +103,17 @@ async function createSchemaAndSeed(client: Client): Promise<void> {
       mime TEXT NOT NULL, content BLOB NOT NULL, PRIMARY KEY (quote_id, name)
     )`,
     'CREATE INDEX IF NOT EXISTS agenda_quotes_created ON agenda_quotes (created_at DESC, id DESC)',
+    `CREATE TABLE IF NOT EXISTS planner_quotes (
+      id TEXT PRIMARY KEY, draft_token TEXT NOT NULL UNIQUE, product TEXT NOT NULL,
+      created_at TEXT NOT NULL, status TEXT NOT NULL,
+      config_version INTEGER NOT NULL, config_json TEXT NOT NULL
+    )`,
+    `CREATE TABLE IF NOT EXISTS planner_quote_assets (
+      quote_id TEXT NOT NULL REFERENCES planner_quotes(id) ON DELETE CASCADE,
+      name TEXT NOT NULL,
+      mime TEXT NOT NULL, content BLOB NOT NULL, PRIMARY KEY (quote_id, name)
+    )`,
+    'CREATE INDEX IF NOT EXISTS planner_quotes_created ON planner_quotes (created_at DESC, id DESC)',
   ], 'write');
   await migrateStationery(client);
 

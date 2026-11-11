@@ -1,0 +1,78 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import { listPlannerQuotes } from '../../../db/plannerQuotes';
+import {
+  formatPlannerQuoteDate,
+  isPlannerReference,
+  plannerQuoteLabels,
+} from '../../../server/planner/quoteConfig';
+
+export const prerender = false;
+
+const referenceParam = Astro.url.searchParams.get('referencia')?.trim().toLowerCase();
+if (referenceParam && isPlannerReference(referenceParam)) {
+  return Astro.redirect(`/admin/planners/${referenceParam}`, 303);
+}
+
+const pageParam = Number(Astro.url.searchParams.get('pagina') ?? '1');
+const page = Number.isSafeInteger(pageParam) && pageParam > 0 && pageParam <= 100_000 ? pageParam : 1;
+const { quotes, totalPages } = await listPlannerQuotes(page);
+---
+
+<BaseLayout title="Solicitações de Planners | 678 Estudio">
+  <section class="mx-auto max-w-5xl px-4 py-10 sm:px-6">
+    <a href="/admin" class="text-sm font-semibold text-accent hover:underline">← Voltar ao painel</a>
+    <h1 class="editorial-heading mt-4 text-4xl">Solicitações de Planners</h1>
+    <p class="mt-2 text-sm text-ink-secondary">Consulte as configurações, prévias reais e arquivos de produção gráfica.</p>
+
+    <form method="get" class="mt-6">
+      <label for="planner-reference" class="block text-sm font-semibold">Abrir por código de referência</label>
+      <div class="mt-2 flex flex-wrap gap-2">
+        <input
+          id="planner-reference"
+          name="referencia"
+          type="text"
+          required
+          maxlength="36"
+          value={referenceParam}
+          placeholder="Ex.: 4589d896-fc8b-4914-9b55-d36c57f722cb"
+          class="min-h-11 w-full max-w-sm rounded-md border border-control bg-canvas px-3 text-sm"
+        />
+        <button class="min-h-11 rounded-md bg-action px-4 text-sm font-semibold text-on-action hover:bg-action-hover">
+          Consultar
+        </button>
+      </div>
+      {referenceParam && <p role="alert" class="mt-2 text-sm text-danger">Informe o código completo da referência (UUID).</p>}
+    </form>
+
+    {quotes.length > 0 ? (
+      <ul class="mt-6 divide-y divide-line rounded-xl border border-line bg-surface">
+        {quotes.map((quote) => (
+          <li class="p-4 transition hover:bg-surface-muted/50">
+            <a class="block font-semibold text-accent hover:underline" href={`/admin/planners/${quote.id}`}>
+              {quote.product} · {formatPlannerQuoteDate(quote.createdAt)}
+            </a>
+            <p class="mt-1 text-sm text-ink-secondary">{plannerQuoteLabels(quote.config).join(' · ')}</p>
+            {quote.config.personalizationName && (
+              <p class="mt-0.5 text-xs text-ink-muted">Identificação: {quote.config.personalizationName}</p>
+            )}
+            <p class="mt-1 break-all font-mono text-xs text-ink-muted">{quote.id}</p>
+          </li>
+        ))}
+      </ul>
+    ) : (
+      <p class="mt-6 rounded-lg border border-line bg-surface p-4 text-sm text-ink-secondary">
+        Nenhuma solicitação de planner encontrada nesta página.
+      </p>
+    )}
+
+    {(page > 1 || page < totalPages) && (
+      <nav class="mt-4 flex items-center justify-between text-sm font-semibold text-accent" aria-label="Navegação da lista">
+        {page > 1 ? <a href={`?pagina=${page - 1}`} class="hover:underline">← Anterior</a> : <span />}
+        <span class="text-xs font-normal text-ink-muted">Página {page} de {totalPages}</span>
+        {page < totalPages ? <a href={`?pagina=${page + 1}`} class="hover:underline">Próxima →</a> : <span />}
+      </nav>
+    )}
+  </section>
+</BaseLayout>
+

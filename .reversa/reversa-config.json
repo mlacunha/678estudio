@@ -1,5 +1,14 @@
 {
   "version": 1,
   "allowLegacyEdits": false,
-  "allowedPaths": []
+  "allowedPaths": [
+    "src/server/planner/**",
+    "src/pages/personalizar/planner.astro",
+    "src/scripts/plannerCustomizer.ts",
+    "src/pages/api/planner/**",
+    "src/pages/admin/planners/**",
+    "src/db/plannerQuotes*",
+    "src/db/database.ts",
+    "src/data/stationery.ts"
+  ]
 }

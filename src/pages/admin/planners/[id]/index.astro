@@ -1,0 +1,102 @@
+---
+import BaseLayout from '../../../../layouts/BaseLayout.astro';
+import { getPlannerQuote } from '../../../../db/plannerQuotes';
+import {
+  formatPlannerQuoteDate,
+  plannerQuoteLabels,
+} from '../../../../server/planner/quoteConfig';
+import { plannerSections } from '../../../../server/planner/options.mjs';
+
+export const prerender = false;
+
+const id = Astro.params.id ?? '';
+const quote = await getPlannerQuote(id);
+if (!quote) return new Response('Solicitação de planner não encontrada.', { status: 404 });
+
+const { config } = quote;
+const files = `/admin/planners/${quote.id}/arquivo`;
+const labelClass = 'text-xs font-semibold uppercase tracking-wider text-ink-muted';
+---
+
+<BaseLayout title={`Produção: ${quote.product} | 678 Estudio`}>
+  <section class="mx-auto max-w-5xl px-4 py-10 sm:px-6">
+    <a href="/admin/planners" class="text-sm font-semibold text-accent hover:underline">← Voltar às solicitações de planners</a>
+    <h1 class="editorial-heading mt-4 text-4xl">{quote.product}</h1>
+    <p class="mt-2 text-sm text-ink-secondary">Solicitado · {formatPlannerQuoteDate(quote.createdAt)}</p>
+    <p class="mt-2 break-all font-mono text-xs text-ink-muted">{quote.id}</p>
+
+    <div class="mt-6 rounded-xl border border-line bg-surface p-4 sm:p-6">
+      <h2 class="text-xl font-semibold">Especificações do produto</h2>
+
+      <dl class="mt-4 grid grid-cols-2 gap-4 md:grid-cols-4">
+        {plannerQuoteLabels(config).map((value, index) => (
+          <div>
+            <dt class={labelClass}>{['Modelo', 'Modalidade / Ano', 'Estilo visual', 'Tipografia', 'Formato'][index]}</dt>
+            <dd class="mt-1 text-sm font-medium">{value}</dd>
+          </div>
+        ))}
+        <div>
+          <dt class={labelClass}>Identificação</dt>
+          <dd class="mt-1 text-sm font-medium">{config.personalizationName || 'Não informada'}</dd>
+        </div>
+        <div>
+          <dt class={labelClass}>Paleta do estilo</dt>
+          <dd class="mt-1 font-mono text-xs">{config.colors.primary} / {config.colors.secondary} / {config.colors.accent}</dd>
+        </div>
+        <div class="min-w-0">
+          <dt class={labelClass}>Logomarca</dt>
+          <dd class="mt-1 break-all text-sm font-medium">{config.logo?.originalName || 'Sem logomarca'}</dd>
+        </div>
+        <div>
+          <dt class={labelClass}>Template Typst</dt>
+          <dd class="mt-1 text-sm font-medium">{config.template} (v{quote.configVersion})</dd>
+        </div>
+      </dl>
+
+      <div class="mt-6 flex flex-wrap items-center gap-3 border-t border-line pt-5">
+        <a
+          href={`/admin/planners/${quote.id}/pdf`}
+          class="inline-flex min-h-11 items-center justify-center rounded-md bg-action px-5 text-sm font-semibold text-on-action hover:bg-action-hover"
+        >
+          Baixar PDF de produção (A5)
+        </a>
+        <a class="p-2 text-sm font-semibold text-accent hover:underline" href={`${files}/configuracao`}>
+          Baixar configuração JSON
+        </a>
+        {config.logo && (
+          <>
+            <a class="p-2 text-sm font-semibold text-accent hover:underline" href={`${files}/original`}>
+              Baixar logo original
+            </a>
+            <a class="p-2 text-sm font-semibold text-accent hover:underline" href={`${files}/logo`}>
+              Baixar logo processada
+            </a>
+          </>
+        )}
+      </div>
+    </div>
+
+    <div class="mt-8">
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <h2 class="text-xl font-semibold">Prévias reais salvas no banco</h2>
+        <span class="text-xs text-ink-muted">8 seções renderizadas pelo motor Typst</span>
+      </div>
+
+      <div class="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
+        {plannerSections.map((section) => (
+          <div class="rounded-xl border border-line bg-surface p-2">
+            <img
+              src={`${files}/preview-${section.id}`}
+              alt={`Prévia da seção ${section.label}`}
+              loading="lazy"
+              class="block aspect-[148/210] w-full rounded bg-white object-contain shadow-inner"
+            />
+            <span class="mt-2 block px-1 text-xs font-semibold text-ink">{section.label}</span>
+            <span class="block px-1 text-[11px] text-ink-muted">{section.detail}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+

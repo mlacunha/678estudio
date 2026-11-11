@@ -1,0 +1,8 @@
+{"timestamp":"2026-11-11T17:10:00-03:00","phase":1,"task":"T001-T005","status":"completed","note":"Opções, contratos, calendário e schema SQLite criados"}
+{"timestamp":"2026-11-11T17:12:00-03:00","phase":2,"task":"T006-T007","status":"completed","note":"Testes unitários de calendário e SQLite criados"}
+{"timestamp":"2026-11-11T17:14:00-03:00","phase":3,"task":"T008-T010","status":"completed","note":"Templates Typst A5 e orquestrador de compilação implementados"}
+{"timestamp":"2026-11-11T17:16:00-03:00","phase":4,"task":"T011-T012","status":"completed","note":"Endpoints de prévia e orçamento implementados"}
+{"timestamp":"2026-11-11T17:18:00-03:00","phase":4,"task":"T013-T016","status":"completed","note":"Página Astro, script cliente, rotas administrativas e vitrine ativada"}
+{"timestamp":"2026-11-11T17:20:00-03:00","phase":5,"task":"T017","status":"completed","note":"Testes de integração Typst implementados e pronto para validação de testes"}
+{"timestamp":"2026-11-11T18:40:00-03:00","phase":6,"task":"MOD-TIPOGRAFIA","status":"completed","note":"Modernização tipográfica: Inter, Manrope, DM Sans e DM Serif Display embarcados com SIL OFL e suporte independente"}
+
