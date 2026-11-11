@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Feature: Compilador Typst — 678 Estudio</title>
+  <link rel="stylesheet" href="../assets/css/docs.css">
+  <script src="../assets/js/data.js"></script>
+</head>
+<body>
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="brand">
+        <img src="../assets/img/seal-mini.svg" alt="Selo">
+        <div>
+          <div class="brand-title">678 Estudio</div>
+          <div class="brand-badge">REVERSA DOCS</div>
+        </div>
+      </div>
+      <div class="nav-section">Visão Geral</div>
+      <a href="../index.html" class="nav-item">Início</a>
+      <a href="../arquitetura.html" class="nav-item">Arquitetura 3D</a>
+      <a href="../modulos.html" class="nav-item">Mapa de Módulos</a>
+      <a href="../topologia.html" class="nav-item">Topologia C4</a>
+      <div class="nav-section">Análise & Dados</div>
+      <a href="../metricas.html" class="nav-item">Dashboard de Métricas</a>
+      <div class="nav-section">Conhecimento & Onboarding</div>
+      <a href="../glossario.html" class="nav-item">Glossário do Sistema</a>
+      <a href="../deck.html" class="nav-item">Slide Deck Executivo</a>
+      <div class="nav-section">Features & Specs</div>
+      <a href="catalog.html" class="nav-item">Catálogo & Produtos</a>
+      <a href="database.html" class="nav-item">Banco SQLite & Migrações</a>
+      <a href="customizer-caneca-3d.html" class="nav-item">Caneca 3D (Three.js)</a>
+      <a href="customizer-quadro-ambiente.html" class="nav-item">Quadro Ambiente (Canvas)</a>
+      <a href="agenda-compiler.html" class="nav-item active">Compilador Typst (Agendas)</a>
+      <a href="admin.html" class="nav-item">Painel Administrativo</a>
+      <a href="public-site.html" class="nav-item">Site Público Vitrine</a>
+    </aside>
+
+    <main class="main-content">
+      <header class="page-header">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <div>
+            <h1 class="page-title">Motor de Compilação de Agendas (Typst)</h1>
+            <p class="page-desc">Especificação da unit <code>agenda-compiler</code> — automação gráfica, CLI isolado e WCAG.</p>
+          </div>
+          <span class="badge badge-yellow">Confiança: 84.6%</span>
+        </div>
+      </header>
+
+      <div class="card" style="margin-bottom:2rem;">
+        <div class="card-title">Resumo Operacional</div>
+        <div class="card-desc">
+          Pipeline gráfico acionado via Node.js para compilar miolos completos de agendas anuais e planners usando o binário CLI do Typst. Gera PDFs vetoriais prontos para gráfica e renderiza prévias pontuais de 8 páginas essenciais em PNG para aprovação prévia em cotações.
+        </div>
+      </div>
+
+      <div class="grid-2" style="margin-bottom:2rem;">
+        <div class="card">
+          <div class="card-title">Validação de Contraste WCAG</div>
+          <p style="font-size:0.875rem; color:var(--text-secondary); line-height:1.7;">
+            A função <code>isAgendaColor</code> decompõe canais sRGB, converte para luminância relativa e valida que a taxa de contraste sobre o papel branco atinja o piso de <strong>3:1</strong>, prevenindo agendas com texto ilegível.
+          </p>
+        </div>
+        <div class="card">
+          <div class="card-title">Isolamento em Subprocesso</div>
+          <p style="font-size:0.875rem; color:var(--text-secondary); line-height:1.7;">
+            Se o usuário envia um logotipo corporativo, o compilador cria uma pasta temporária (<code>mkdtemp</code>), copia fontes e templates e roda com <code>--ignore-system-fonts</code>, garantindo segurança e destruição no <code>finally</code>.
+          </p>
+        </div>
+      </div>
+    </main>
+  </div>
+</body>
+</html>
+

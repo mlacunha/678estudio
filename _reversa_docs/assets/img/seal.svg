@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" width="800" height="800">
+  <defs>
+    <radialGradient id="sealBg" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#18181b"/>
+      <stop offset="70%" stop-color="#09090b"/>
+      <stop offset="100%" stop-color="#000000"/>
+    </radialGradient>
+    <linearGradient id="goldAcc" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f59e0b"/>
+      <stop offset="100%" stop-color="#d97706"/>
+    </linearGradient>
+    <linearGradient id="lineGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#71717a" stop-opacity="0.8"/>
+      <stop offset="100%" stop-color="#27272a" stop-opacity="0.2"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background Base -->
+  <rect width="800" height="800" rx="40" fill="url(#sealBg)"/>
+
+  <!-- Concentric Geometry -->
+  <circle cx="400" cy="400" r="320" fill="none" stroke="#27272a" stroke-width="2" stroke-dasharray="8 6"/>
+  <circle cx="400" cy="400" r="260" fill="none" stroke="#3f3f46" stroke-width="1.5"/>
+  <circle cx="400" cy="400" r="180" fill="none" stroke="#52525b" stroke-width="2"/>
+  <circle cx="400" cy="400" r="100" fill="none" stroke="url(#goldAcc)" stroke-width="3"/>
+  <circle cx="400" cy="400" r="28" fill="url(#goldAcc)"/>
+
+  <!-- Radial Rays & Nodes -->
+  <g stroke="url(#lineGrad)" stroke-width="1.5">
+    <line x1="400" y1="80" x2="400" y2="720"/>
+    <line x1="80" y1="400" x2="720" y2="400"/>
+    <line x1="174" y1="174" x2="626" y2="626"/>
+    <line x1="174" y1="626" x2="626" y2="174"/>
+  </g>
+
+  <!-- Hexagonal Core Nodes -->
+  <polygon points="400,220 556,310 556,490 400,580 244,490 244,310" fill="none" stroke="#71717a" stroke-width="2"/>
+  <polygon points="400,260 521,330 521,470 400,540 279,470 279,330" fill="none" stroke="url(#goldAcc)" stroke-width="1" stroke-dasharray="4 4"/>
+
+  <!-- Orbital Satellites -->
+  <circle cx="400" cy="220" r="9" fill="#f59e0b"/>
+  <circle cx="556" cy="310" r="9" fill="#f59e0b"/>
+  <circle cx="556" cy="490" r="9" fill="#f59e0b"/>
+  <circle cx="400" cy="580" r="9" fill="#f59e0b"/>
+  <circle cx="244" cy="490" r="9" fill="#f59e0b"/>
+  <circle cx="244" cy="310" r="9" fill="#f59e0b"/>
+
+  <!-- Micro Details -->
+  <circle cx="400" cy="400" r="350" fill="none" stroke="#27272a" stroke-width="1"/>
+  <text x="400" y="750" text-anchor="middle" font-family="monospace" font-size="13" fill="#71717a" letter-spacing="6">678 ESTUDIO · SEED CE64F4A1 · REVERSA DOCS</text>
+</svg>
+

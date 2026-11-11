@@ -59,6 +59,20 @@ const { studioProducts } = Astro.props;
           <div class="absolute top-4 right-4 pointer-events-none px-2.5 py-1 rounded text-[10px] uppercase tracking-wider font-semibold bg-media-badge/95 text-on-media">
             <span data-frame-measure>30 × 40 cm</span>
           </div>
+
+          <!-- Gatilho de Ampliação do Mockup -->
+          <button
+            type="button"
+            id="btn-open-mockup-zoom"
+            aria-label="Ampliar mockup em detalhes"
+            title="Ampliar visualização do mockup"
+            class="absolute bottom-4 right-4 z-10 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-media-badge/95 hover:bg-media-badge text-on-media text-xs font-medium shadow-md backdrop-blur-md border border-line/30 transition-all hover:scale-105 active:scale-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" class="size-3.5 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v6m3-3H7" />
+            </svg>
+            <span>Ampliar</span>
+          </button>
         </div>
 
       </div>
@@ -243,6 +257,86 @@ const { studioProducts } = Astro.props;
 
     </div>
   </div>
+
+  <!-- Modal de Zoom e Inspeção do Mockup -->
+  <dialog
+    id="modal-mockup-zoom"
+    aria-label="Inspeção detalhada do mockup"
+    class="backdrop:bg-black/85 backdrop:backdrop-blur-sm fixed inset-0 z-50 m-0 p-0 w-screen h-screen max-w-none max-h-none bg-canvas/95 text-ink border-0 flex flex-col items-center justify-between overflow-hidden [&:not([open])]:hidden"
+  >
+    <!-- Barra Superior -->
+    <header class="w-full flex items-center justify-between px-4 sm:px-6 py-3 border-b border-line bg-surface/90 backdrop-blur-md z-10">
+      <div class="flex items-center gap-3">
+        <span class="text-sm font-semibold text-ink">Inspeção do Mockup</span>
+        <span id="zoom-level-badge" class="px-2 py-0.5 rounded text-[11px] font-semibold bg-surface-raised border border-control text-accent">100%</span>
+      </div>
+      <button
+        type="button"
+        id="btn-close-mockup-zoom"
+        aria-label="Fechar ampliação"
+        class="min-h-11 min-w-11 flex items-center justify-center rounded-lg hover:bg-surface-raised text-ink-secondary hover:text-ink transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" class="size-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </header>
+
+    <!-- Viewport de Visualização com Arraste e Zoom -->
+    <div
+      id="zoom-viewport"
+      class="relative flex-1 w-full h-full overflow-hidden flex items-center justify-center cursor-grab active:cursor-grabbing select-none touch-none"
+    >
+      <img
+        id="zoom-display-image"
+        src=""
+        alt="Mockup ampliado do quadro no ambiente"
+        class="max-w-full max-h-full object-contain pointer-events-none origin-center will-change-transform"
+      />
+    </div>
+
+    <!-- Barra Inferior de Controles -->
+    <footer class="w-full flex flex-col sm:flex-row items-center justify-between gap-2 px-4 sm:px-6 py-3 border-t border-line bg-surface/90 backdrop-blur-md z-10">
+      <p class="text-[11px] text-ink-muted hidden sm:block">
+        Arraste para mover • Scroll do mouse ou pinça no celular para zoom
+      </p>
+
+      <div class="flex items-center gap-2 sm:gap-3 mx-auto sm:mx-0">
+        <button
+          type="button"
+          id="btn-zoom-out"
+          aria-label="Reduzir ampliação"
+          class="min-h-11 px-3.5 py-2 flex items-center gap-1.5 rounded-lg border border-control bg-surface hover:bg-surface-raised text-xs font-semibold text-ink transition-all active:scale-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4" />
+          </svg>
+          <span>Reduzir</span>
+        </button>
+
+        <button
+          type="button"
+          id="btn-zoom-reset"
+          aria-label="Restaurar tamanho original 1:1"
+          class="min-h-11 px-4 py-2 flex items-center justify-center rounded-lg border border-control bg-surface hover:bg-surface-raised text-xs font-semibold text-ink transition-all active:scale-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
+        >
+          <span>1:1</span>
+        </button>
+
+        <button
+          type="button"
+          id="btn-zoom-in"
+          aria-label="Aproximar ampliação"
+          class="min-h-11 px-3.5 py-2 flex items-center gap-1.5 rounded-lg border border-control bg-surface hover:bg-surface-raised text-xs font-semibold text-ink transition-all active:scale-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+          </svg>
+          <span>Aproximar</span>
+        </button>
+      </div>
+    </footer>
+  </dialog>
 </BaseLayout>
 
 <script>
@@ -250,6 +344,14 @@ const { studioProducts } = Astro.props;
   import { loadArtwork, setupMockupQuote } from '../../utils/customizerClient';
   import { loadStudioArtwork, setupStudioPublication } from '../../utils/imageStudioClient';
   import { createWoodSurface, sublimateArtwork, WOOD_PROFILES } from '../../utils/woodSublimation';
+  import {
+    calcZoomStep,
+    calcWheelZoom,
+    calculatePanLimits,
+    clampPan,
+    calcTouchDistance,
+    calcPinchScale,
+  } from '../../utils/mockupZoom';
   function initFrameCustomizer() {
     const stageCanvas = document.getElementById('frame-stage-canvas') as HTMLCanvasElement | null;
     const inputArt = document.getElementById('input-frame-art') as HTMLInputElement | null;
@@ -499,9 +601,12 @@ const { studioProducts } = Astro.props;
         }))
       : undefined;
 
+    const zoomController = setupMockupZoom(stageCanvas);
+
     const updateScene = () => {
       quote?.invalidate();
       renderScene();
+      zoomController.sync();
     };
 
     const updateLayout = () => {
@@ -583,6 +688,146 @@ const { studioProducts } = Astro.props;
     });
     sliderX?.addEventListener('input', updateScene);
     sliderY?.addEventListener('input', updateScene);
+
+    function setupMockupZoom(canvas: HTMLCanvasElement | null) {
+      const modal = document.getElementById('modal-mockup-zoom') as HTMLDialogElement | null;
+      const btnOpen = document.getElementById('btn-open-mockup-zoom');
+      const btnClose = document.getElementById('btn-close-mockup-zoom');
+      const btnZoomIn = document.getElementById('btn-zoom-in');
+      const btnZoomOut = document.getElementById('btn-zoom-out');
+      const btnZoomReset = document.getElementById('btn-zoom-reset');
+      const zoomBadge = document.getElementById('zoom-level-badge');
+      const zoomViewport = document.getElementById('zoom-viewport');
+      const zoomImage = document.getElementById('zoom-display-image') as HTMLImageElement | null;
+
+      if (!modal || !zoomViewport || !zoomImage || !canvas) return { sync: () => {} };
+
+      let scale = 1.0;
+      let panX = 0;
+      let panY = 0;
+      let isDragging = false;
+      let startX = 0;
+      let startY = 0;
+      let startPanX = 0;
+      let startPanY = 0;
+      let pinchDist: number | null = null;
+      let pinchScale = 1.0;
+
+      function render() {
+        const limits = calculatePanLimits(scale, zoomViewport!.clientWidth, zoomViewport!.clientHeight);
+        const clamped = clampPan(panX, panY, limits);
+        panX = clamped.x;
+        panY = clamped.y;
+        zoomImage!.style.transform = `translate3d(${panX}px, ${panY}px, 0px) scale(${scale})`;
+        if (zoomBadge) zoomBadge.textContent = `${Math.round(scale * 100)}%`;
+      }
+
+      function reset() {
+        scale = 1.0;
+        panX = 0;
+        panY = 0;
+        render();
+      }
+
+      function sync() {
+        if (!modal?.open) return;
+        zoomImage!.src = canvas!.toDataURL('image/jpeg', 0.95);
+      }
+
+      function open() {
+        reset();
+        zoomImage!.src = canvas!.toDataURL('image/jpeg', 0.95);
+        modal!.showModal();
+      }
+
+      function close() {
+        modal!.close();
+        reset();
+        if (btnOpen instanceof HTMLElement) btnOpen.focus();
+      }
+
+      btnOpen?.addEventListener('click', open);
+      canvas.addEventListener('click', open);
+      btnClose?.addEventListener('click', close);
+      btnZoomReset?.addEventListener('click', reset);
+      modal.addEventListener('close', reset);
+
+      btnZoomIn?.addEventListener('click', () => {
+        scale = calcZoomStep(scale, 'in');
+        render();
+      });
+
+      btnZoomOut?.addEventListener('click', () => {
+        scale = calcZoomStep(scale, 'out');
+        render();
+      });
+
+      zoomViewport.addEventListener('wheel', (e) => {
+        e.preventDefault();
+        scale = calcWheelZoom(scale, e.deltaY);
+        render();
+      }, { passive: false });
+
+      zoomViewport.addEventListener('pointerdown', (e) => {
+        if (scale <= 1.0) return;
+        isDragging = true;
+        startX = e.clientX;
+        startY = e.clientY;
+        startPanX = panX;
+        startPanY = panY;
+        zoomViewport!.setPointerCapture(e.pointerId);
+      });
+
+      zoomViewport.addEventListener('pointermove', (e) => {
+        if (!isDragging) return;
+        panX = startPanX + (e.clientX - startX);
+        panY = startPanY + (e.clientY - startY);
+        render();
+      });
+
+      const endDrag = (e: PointerEvent) => {
+        if (!isDragging) return;
+        isDragging = false;
+        try { zoomViewport!.releasePointerCapture(e.pointerId); } catch {}
+      };
+      zoomViewport.addEventListener('pointerup', endDrag);
+      zoomViewport.addEventListener('pointercancel', endDrag);
+
+      zoomViewport.addEventListener('touchstart', (e) => {
+        if (e.touches.length === 2) {
+          pinchDist = calcTouchDistance(e.touches[0], e.touches[1]);
+          pinchScale = scale;
+        }
+      }, { passive: true });
+
+      zoomViewport.addEventListener('touchmove', (e) => {
+        if (e.touches.length === 2 && pinchDist) {
+          const currentDist = calcTouchDistance(e.touches[0], e.touches[1]);
+          scale = calcPinchScale(pinchScale, pinchDist, currentDist);
+          render();
+        }
+      }, { passive: true });
+
+      zoomViewport.addEventListener('touchend', () => {
+        pinchDist = null;
+      }, { passive: true });
+
+      document.addEventListener('keydown', (e) => {
+        if (!modal?.open) return;
+        if (e.key === 'Escape') close();
+        if (e.key === '+' || e.key === '=') {
+          scale = calcZoomStep(scale, 'in');
+          render();
+        }
+        if (e.key === '-' || e.key === '_') {
+          scale = calcZoomStep(scale, 'out');
+          render();
+        }
+        if (e.key === '0') reset();
+      });
+
+      return { sync };
+    }
 
   }
 

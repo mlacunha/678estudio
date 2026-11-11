@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Mapa de Módulos e Dependências — 678 Estudio</title>
+  <link rel="stylesheet" href="assets/css/docs.css">
+  <script src="assets/js/data.js"></script>
+</head>
+<body>
+  <div class="layout">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="brand">
+        <img src="assets/img/seal-mini.svg" alt="Selo">
+        <div>
+          <div class="brand-title">678 Estudio</div>
+          <div class="brand-badge">REVERSA DOCS</div>
+        </div>
+      </div>
+      <div class="nav-section">Visão Geral</div>
+      <a href="index.html" class="nav-item">Início</a>
+      <a href="arquitetura.html" class="nav-item">Arquitetura 3D</a>
+      <a href="modulos.html" class="nav-item active">Mapa de Módulos</a>
+      <a href="topologia.html" class="nav-item">Topologia C4</a>
+      <div class="nav-section">Análise & Dados</div>
+      <a href="metricas.html" class="nav-item">Dashboard de Métricas</a>
+      <div class="nav-section">Conhecimento & Onboarding</div>
+      <a href="glossario.html" class="nav-item">Glossário do Sistema</a>
+      <a href="deck.html" class="nav-item">Slide Deck Executivo</a>
+      <div class="nav-section">Features & Specs</div>
+      <a href="features/catalog.html" class="nav-item">Catálogo & Produtos</a>
+      <a href="features/database.html" class="nav-item">Banco SQLite & Migrações</a>
+      <a href="features/customizer-caneca-3d.html" class="nav-item">Caneca 3D (Three.js)</a>
+      <a href="features/customizer-quadro-ambiente.html" class="nav-item">Quadro Ambiente (Canvas)</a>
+      <a href="features/agenda-compiler.html" class="nav-item">Compilador Typst (Agendas)</a>
+      <a href="features/admin.html" class="nav-item">Painel Administrativo</a>
+      <a href="features/public-site.html" class="nav-item">Site Público Vitrine</a>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <header class="page-header">
+        <h1 class="page-title">Grafo de Dependências e Módulos</h1>
+        <p class="page-desc">Visualização interativa das conexões e chamadas internas entre as unidades do sistema.</p>
+      </header>
+
+      <!-- Interactive Graph Canvas -->
+      <div class="interactive-canvas" style="height: 500px; margin-bottom: 2rem;">
+        <canvas id="graphCanvas" width="900" height="500" style="display:block; width:100%; height:100%;"></canvas>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title">Núcleo Relacional Central</div>
+          <div class="card-desc">O módulo <code>database</code> atua como a fundação de persistência para catálogo, portfólio de trabalhos e orçamentos do compilador Typst.</div>
+        </div>
+        <div class="card">
+          <div class="card-title">Desacoplamento nos Simuladores</div>
+          <div class="card-desc">Os personalizadores operam no cliente sem dependência de processamento em tempo real no servidor, gerando snapshots assíncronos apenas no momento do orçamento.</div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const canvas = document.getElementById('graphCanvas');
+    const ctx = canvas.getContext('2d');
+    const { nodes, edges } = window.RV_DATA.deps;
+
+    // Posições espaciais harmoniosas
+    const positions = {
+      "database": { x: 450, y: 380, color: "#64748b" },
+      "catalog": { x: 450, y: 240, color: "#6366f1" },
+      "public-site": { x: 180, y: 150, color: "#10b981" },
+      "customizer-caneca-3d": { x: 300, y: 90, color: "#ec4899" },
+      "customizer-quadro-ambiente": { x: 600, y: 90, color: "#f59e0b" },
+      "agenda-compiler": { x: 740, y: 260, color: "#8b5cf6" },
+      "admin": { x: 200, y: 340, color: "#3b82f6" }
+    };
+
+    function drawGraph() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Conexões (Edges)
+      edges.forEach(e => {
+        const from = positions[e.source];
+        const to = positions[e.target];
+        if (!from || !to) return;
+
+        ctx.strokeStyle = "rgba(113, 113, 122, 0.45)";
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(from.x, from.y);
+        ctx.lineTo(to.x, to.y);
+        ctx.stroke();
+
+        // Rótulo da aresta
+        const midX = (from.x + to.x) / 2;
+        const midY = (from.y + to.y) / 2;
+        ctx.fillStyle = "#71717a";
+        ctx.font = "10px var(--font-mono)";
+        ctx.textAlign = "center";
+        ctx.fillText(e.type, midX, midY - 4);
+      });
+
+      // Nós (Nodes)
+      nodes.forEach(n => {
+        const p = positions[n.id];
+        if (!p) return;
+
+        // Aura
+        ctx.fillStyle = p.color;
+        ctx.globalAlpha = 0.2;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 32, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.globalAlpha = 1.0;
+
+        // Círculo central
+        ctx.fillStyle = "#18181b";
+        ctx.strokeStyle = p.color;
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 22, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+
+        // Rótulo
+        ctx.fillStyle = "#f4f4f5";
+        ctx.font = "12px var(--font-sans)";
+        ctx.textAlign = "center";
+        ctx.fillText(n.label, p.x, p.y + 36);
+      });
+    }
+
+    drawGraph();
+  </script>
+</body>
+</html>
+

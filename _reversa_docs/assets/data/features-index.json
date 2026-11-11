@@ -1,0 +1,63 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-11-11T18:25:00Z",
+  "features": [
+    {
+      "id": "catalog",
+      "title": "Catálogo de Produtos & Categorias",
+      "summary": "Gestão de produtos com ordenação, filtros de categoria e operações CRUD parametrizadas.",
+      "path": "features/catalog.html",
+      "badge": "Core / Dados",
+      "confidence": "96.4%"
+    },
+    {
+      "id": "database",
+      "title": "Banco de Dados SQLite & Migrações",
+      "summary": "Driver @libsql/client singleton, bootstrap idempotente via WeakMap e migrações versionadas.",
+      "path": "features/database.html",
+      "badge": "Infraestrutura",
+      "confidence": "95.8%"
+    },
+    {
+      "id": "customizer-caneca-3d",
+      "title": "Personalizador 3D de Canecas",
+      "summary": "Simulador interativo Three.js WebGL com rotação 360°, projeção cilíndrica métrica e WhatsApp CTA.",
+      "path": "features/customizer-caneca-3d.html",
+      "badge": "Simulador 3D",
+      "confidence": "95.5%"
+    },
+    {
+      "id": "customizer-quadro-ambiente",
+      "title": "Personalizador de Quadros em Ambientes",
+      "summary": "Composição 2D em 5 camadas em cenários fotorrealistas de Sala e Escritório com escala de 15 px/cm.",
+      "path": "features/customizer-quadro-ambiente.html",
+      "badge": "Simulador 2D",
+      "confidence": "95.0%"
+    },
+    {
+      "id": "agenda-compiler",
+      "title": "Compilador de Agendas (Typst CLI)",
+      "summary": "Diagramação profissional automatizada em PDF e prévias PNG com validação de contraste WCAG.",
+      "path": "features/agenda-compiler.html",
+      "badge": "Compilador Gráfico",
+      "confidence": "84.6%"
+    },
+    {
+      "id": "admin",
+      "title": "Painel Administrativo",
+      "summary": "Gestão de catálogo sem rebuild, configurações de contato e redes sociais, galeria e backups.",
+      "path": "features/admin.html",
+      "badge": "Gestão Interna",
+      "confidence": "77.8%"
+    },
+    {
+      "id": "public-site",
+      "title": "Site Público & Vitrine Editorial",
+      "summary": "Homepage com Hero editorial, 4 carrosséis temáticos responsivos e funil de conversão WhatsApp.",
+      "path": "features/public-site.html",
+      "badge": "Frontend / UX",
+      "confidence": "83.3%"
+    }
+  ]
+}
+

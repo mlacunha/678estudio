@@ -1,0 +1,17 @@
+{
+  "schema-version": 1,
+  "feature-dir": "_reversa_forward/001-zoom-mockup-quadros",
+  "feature-id": "001",
+  "short-name": "zoom-mockup-quadros",
+  "started-at": "2026-11-11T18:51:00Z",
+  "current-stage": "sync",
+  "stages-completed": [
+    "requirements",
+    "plan",
+    "to-do",
+    "coding",
+    "sync"
+  ],
+  "paused-features": []
+}
+

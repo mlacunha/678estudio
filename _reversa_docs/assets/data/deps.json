@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-11-11T18:25:00Z",
+  "nodes": [
+    { "id": "catalog", "label": "Catálogo", "group": "core", "loc": 315 },
+    { "id": "database", "label": "Banco de Dados", "group": "infra", "loc": 235 },
+    { "id": "customizer-caneca-3d", "label": "Caneca 3D", "group": "feature", "loc": 610 },
+    { "id": "customizer-quadro-ambiente", "label": "Quadro Ambiente", "group": "feature", "loc": 645 },
+    { "id": "agenda-compiler", "label": "Compilador Typst", "group": "compiler", "loc": 480 },
+    { "id": "admin", "label": "Painel Admin", "group": "admin", "loc": 820 },
+    { "id": "public-site", "label": "Site Público", "group": "ui", "loc": 735 }
+  ],
+  "edges": [
+    { "source": "catalog", "target": "database", "type": "imports" },
+    { "source": "customizer-caneca-3d", "target": "catalog", "type": "uses" },
+    { "source": "customizer-caneca-3d", "target": "database", "type": "persists" },
+    { "source": "customizer-quadro-ambiente", "target": "catalog", "type": "uses" },
+    { "source": "agenda-compiler", "target": "database", "type": "persists" },
+    { "source": "admin", "target": "catalog", "type": "manages" },
+    { "source": "admin", "target": "database", "type": "manages" },
+    { "source": "public-site", "target": "catalog", "type": "renders" },
+    { "source": "public-site", "target": "customizer-caneca-3d", "type": "links" },
+    { "source": "public-site", "target": "customizer-quadro-ambiente", "type": "links" }
+  ]
+}
+

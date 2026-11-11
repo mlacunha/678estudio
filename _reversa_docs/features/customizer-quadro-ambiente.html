@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Feature: Quadro em Ambiente — 678 Estudio</title>
+  <link rel="stylesheet" href="../assets/css/docs.css">
+  <script src="../assets/js/data.js"></script>
+</head>
+<body>
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="brand">
+        <img src="../assets/img/seal-mini.svg" alt="Selo">
+        <div>
+          <div class="brand-title">678 Estudio</div>
+          <div class="brand-badge">REVERSA DOCS</div>
+        </div>
+      </div>
+      <div class="nav-section">Visão Geral</div>
+      <a href="../index.html" class="nav-item">Início</a>
+      <a href="../arquitetura.html" class="nav-item">Arquitetura 3D</a>
+      <a href="../modulos.html" class="nav-item">Mapa de Módulos</a>
+      <a href="../topologia.html" class="nav-item">Topologia C4</a>
+      <div class="nav-section">Análise & Dados</div>
+      <a href="../metricas.html" class="nav-item">Dashboard de Métricas</a>
+      <div class="nav-section">Conhecimento & Onboarding</div>
+      <a href="../glossario.html" class="nav-item">Glossário do Sistema</a>
+      <a href="../deck.html" class="nav-item">Slide Deck Executivo</a>
+      <div class="nav-section">Features & Specs</div>
+      <a href="catalog.html" class="nav-item">Catálogo & Produtos</a>
+      <a href="database.html" class="nav-item">Banco SQLite & Migrações</a>
+      <a href="customizer-caneca-3d.html" class="nav-item">Caneca 3D (Three.js)</a>
+      <a href="customizer-quadro-ambiente.html" class="nav-item active">Quadro Ambiente (Canvas)</a>
+      <a href="agenda-compiler.html" class="nav-item">Compilador Typst (Agendas)</a>
+      <a href="admin.html" class="nav-item">Painel Administrativo</a>
+      <a href="public-site.html" class="nav-item">Site Público Vitrine</a>
+    </aside>
+
+    <main class="main-content">
+      <header class="page-header">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <div>
+            <h1 class="page-title">Personalizador de Quadros em Ambientes</h1>
+            <p class="page-desc">Especificação da unit <code>customizer-quadro-ambiente</code> — Canvas 2D em 5 camadas e proporção 15 px/cm.</p>
+          </div>
+          <span class="badge badge-green">Confiança: 95.0%</span>
+        </div>
+      </header>
+
+      <div class="card" style="margin-bottom:2rem;">
+        <div class="card-title">Resumo Operacional</div>
+        <div class="card-desc">
+          Simulador visual contextual que projeta quadros de madeira clara sublimada (30 × 40 cm) em cenários de Sala Contemporânea ou Escritório Elegante. Utiliza Canvas 2D HTML5 com renderização em 5 camadas (fundo, sombra suave, moldura chanfrada, placa de madeira clara e estampa recortada).
+        </div>
+      </div>
+
+      <div class="grid-2" style="margin-bottom:2rem;">
+        <div class="card">
+          <div class="card-title">Regras de Geometria & Proporção</div>
+          <ul style="font-size:0.875rem; color:var(--text-secondary); margin-left:1.25rem; line-height:1.7;">
+            <li><strong>Escala Fixo</strong>: 15 pixels por centímetro (<code>pixelsPerCm = 15</code>).</li>
+            <li><strong>Orientações</strong>: Retrato (30 × 40 cm) e Paisagem (40 × 30 cm).</li>
+            <li><strong>Margens de Madeira</strong>: Entre 0.5 cm e 8.0 cm com passo de 0.5 cm.</li>
+            <li><strong>Molduras</strong>: Preta (#121316), Branca (#f1eee8) e Marrom (#583a2c).</li>
+          </ul>
+        </div>
+        <div class="card">
+          <div class="card-title">Resolução do Canvas</div>
+          <p style="font-size:0.85rem; color:var(--text-secondary); line-height:1.8;">
+            O palco do canvas opera na proporção nativa de <strong>1600 × 1100 px</strong> (aspect ratio 16:11), assegurando alinhamento milimétrico na parede e exportação em alta qualidade JPEG para o WhatsApp.
+          </p>
+        </div>
+      </div>
+    </main>
+  </div>
+</body>
+</html>
+

@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Documentação do Sistema — 678 Estudio</title>
+  <link rel="stylesheet" href="assets/css/docs.css">
+  <script src="assets/js/data.js"></script>
+</head>
+<body>
+  <div class="layout">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="brand">
+        <img src="assets/img/seal-mini.svg" alt="Selo">
+        <div>
+          <div class="brand-title">678 Estudio</div>
+          <div class="brand-badge">REVERSA DOCS</div>
+        </div>
+      </div>
+      <div class="nav-section">Visão Geral</div>
+      <a href="index.html" class="nav-item active">Início</a>
+      <a href="arquitetura.html" class="nav-item">Arquitetura 3D</a>
+      <a href="modulos.html" class="nav-item">Mapa de Módulos</a>
+      <a href="topologia.html" class="nav-item">Topologia C4</a>
+      <div class="nav-section">Análise & Dados</div>
+      <a href="metricas.html" class="nav-item">Dashboard de Métricas</a>
+      <div class="nav-section">Conhecimento & Onboarding</div>
+      <a href="glossario.html" class="nav-item">Glossário do Sistema</a>
+      <a href="deck.html" class="nav-item">Slide Deck Executivo</a>
+      <div class="nav-section">Features & Specs</div>
+      <a href="features/catalog.html" class="nav-item">Catálogo & Produtos</a>
+      <a href="features/database.html" class="nav-item">Banco SQLite & Migrações</a>
+      <a href="features/customizer-caneca-3d.html" class="nav-item">Caneca 3D (Three.js)</a>
+      <a href="features/customizer-quadro-ambiente.html" class="nav-item">Quadro Ambiente (Canvas)</a>
+      <a href="features/agenda-compiler.html" class="nav-item">Compilador Typst (Agendas)</a>
+      <a href="features/admin.html" class="nav-item">Painel Administrativo</a>
+      <a href="features/public-site.html" class="nav-item">Site Público Vitrine</a>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Hero Section with Large Generative Seal -->
+      <section style="display:flex; align-items:center; justify-content:space-between; gap:2.5rem; margin-bottom:3rem; padding-bottom:2.5rem; border-bottom:1px solid var(--border-subtle);">
+        <div style="flex:1;">
+          <div style="display:inline-block; font-family:var(--font-mono); font-size:0.75rem; color:var(--accent); background:var(--accent-subtle); padding:0.25rem 0.6rem; border-radius:4px; margin-bottom:1rem; font-weight:600;">
+            ENGENHARIA REVERSA SDD · 678 ESTUDIO
+          </div>
+          <h1 style="font-size:2.6rem; font-weight:700; line-height:1.2; letter-spacing:-0.03em; color:var(--text-primary); margin-bottom:1rem;">
+            Documentação Interativa do Sistema
+          </h1>
+          <p style="font-size:1.1rem; color:var(--text-secondary); line-height:1.7; margin-bottom:1.75rem;">
+            Mini-site autocontido gerado a partir do acervo de especificações do 678 Estudio.
+            Explore a arquitetura espacial, o mapa de dependências, os modelos relacionais e as regras de negócio de cada módulo.
+          </p>
+          <div style="display:flex; gap:1rem;">
+            <a href="arquitetura.html" style="background:var(--accent); color:#000; padding:0.75rem 1.5rem; border-radius:8px; font-weight:600; font-size:0.9rem;">
+              Explorar Arquitetura 3D →
+            </a>
+            <a href="deck.html" style="background:var(--bg-secondary); border:1px solid var(--border-strong); color:var(--text-primary); padding:0.75rem 1.5rem; border-radius:8px; font-weight:600; font-size:0.9rem;">
+              Ver Slide Deck
+            </a>
+          </div>
+        </div>
+
+        <div style="flex-shrink:0; text-align:center;">
+          <img src="assets/img/seal.svg" alt="Selo Generativo do Projeto" style="width:260px; height:260px; border-radius:24px; box-shadow:0 12px 36px rgba(0,0,0,0.6); border:1px solid var(--border-strong);">
+          <div style="font-family:var(--font-mono); font-size:0.7rem; color:var(--text-muted); margin-top:0.75rem;">
+            SEED: CE64F4A1 (REPRODUTÍVEL)
+          </div>
+        </div>
+      </section>
+
+      <!-- Resumo Quantitativo Rápido -->
+      <div class="grid-4" style="margin-bottom:2.5rem;">
+        <div class="stat-box">
+          <div class="stat-label">Confiança Geral</div>
+          <div class="stat-value" style="color:var(--success);">90.6%</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Módulos Auditados</div>
+          <div class="stat-value">7</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Volume de Código</div>
+          <div class="stat-value">3.840 LOC</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Stack Principal</div>
+          <div class="stat-value" style="font-size:1.15rem; margin-top:0.6rem;">Astro 4.16 Hybrid</div>
+        </div>
+      </div>
+
+      <!-- Sumário Navegável por Módulo -->
+      <h2 style="font-size:1.4rem; font-weight:600; margin-bottom:1.25rem;">Especificações Detalhadas por Módulo</h2>
+      <div class="grid-2">
+        <a href="features/catalog.html" class="card" style="display:block;">
+          <div style="display:flex; justify-content:space-between; margin-bottom:0.4rem;">
+            <div class="card-title">Catálogo de Produtos & Categorias</div>
+            <span class="badge badge-green">96.4%</span>
+          </div>
+          <div class="card-desc">Operações CRUD parametrizadas, ordenação comercial de produtos e filtros de vitrine pública.</div>
+        </a>
+
+        <a href="features/database.html" class="card" style="display:block;">
+          <div style="display:flex; justify-content:space-between; margin-bottom:0.4rem;">
+            <div class="card-title">Banco de Dados SQLite & Migrações</div>
+            <span class="badge badge-green">95.8%</span>
+          </div>
+          <div class="card-desc">Driver @libsql/client singleton, bootstrap protegido por WeakMap e migrações versionadas.</div>
+        </a>
+
+        <a href="features/customizer-caneca-3d.html" class="card" style="display:block;">
+          <div style="display:flex; justify-content:space-between; margin-bottom:0.4rem;">
+            <div class="card-title">Personalizador 3D de Canecas</div>
+            <span class="badge badge-green">95.5%</span>
+          </div>
+          <div class="card-desc">Renderizador WebGL Three.js com rotação 360°, projeção angular e integração com WhatsApp.</div>
+        </a>
+
+        <a href="features/customizer-quadro-ambiente.html" class="card" style="display:block;">
+          <div style="display:flex; justify-content:space-between; margin-bottom:0.4rem;">
+            <div class="card-title">Personalizador de Quadros em Ambientes</div>
+            <span class="badge badge-green">95.0%</span>
+          </div>
+          <div class="card-desc">Composição em 5 camadas em cenários de Sala e Escritório com escala de 15 px/cm.</div>
+        </a>
+
+        <a href="features/agenda-compiler.html" class="card" style="display:block;">
+          <div style="display:flex; justify-content:space-between; margin-bottom:0.4rem;">
+            <div class="card-title">Compilador de Agendas (Typst)</div>
+            <span class="badge badge-yellow">84.6%</span>
+          </div>
+          <div class="card-desc">Diagramação automatizada em PDF vetorial, cálculo de contraste WCAG e prévias em PNG.</div>
+        </a>
+
+        <a href="features/admin.html" class="card" style="display:block;">
+          <div style="display:flex; justify-content:space-between; margin-bottom:0.4rem;">
+            <div class="card-title">Painel Administrativo</div>
+            <span class="badge badge-yellow">77.8%</span>
+          </div>
+          <div class="card-desc">Gestão de catálogo em tempo real, configurações de contato com DDI +55 e rotinas de backup.</div>
+        </a>
+
+        <a href="features/public-site.html" class="card" style="display:block;">
+          <div style="display:flex; justify-content:space-between; margin-bottom:0.4rem;">
+            <div class="card-title">Site Público & Vitrine Editorial</div>
+            <span class="badge badge-yellow">83.3%</span>
+          </div>
+          <div class="card-desc">Hero institucional, 4 carrosséis horizontais com snap suave e design responsivo.</div>
+        </a>
+
+        <a href="glossario.html" class="card" style="display:block;">
+          <div style="display:flex; justify-content:space-between; margin-bottom:0.4rem;">
+            <div class="card-title">Glossário & Conceitos</div>
+            <span class="badge badge-blue">8 Termos</span>
+          </div>
+          <div class="card-desc">Definições conceituais de domínio com busca instantânea em tempo real no cliente.</div>
+        </a>
+      </div>
+    </main>
+  </div>
+</body>
+</html>
+

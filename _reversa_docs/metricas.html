@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Dashboard de Métricas — 678 Estudio</title>
+  <link rel="stylesheet" href="assets/css/docs.css">
+  <script src="assets/js/data.js"></script>
+</head>
+<body>
+  <div class="layout">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="brand">
+        <img src="assets/img/seal-mini.svg" alt="Selo">
+        <div>
+          <div class="brand-title">678 Estudio</div>
+          <div class="brand-badge">REVERSA DOCS</div>
+        </div>
+      </div>
+      <div class="nav-section">Visão Geral</div>
+      <a href="index.html" class="nav-item">Início</a>
+      <a href="arquitetura.html" class="nav-item">Arquitetura 3D</a>
+      <a href="modulos.html" class="nav-item">Mapa de Módulos</a>
+      <a href="topologia.html" class="nav-item">Topologia C4</a>
+      <div class="nav-section">Análise & Dados</div>
+      <a href="metricas.html" class="nav-item active">Dashboard de Métricas</a>
+      <div class="nav-section">Conhecimento & Onboarding</div>
+      <a href="glossario.html" class="nav-item">Glossário do Sistema</a>
+      <a href="deck.html" class="nav-item">Slide Deck Executivo</a>
+      <div class="nav-section">Features & Specs</div>
+      <a href="features/catalog.html" class="nav-item">Catálogo & Produtos</a>
+      <a href="features/database.html" class="nav-item">Banco SQLite & Migrações</a>
+      <a href="features/customizer-caneca-3d.html" class="nav-item">Caneca 3D (Three.js)</a>
+      <a href="features/customizer-quadro-ambiente.html" class="nav-item">Quadro Ambiente (Canvas)</a>
+      <a href="features/agenda-compiler.html" class="nav-item">Compilador Typst (Agendas)</a>
+      <a href="features/admin.html" class="nav-item">Painel Administrativo</a>
+      <a href="features/public-site.html" class="nav-item">Site Público Vitrine</a>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <header class="page-header">
+        <h1 class="page-title">Dashboard Quantitativo & Métricas</h1>
+        <p class="page-desc">Estatísticas consolidadas de volume de código, linguagens e distribuição de complexidade.</p>
+      </header>
+
+      <!-- KPI Summary Cards -->
+      <div class="grid-4" style="margin-bottom:2rem;">
+        <div class="stat-box">
+          <div class="stat-label">Linhas de Código</div>
+          <div class="stat-value">3.840</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Arquivos de Código</div>
+          <div class="stat-value">45</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Módulos Auditados</div>
+          <div class="stat-value">7</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Índice Confiança</div>
+          <div class="stat-value" style="color:var(--success);">90.6%</div>
+        </div>
+      </div>
+
+      <!-- Distribuição de Código por Módulo (Treemap / Bar representation) -->
+      <h2 style="font-size:1.25rem; font-weight:600; margin-bottom:1rem;">Volume de Código por Módulo (LOC)</h2>
+      <div class="card" style="margin-bottom:2rem;">
+        <div id="locBarChart" style="display:flex; flex-direction:column; gap:0.9rem;">
+          <!-- Populado via script -->
+        </div>
+      </div>
+
+      <!-- Divisão de Linguagens & Complexidade -->
+      <div class="grid-2" style="margin-bottom:2rem;">
+        <div class="card">
+          <div class="card-title">Distribuição de Linguagens</div>
+          <div style="margin-top:1rem; display:flex; flex-direction:column; gap:0.75rem;">
+            <div>
+              <div style="display:flex; justify-content:space-between; font-size:0.85rem; margin-bottom:0.25rem;">
+                <span style="font-weight:600;">TypeScript</span>
+                <span style="color:var(--text-muted); font-family:var(--font-mono);">42.5% (8 arquivos)</span>
+              </div>
+              <div style="height:6px; background:#27272a; border-radius:3px; overflow:hidden;">
+                <div style="width:42.5%; height:100%; background:#3b82f6;"></div>
+              </div>
+            </div>
+            <div>
+              <div style="display:flex; justify-content:space-between; font-size:0.85rem; margin-bottom:0.25rem;">
+                <span style="font-weight:600;">Astro Components</span>
+                <span style="color:var(--text-muted); font-family:var(--font-mono);">35.8% (10 arquivos)</span>
+              </div>
+              <div style="height:6px; background:#27272a; border-radius:3px; overflow:hidden;">
+                <div style="width:35.8%; height:100%; background:#ec4899;"></div>
+              </div>
+            </div>
+            <div>
+              <div style="display:flex; justify-content:space-between; font-size:0.85rem; margin-bottom:0.25rem;">
+                <span style="font-weight:600;">JavaScript / Node ESM</span>
+                <span style="color:var(--text-muted); font-family:var(--font-mono);">12.2% (6 arquivos)</span>
+              </div>
+              <div style="height:6px; background:#27272a; border-radius:3px; overflow:hidden;">
+                <div style="width:12.2%; height:100%; background:#f59e0b;"></div>
+              </div>
+            </div>
+            <div>
+              <div style="display:flex; justify-content:space-between; font-size:0.85rem; margin-bottom:0.25rem;">
+                <span style="font-weight:600;">Typst Templates</span>
+                <span style="color:var(--text-muted); font-family:var(--font-mono);">7.5% (5 arquivos)</span>
+              </div>
+              <div style="height:6px; background:#27272a; border-radius:3px; overflow:hidden;">
+                <div style="width:7.5%; height:100%; background:#8b5cf6;"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Distribuição de Complexidade</div>
+          <div style="margin-top:1rem; display:flex; flex-direction:column; gap:1rem;">
+            <div style="display:flex; align-items:center; justify-content:space-between; padding:0.75rem; background:rgba(239, 68, 68, 0.08); border:1px solid rgba(239, 68, 68, 0.3); border-radius:6px;">
+              <div>
+                <span class="badge badge-yellow" style="color:#ef4444; background:rgba(239, 68, 68, 0.2);">Alta (1 módulo)</span>
+                <div style="font-size:0.85rem; margin-top:0.25rem; font-weight:600;">agenda-compiler</div>
+              </div>
+              <span style="font-size:0.8rem; color:var(--text-muted);">Isolamento CLI e WCAG</span>
+            </div>
+            <div style="display:flex; align-items:center; justify-content:space-between; padding:0.75rem; background:rgba(59, 130, 246, 0.08); border:1px solid rgba(59, 130, 246, 0.3); border-radius:6px;">
+              <div>
+                <span class="badge badge-blue">Média (4 módulos)</span>
+                <div style="font-size:0.85rem; margin-top:0.25rem; font-weight:600;">database, caneca-3d, quadro-ambiente, admin</div>
+              </div>
+              <span style="font-size:0.8rem; color:var(--text-muted);">Simuladores & Transações</span>
+            </div>
+            <div style="display:flex; align-items:center; justify-content:space-between; padding:0.75rem; background:rgba(16, 185, 129, 0.08); border:1px solid rgba(16, 185, 129, 0.3); border-radius:6px;">
+              <div>
+                <span class="badge badge-green">Baixa (2 módulos)</span>
+                <div style="font-size:0.85rem; margin-top:0.25rem; font-weight:600;">catalog, public-site</div>
+              </div>
+              <span style="font-size:0.8rem; color:var(--text-muted);">CRUD & Vitrine</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const barContainer = document.getElementById('locBarChart');
+    const modules = window.RV_DATA.modules || [];
+    const maxLoc = Math.max(...modules.map(m => m.loc));
+
+    barContainer.innerHTML = modules.map(m => {
+      const pct = (m.loc / maxLoc) * 100;
+      return `
+        <div>
+          <div style="display:flex; justify-content:space-between; font-size:0.85rem; margin-bottom:0.25rem;">
+            <span style="font-weight:600; color:var(--text-primary);">${m.name}</span>
+            <span style="font-family:var(--font-mono); color:var(--text-muted);">${m.loc} linhas (${m.files} arquivos)</span>
+          </div>
+          <div style="height:10px; background:#27272a; border-radius:4px; overflow:hidden;">
+            <div style="width:${pct}%; height:100%; background:var(--accent); border-radius:4px;"></div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  </script>
+</body>
+</html>
+

@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-11-11T18:33:00Z",
+  "completedAgents": ["mapper", "analyst", "storyteller", "publisher"],
+  "pendingAgents": [],
+  "pagesGenerated": [
+    "index.html",
+    "arquitetura.html",
+    "modulos.html",
+    "topologia.html",
+    "metricas.html",
+    "glossario.html",
+    "deck.html",
+    "features/catalog.html",
+    "features/database.html",
+    "features/customizer-caneca-3d.html",
+    "features/customizer-quadro-ambiente.html",
+    "features/agenda-compiler.html",
+    "features/admin.html",
+    "features/public-site.html"
+  ],
+  "smokeTestFailed": false,
+  "smokeTestErrors": []
+}
+

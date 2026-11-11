@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Slide Deck Executivo — 678 Estudio</title>
+  <link rel="stylesheet" href="assets/css/docs.css">
+  <script src="assets/js/data.js"></script>
+  <style>
+    .deck-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 520px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-strong);
+      border-radius: 12px;
+      padding: 3rem;
+      position: relative;
+    }
+    .slide {
+      display: none;
+      width: 100%;
+      max-width: 800px;
+      animation: fadeIn 0.25s ease-in-out;
+    }
+    .slide.active { display: block; }
+    .slide-number {
+      position: absolute;
+      top: 1.5rem;
+      right: 2rem;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+    .deck-controls {
+      display: flex;
+      gap: 1rem;
+      margin-top: 2rem;
+    }
+    .deck-btn {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-strong);
+      color: var(--text-primary);
+      padding: 0.6rem 1.4rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.15s;
+    }
+    .deck-btn:hover {
+      background: var(--accent);
+      color: #000;
+      border-color: var(--accent);
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="brand">
+        <img src="assets/img/seal-mini.svg" alt="Selo">
+        <div>
+          <div class="brand-title">678 Estudio</div>
+          <div class="brand-badge">REVERSA DOCS</div>
+        </div>
+      </div>
+      <div class="nav-section">Visão Geral</div>
+      <a href="index.html" class="nav-item">Início</a>
+      <a href="arquitetura.html" class="nav-item">Arquitetura 3D</a>
+      <a href="modulos.html" class="nav-item">Mapa de Módulos</a>
+      <a href="topologia.html" class="nav-item">Topologia C4</a>
+      <div class="nav-section">Análise & Dados</div>
+      <a href="metricas.html" class="nav-item">Dashboard de Métricas</a>
+      <div class="nav-section">Conhecimento & Onboarding</div>
+      <a href="glossario.html" class="nav-item">Glossário do Sistema</a>
+      <a href="deck.html" class="nav-item active">Slide Deck Executivo</a>
+      <div class="nav-section">Features & Specs</div>
+      <a href="features/catalog.html" class="nav-item">Catálogo & Produtos</a>
+      <a href="features/database.html" class="nav-item">Banco SQLite & Migrações</a>
+      <a href="features/customizer-caneca-3d.html" class="nav-item">Caneca 3D (Three.js)</a>
+      <a href="features/customizer-quadro-ambiente.html" class="nav-item">Quadro Ambiente (Canvas)</a>
+      <a href="features/agenda-compiler.html" class="nav-item">Compilador Typst (Agendas)</a>
+      <a href="features/admin.html" class="nav-item">Painel Administrativo</a>
+      <a href="features/public-site.html" class="nav-item">Site Público Vitrine</a>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <header class="page-header">
+        <h1 class="page-title">Apresentação Executiva do Projeto</h1>
+        <p class="page-desc">Navegue pelos slides com as setas do teclado (← / →) ou pelos botões de navegação.</p>
+      </header>
+
+      <div class="deck-container">
+        <div class="slide-number" id="slideCounter">1 / 6</div>
+
+        <!-- Slide 1 -->
+        <div class="slide active">
+          <span class="badge badge-yellow" style="margin-bottom:1rem;">Visão Geral</span>
+          <h2 style="font-size:2.2rem; font-weight:700; color:var(--text-primary); margin-bottom:1rem;">678 Estudio</h2>
+          <p style="font-size:1.15rem; color:var(--text-secondary); line-height:1.7;">
+            Plataforma digital integrada para ateliê de produtos personalizados de alto padrão.
+            Combina e-commerce vitrine editorial, personalizadores visuais em tempo real (3D e 2D) e automação gráfica de agendas com fechamento consultivo via WhatsApp.
+          </p>
+        </div>
+
+        <!-- Slide 2 -->
+        <div class="slide">
+          <span class="badge badge-blue" style="margin-bottom:1rem;">Arquitetura & Engenharia</span>
+          <h2 style="font-size:1.8rem; font-weight:600; color:var(--text-primary); margin-bottom:1rem;">Monólito Modular com Astro Islands</h2>
+          <ul style="font-size:1rem; color:var(--text-secondary); line-height:1.9; margin-left:1.5rem;">
+            <li><strong>Astro 4.16 Hybrid SSR</strong>: páginas estáticas ultrarrápidas com SEO e rotas dinâmicas Node.js.</li>
+            <li><strong>Persistência Local</strong>: SQLite incorporado via <code>@libsql/client</code> eliminando dependências nativas C++.</li>
+            <li><strong>Zero Lock-in</strong>: arquitetura totalmente desacoplada e independente de serviços proprietários externos.</li>
+          </ul>
+        </div>
+
+        <!-- Slide 3 -->
+        <div class="slide">
+          <span class="badge badge-green" style="margin-bottom:1rem;">Inovação Front-end</span>
+          <h2 style="font-size:1.8rem; font-weight:600; color:var(--text-primary); margin-bottom:1rem;">Simuladores Interativos de Alta Fidelidade</h2>
+          <p style="font-size:1rem; color:var(--text-secondary); line-height:1.7; margin-bottom:1rem;">
+            Experiências imersivas no navegador do cliente sem sobrecarregar a infraestrutura do servidor:
+          </p>
+          <div class="grid-2">
+            <div style="background:var(--bg-secondary); padding:1rem; border-radius:6px;">
+              <strong style="color:var(--accent);">Caneca 3D (Three.js)</strong>
+              <p style="font-size:0.85rem; color:var(--text-muted); margin-top:0.3rem;">Visualização tridimensional 360°, projeção angular e cálculo de folga de alça.</p>
+            </div>
+            <div style="background:var(--bg-secondary); padding:1rem; border-radius:6px;">
+              <strong style="color:var(--accent);">Quadro Ambiente (Canvas 2D)</strong>
+              <p style="font-size:0.85rem; color:var(--text-muted); margin-top:0.3rem;">Composição em 5 camadas (Sala e Escritório) com escala milimétrica exata de 15 px/cm.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Slide 4 -->
+        <div class="slide">
+          <span class="badge badge-purple" style="margin-bottom:1rem;">Automação Gráfica</span>
+          <h2 style="font-size:1.8rem; font-weight:600; color:var(--text-primary); margin-bottom:1rem;">Motor Typst para Papelaria</h2>
+          <p style="font-size:1rem; color:var(--text-secondary); line-height:1.8;">
+            Compilação automatizada de miolos de agendas com centenas de páginas em menos de 2 segundos.
+            Validação rigorosa de contraste tipográfico WCAG (≥ 3:1) e geração instantânea de amostras PNG para aprovação prévia de cotações corporativas.
+          </p>
+        </div>
+
+        <!-- Slide 5 -->
+        <div class="slide">
+          <span class="badge badge-yellow" style="margin-bottom:1rem;">Estratégia Comercial</span>
+          <h2 style="font-size:1.8rem; font-weight:600; color:var(--text-primary); margin-bottom:1rem;">Funil WhatsApp sem Fricção</h2>
+          <p style="font-size:1rem; color:var(--text-secondary); line-height:1.8;">
+            Em vez de um checkout impessoal e burocrático, o cliente exporta sua prévia e é conduzido diretamente ao WhatsApp oficial com mensagem estruturada.
+            Permite atendimento consultivo, envio de fotos em alta resolução e negociações de prazos personalizadas.
+          </p>
+        </div>
+
+        <!-- Slide 6 -->
+        <div class="slide">
+          <span class="badge badge-green" style="margin-bottom:1rem;">Conclusão & Auditoria</span>
+          <h2 style="font-size:1.8rem; font-weight:600; color:var(--text-primary); margin-bottom:1rem;">Acervo SDD Completo</h2>
+          <p style="font-size:1rem; color:var(--text-secondary); line-height:1.8;">
+            O sistema legado está 100% catalogado, com índice de confiança de 90.6%, testes automatizados passando e documentação executável pronta para sustentar a evolução e escala do estúdio.
+          </p>
+        </div>
+      </div>
+
+      <div class="deck-controls">
+        <button class="deck-btn" id="prevBtn">← Anterior</button>
+        <button class="deck-btn" id="nextBtn">Próximo →</button>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    let currentSlide = 0;
+    const slides = document.querySelectorAll('.slide');
+    const counter = document.getElementById('slideCounter');
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+
+    function showSlide(index) {
+      slides[currentSlide].classList.remove('active');
+      currentSlide = (index + slides.length) % slides.length;
+      slides[currentSlide].classList.add('active');
+      counter.innerText = `${currentSlide + 1} / ${slides.length}`;
+    }
+
+    prevBtn.addEventListener('click', () => showSlide(currentSlide - 1));
+    nextBtn.addEventListener('click', () => showSlide(currentSlide + 1));
+
+    window.addEventListener('keydown', e => {
+      if (e.key === 'ArrowRight' || e.key === ' ') showSlide(currentSlide + 1);
+      if (e.key === 'ArrowLeft') showSlide(currentSlide - 1);
+    });
+  </script>
+</body>
+</html>
+

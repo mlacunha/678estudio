@@ -1,0 +1,74 @@
+{
+  "generated_at": "2026-11-11T15:56:00Z",
+  "project_root": "D:/Projetos/site678Estudio",
+  "languages": [
+    { "name": "TypeScript", "extensions": [".ts"], "file_count": 8 },
+    { "name": "Astro", "extensions": [".astro"], "file_count": 10 },
+    { "name": "JavaScript", "extensions": [".mjs", ".js", ".cjs"], "file_count": 6 },
+    { "name": "Typst", "extensions": [".typ"], "file_count": 5 },
+    { "name": "CSS", "extensions": [".css"], "file_count": 1 }
+  ],
+  "primary_language": "TypeScript",
+  "frameworks": [
+    { "name": "Astro", "version": "4.16.19", "source": "package.json" },
+    { "name": "Tailwind CSS", "version": "3.4.17", "source": "package.json" },
+    { "name": "@libsql/client", "version": "0.18.0", "source": "package.json" },
+    { "name": "Three.js", "version": "0.187.0", "source": "package.json" },
+    { "name": "Typst", "version": "CLI", "source": "src/server/agenda/classic.mjs" },
+    { "name": "Vitest", "version": "2.1.8", "source": "package.json" }
+  ],
+  "package_manager": "pnpm",
+  "entry_points": [
+    { "path": "src/pages/index.astro", "type": "public_home" },
+    { "path": "src/pages/admin/index.astro", "type": "admin_dashboard" },
+    { "path": "src/pages/personalizar/caneca.astro", "type": "customizer_3d_mug" },
+    { "path": "src/pages/personalizar/quadro.astro", "type": "customizer_2d_frame" },
+    { "path": "src/pages/api/products/index.ts", "type": "api_products" },
+    { "path": "src/pages/api/categories.ts", "type": "api_categories" },
+    { "path": "src/pages/api/upload.ts", "type": "api_upload" },
+    { "path": "src/pages/api/mockup/save.ts", "type": "api_mockup_save" },
+    { "path": "src/server/agenda/poc.mjs", "type": "cli_agenda_compiler" }
+  ],
+  "config_files": [
+    "astro.config.mjs",
+    "tailwind.config.mjs",
+    "tsconfig.json",
+    "vitest.config.ts",
+    "package.json"
+  ],
+  "ci_cd": [],
+  "database_hints": [
+    { "path": "data/studio678.db", "type": "sqlite_database" },
+    { "path": "src/db/database.ts", "type": "sqlite_schema_init" },
+    { "path": "src/db/catalogRepository.ts", "type": "sqlite_repository" }
+  ],
+  "test_framework": "Vitest",
+  "test_file_count": 4,
+  "modules": [
+    "catalog",
+    "database",
+    "customizer-caneca-3d",
+    "customizer-quadro-ambiente",
+    "agenda-compiler",
+    "admin",
+    "public-site"
+  ],
+  "total_files": 45,
+  "organization_suggestion": {
+    "granularity": "module",
+    "rationale": "A aplicação possui domínios funcionais bem segregados entre catálogo/banco, personalizadores interativos (3D caneca e canvas quadro), compilador de agenda Typst e painel administrativo.",
+    "signals": [
+      {
+        "type": "top_level_domain_folders",
+        "evidence": [
+          "src/db/",
+          "src/pages/personalizar/",
+          "src/server/agenda/",
+          "src/pages/admin/"
+        ]
+      }
+    ],
+    "features": []
+  }
+}
+

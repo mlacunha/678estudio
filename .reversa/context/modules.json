@@ -1,0 +1,532 @@
+{
+  "generated_at": "2026-11-11T16:11:00Z",
+  "modules": [
+    {
+      "name": "catalog",
+      "path": "src/db/catalogRepository.ts",
+      "purpose": "Consulta, inserção, atualização e desativação lógica de produtos e categorias do catálogo",
+      "primary_files": [
+        "src/db/catalogRepository.ts",
+        "src/types/catalog.ts",
+        "src/data/mockCatalog.ts",
+        "src/pages/api/products/index.ts",
+        "src/pages/api/products/[id].ts",
+        "src/pages/api/categories.ts"
+      ],
+      "functions": [
+        {
+          "name": "getActiveCategories",
+          "file": "src/db/catalogRepository.ts",
+          "params": ["client?: Client"],
+          "returns": "Promise<ProductCategory[]>",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "getAllCategories",
+          "file": "src/db/catalogRepository.ts",
+          "params": ["client?: Client"],
+          "returns": "Promise<ProductCategory[]>",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "getActiveProductsByCategory",
+          "file": "src/db/catalogRepository.ts",
+          "params": ["categorySlug: string", "client?: Client"],
+          "returns": "Promise<Product[]>",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "getAllProducts",
+          "file": "src/db/catalogRepository.ts",
+          "params": ["client?: Client"],
+          "returns": "Promise<Product[]>",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "getProductById",
+          "file": "src/db/catalogRepository.ts",
+          "params": ["id: string", "client?: Client"],
+          "returns": "Promise<Product | null>",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "createProduct",
+          "file": "src/db/catalogRepository.ts",
+          "params": ["product: Product", "client?: Client"],
+          "returns": "Promise<void>",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "updateProduct",
+          "file": "src/db/catalogRepository.ts",
+          "params": ["product: Product", "client?: Client"],
+          "returns": "Promise<void>",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "toggleProductActive",
+          "file": "src/db/catalogRepository.ts",
+          "params": ["id: string", "isActive: boolean", "client?: Client"],
+          "returns": "Promise<void>",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "replaceProductImage",
+          "file": "src/db/catalogRepository.ts",
+          "params": ["product: Product", "imageUrl: string", "client?: Client"],
+          "returns": "Promise<boolean>",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "deleteProduct",
+          "file": "src/db/catalogRepository.ts",
+          "params": ["id: string", "client?: Client"],
+          "returns": "Promise<void>",
+          "confidence": "confirmed"
+        }
+      ],
+      "entities": [
+        {
+          "name": "Product",
+          "fields": [
+            { "name": "id", "type": "string", "required": true },
+            { "name": "name", "type": "string", "required": true },
+            { "name": "categorySlug", "type": "CategorySlug", "required": true },
+            { "name": "tagline", "type": "string", "required": true },
+            { "name": "description", "type": "string", "required": true },
+            { "name": "featuredBadge", "type": "string", "required": false },
+            { "name": "imageUrl", "type": "string", "required": true },
+            { "name": "order", "type": "number", "required": true },
+            { "name": "isActive", "type": "boolean", "required": true },
+            { "name": "isProvisional", "type": "boolean", "required": true }
+          ],
+          "confidence": "confirmed"
+        },
+        {
+          "name": "ProductCategory",
+          "fields": [
+            { "name": "id", "type": "string", "required": true },
+            { "name": "slug", "type": "CategorySlug", "required": true },
+            { "name": "title", "type": "string", "required": true },
+            { "name": "subtitle", "type": "string", "required": true },
+            { "name": "description", "type": "string", "required": true },
+            { "name": "badge", "type": "string", "required": true }
+          ],
+          "confidence": "confirmed"
+        }
+      ],
+      "business_rules": [
+        {
+          "description": "Consultas públicas filtram estritamente por is_active = 1 ordenadas por display_order ASC",
+          "location": "src/db/catalogRepository.ts:36",
+          "confidence": "confirmed"
+        },
+        {
+          "description": "Criação de produto exige name, categorySlug e imageUrl válidos",
+          "location": "src/pages/api/products/index.ts:39",
+          "confidence": "confirmed"
+        },
+        {
+          "description": "Atualização atômica de imagem valida simultaneamente id, categorySlug e imageUrl anterior",
+          "location": "src/db/catalogRepository.ts:130",
+          "confidence": "confirmed"
+        }
+      ],
+      "dependencies": ["database"],
+      "algorithms": [],
+      "complexity": "low"
+    },
+    {
+      "name": "database",
+      "path": "src/db/database.ts",
+      "purpose": "Gerenciamento de conexão SQLite via @libsql/client, criação de schema, seed inicial e controle transacional de migrações",
+      "primary_files": [
+        "src/db/database.ts",
+        "data/studio678.db"
+      ],
+      "functions": [
+        {
+          "name": "getDatabasePath",
+          "file": "src/db/database.ts",
+          "params": [],
+          "returns": "string",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "getDbClient",
+          "file": "src/db/database.ts",
+          "params": [],
+          "returns": "Client",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "initDatabase",
+          "file": "src/db/database.ts",
+          "params": ["client?: Client"],
+          "returns": "Promise<void>",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "createSchemaAndSeed",
+          "file": "src/db/database.ts",
+          "params": ["client: Client"],
+          "returns": "Promise<void>",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "seedInitialDataIfEmpty",
+          "file": "src/db/database.ts",
+          "params": ["client: Client"],
+          "returns": "Promise<void>",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "migrateStationery",
+          "file": "src/db/database.ts",
+          "params": ["client: Client"],
+          "returns": "Promise<void>",
+          "confidence": "confirmed"
+        }
+      ],
+      "entities": [
+        {
+          "name": "categories",
+          "fields": [
+            { "name": "id", "type": "TEXT", "required": true },
+            { "name": "slug", "type": "TEXT", "required": true },
+            { "name": "title", "type": "TEXT", "required": true },
+            { "name": "subtitle", "type": "TEXT", "required": true },
+            { "name": "description", "type": "TEXT", "required": true },
+            { "name": "badge", "type": "TEXT", "required": true },
+            { "name": "display_order", "type": "INTEGER", "required": true },
+            { "name": "is_active", "type": "INTEGER", "required": true }
+          ],
+          "confidence": "confirmed"
+        },
+        {
+          "name": "products",
+          "fields": [
+            { "name": "id", "type": "TEXT", "required": true },
+            { "name": "category_slug", "type": "TEXT", "required": true },
+            { "name": "name", "type": "TEXT", "required": true },
+            { "name": "tagline", "type": "TEXT", "required": true },
+            { "name": "description", "type": "TEXT", "required": true },
+            { "name": "featured_badge", "type": "TEXT", "required": false },
+            { "name": "image_url", "type": "TEXT", "required": true },
+            { "name": "display_order", "type": "INTEGER", "required": true },
+            { "name": "is_active", "type": "INTEGER", "required": true },
+            { "name": "is_provisional", "type": "INTEGER", "required": true }
+          ],
+          "confidence": "confirmed"
+        },
+        {
+          "name": "site_settings",
+          "fields": [
+            { "name": "id", "type": "INTEGER", "required": true },
+            { "name": "whatsapp", "type": "TEXT", "required": true },
+            { "name": "instagram", "type": "TEXT", "required": true },
+            { "name": "facebook", "type": "TEXT", "required": true },
+            { "name": "email", "type": "TEXT", "required": true }
+          ],
+          "confidence": "confirmed"
+        },
+        {
+          "name": "schema_migrations",
+          "fields": [
+            { "name": "id", "type": "TEXT", "required": true }
+          ],
+          "confidence": "confirmed"
+        }
+      ],
+      "business_rules": [
+        {
+          "description": "Singleton e inicialização única de schema via WeakMap garantindo idempotência e prevenindo concorrência",
+          "location": "src/db/database.ts:7",
+          "confidence": "confirmed"
+        },
+        {
+          "description": "Migrações rodam dentro de transações com rollback automático em caso de falha",
+          "location": "src/db/database.ts:142",
+          "confidence": "confirmed"
+        }
+      ],
+      "dependencies": ["@libsql/client"],
+      "algorithms": [],
+      "complexity": "medium"
+    },
+    {
+      "name": "customizer-caneca-3d",
+      "path": "src/pages/personalizar/caneca.astro",
+      "purpose": "Personalizador interativo em 3D de canecas de cerâmica, com renderização Three.js, controle de rotação 360, posicionamento de estampa e integração com WhatsApp",
+      "primary_files": [
+        "src/pages/personalizar/caneca.astro",
+        "src/components/customizers/Mug.astro",
+        "src/utils/customizer.ts",
+        "src/utils/customizerClient.ts",
+        "src/pages/api/mockup/save.ts"
+      ],
+      "functions": [
+        {
+          "name": "getMugPrintBand",
+          "file": "src/utils/customizer.ts",
+          "params": ["widthCm: MugPrintWidth"],
+          "returns": "{ height: number, thetaStart: number, thetaLength: number }",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "clampValue",
+          "file": "src/utils/customizer.ts",
+          "params": ["value: number", "min: number", "max: number"],
+          "returns": "number",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "buildMockupWhatsAppMessage",
+          "file": "src/utils/customizer.ts",
+          "params": ["productTitle: string", "mockupUrl: string"],
+          "returns": "string",
+          "confidence": "confirmed"
+        }
+      ],
+      "entities": [
+        {
+          "name": "Dimensions",
+          "fields": [
+            { "name": "widthCm", "type": "number", "required": true },
+            { "name": "heightCm", "type": "number", "required": true }
+          ],
+          "confidence": "confirmed"
+        }
+      ],
+      "business_rules": [
+        {
+          "description": "Dimensão padrão da estampa cilíndrica é de 21 × 9 cm, com larguras aceitas de 20, 21 e 22 cm",
+          "location": "src/utils/customizer.ts:6",
+          "confidence": "confirmed"
+        },
+        {
+          "description": "Alça da caneca posicionada no eixo +X (PI/2), com folga central calculada geometricamente",
+          "location": "src/utils/customizer.ts:19",
+          "confidence": "confirmed"
+        }
+      ],
+      "dependencies": ["three", "catalog", "database"],
+      "algorithms": [
+        {
+          "name": "Cylindrical Texture Mapping",
+          "description": "Cálculo do ângulo angular (thetaStart e thetaLength) a partir de unidades métricas (cm) para mapeamento da textura no cilindro Three.js"
+        }
+      ],
+      "complexity": "medium"
+    },
+    {
+      "name": "customizer-quadro-ambiente",
+      "path": "src/pages/personalizar/quadro.astro",
+      "purpose": "Simulador visual de quadros em madeira clara com molduras personalizáveis e renderização em ambientes reais (sala e escritório)",
+      "primary_files": [
+        "src/pages/personalizar/quadro.astro",
+        "src/components/customizers/Frame.astro",
+        "src/utils/frameLayout.ts",
+        "src/utils/customizer.ts"
+      ],
+      "functions": [
+        {
+          "name": "getFrameLayout",
+          "file": "src/utils/frameLayout.ts",
+          "params": ["orientation: FrameOrientation", "horizontalCm: number", "verticalCm: number"],
+          "returns": "{ frameW: number, frameH: number, inset: number, boardW: number, boardH: number, artLeft: number, artTop: number, artW: number, artH: number }",
+          "confidence": "confirmed"
+        }
+      ],
+      "entities": [
+        {
+          "name": "FrameOrientation",
+          "fields": [
+            { "name": "label", "type": "string", "required": true },
+            { "name": "widthCm", "type": "number", "required": true },
+            { "name": "heightCm", "type": "number", "required": true }
+          ],
+          "confidence": "confirmed"
+        }
+      ],
+      "business_rules": [
+        {
+          "description": "Conversão fixa de 15 pixels por centímetro na renderização de tela do quadro",
+          "location": "src/utils/frameLayout.ts:18",
+          "confidence": "confirmed"
+        },
+        {
+          "description": "Margens de madeira limitadas entre 0.5 cm e 8 cm por lado",
+          "location": "src/utils/frameLayout.ts:14",
+          "confidence": "confirmed"
+        }
+      ],
+      "dependencies": ["catalog", "database"],
+      "algorithms": [
+        {
+          "name": "2D Composite Canvas Rendering",
+          "description": "Composição em 5 camadas: imagem do ambiente, projeção de sombra, moldura chanfrada, suporte de madeira clara e arte ajustada"
+        }
+      ],
+      "complexity": "medium"
+    },
+    {
+      "name": "agenda-compiler",
+      "path": "src/server/agenda/classic.mjs",
+      "purpose": "Compilação automatizada de agendas personalizadas em PDF de alta qualidade gráfica e geração de prévias PNG via Typst CLI",
+      "primary_files": [
+        "src/server/agenda/classic.mjs",
+        "src/server/agenda/quoteConfig.ts",
+        "src/server/agenda/options.mjs",
+        "src/server/agenda/drafts.ts",
+        "src/pages/api/agenda/preview.ts",
+        "src/pages/api/agenda/quote.ts"
+      ],
+      "functions": [
+        {
+          "name": "compileClassicAgenda",
+          "file": "src/server/agenda/classic.mjs",
+          "params": ["config: AgendaConfig", "preview?: { pages: number[], output: string, prefix?: boolean }"],
+          "returns": "Promise<Buffer>",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "renderAgendaPreview",
+          "file": "src/server/agenda/classic.mjs",
+          "params": ["config: AgendaConfig"],
+          "returns": "Promise<{ pages: { page: number, content: Buffer }[] }>",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "isAgendaColor",
+          "file": "src/server/agenda/classic.mjs",
+          "params": ["color: unknown"],
+          "returns": "boolean",
+          "confidence": "confirmed"
+        }
+      ],
+      "entities": [
+        {
+          "name": "QuoteConfig",
+          "fields": [
+            { "name": "template", "type": "string", "required": true },
+            { "name": "year", "type": "number", "required": true },
+            { "name": "format", "type": "string", "required": true },
+            { "name": "layout", "type": "string", "required": true },
+            { "name": "style", "type": "string", "required": true },
+            { "name": "colors", "type": "{ primary: string, secondary: string }", "required": true }
+          ],
+          "confidence": "confirmed"
+        }
+      ],
+      "business_rules": [
+        {
+          "description": "Validação de contraste WCAG mínimo de 3:1 para cores de destaque da agenda sobre o fundo",
+          "location": "src/server/agenda/classic.mjs:35",
+          "confidence": "confirmed"
+        },
+        {
+          "description": "Ano da agenda deve ser número inteiro estritamente entre 1900 e 9998",
+          "location": "src/server/agenda/classic.mjs:41",
+          "confidence": "confirmed"
+        }
+      ],
+      "dependencies": ["typst", "database"],
+      "algorithms": [
+        {
+          "name": "Subprocess CLI Stream Processing",
+          "description": "Execução isolada em diretório temporário passando fontes personalizadas e gerando assets sem poluir o repositório"
+        }
+      ],
+      "complexity": "high"
+    },
+    {
+      "name": "admin",
+      "path": "src/pages/admin/index.astro",
+      "purpose": "Painel de administração para gestão de catálogo, solicitações de orçamentos de agendas, portfólio de trabalhos, estúdio e backups",
+      "primary_files": [
+        "src/pages/admin/index.astro",
+        "src/db/studioSettings.ts",
+        "src/pages/admin/agendas/index.astro",
+        "src/pages/admin/trabalhos/index.astro",
+        "src/pages/admin/backup/index.astro",
+        "src/pages/admin/estudio/index.astro"
+      ],
+      "functions": [
+        {
+          "name": "getStudioSettings",
+          "file": "src/db/studioSettings.ts",
+          "params": ["client?: Client"],
+          "returns": "Promise<StudioSettings>",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "saveStudioSettings",
+          "file": "src/db/studioSettings.ts",
+          "params": ["settings: StudioSettings", "client?: Client"],
+          "returns": "Promise<void>",
+          "confidence": "confirmed"
+        },
+        {
+          "name": "validateStudioSettings",
+          "file": "src/db/studioSettings.ts",
+          "params": ["input: StudioSettings"],
+          "returns": "{ errors: Partial<Record<keyof StudioSettings, string>>, settings: StudioSettings }",
+          "confidence": "confirmed"
+        }
+      ],
+      "entities": [
+        {
+          "name": "StudioSettings",
+          "fields": [
+            { "name": "whatsapp", "type": "string", "required": true },
+            { "name": "instagram", "type": "string", "required": true },
+            { "name": "facebook", "type": "string", "required": true },
+            { "name": "email", "type": "string", "required": true }
+          ],
+          "confidence": "confirmed"
+        }
+      ],
+      "business_rules": [
+        {
+          "description": "Validação rigorosa de URLs HTTPS de redes sociais (instagram.com e facebook.com)",
+          "location": "src/db/studioSettings.ts:19",
+          "confidence": "confirmed"
+        },
+        {
+          "description": "Número do WhatsApp normalizado com DDI +55 antes de persistência",
+          "location": "src/db/studioSettings.ts:26",
+          "confidence": "confirmed"
+        }
+      ],
+      "dependencies": ["catalog", "database", "agenda-compiler"],
+      "algorithms": [],
+      "complexity": "medium"
+    },
+    {
+      "name": "public-site",
+      "path": "src/pages/index.astro",
+      "purpose": "Vitrine pública institucional, carrosséis por categoria, página de contato, portfólio de entregas e roteamento para personalizadores",
+      "primary_files": [
+        "src/pages/index.astro",
+        "src/components/CategorySection.astro",
+        "src/components/ProductCard.astro",
+        "src/layouts/BaseLayout.astro",
+        "src/pages/trabalhos/index.astro",
+        "src/pages/contato/index.astro"
+      ],
+      "functions": [],
+      "entities": [],
+      "business_rules": [
+        {
+          "description": "Renderização híbrida com SSR nos pontos de personalização e catálogo atualizado instantaneamente",
+          "location": "src/pages/index.astro:3",
+          "confidence": "confirmed"
+        }
+      ],
+      "dependencies": ["catalog", "database", "customizer-caneca-3d", "customizer-quadro-ambiente"],
+      "algorithms": [],
+      "complexity": "low"
+    }
+  ]
+}

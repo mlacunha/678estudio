@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Topologia C4 — 678 Estudio</title>
+  <link rel="stylesheet" href="assets/css/docs.css">
+  <script src="assets/js/data.js"></script>
+</head>
+<body>
+  <div class="layout">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="brand">
+        <img src="assets/img/seal-mini.svg" alt="Selo">
+        <div>
+          <div class="brand-title">678 Estudio</div>
+          <div class="brand-badge">REVERSA DOCS</div>
+        </div>
+      </div>
+      <div class="nav-section">Visão Geral</div>
+      <a href="index.html" class="nav-item">Início</a>
+      <a href="arquitetura.html" class="nav-item">Arquitetura 3D</a>
+      <a href="modulos.html" class="nav-item">Mapa de Módulos</a>
+      <a href="topologia.html" class="nav-item active">Topologia C4</a>
+      <div class="nav-section">Análise & Dados</div>
+      <a href="metricas.html" class="nav-item">Dashboard de Métricas</a>
+      <div class="nav-section">Conhecimento & Onboarding</div>
+      <a href="glossario.html" class="nav-item">Glossário do Sistema</a>
+      <a href="deck.html" class="nav-item">Slide Deck Executivo</a>
+      <div class="nav-section">Features & Specs</div>
+      <a href="features/catalog.html" class="nav-item">Catálogo & Produtos</a>
+      <a href="features/database.html" class="nav-item">Banco SQLite & Migrações</a>
+      <a href="features/customizer-caneca-3d.html" class="nav-item">Caneca 3D (Three.js)</a>
+      <a href="features/customizer-quadro-ambiente.html" class="nav-item">Quadro Ambiente (Canvas)</a>
+      <a href="features/agenda-compiler.html" class="nav-item">Compilador Typst (Agendas)</a>
+      <a href="features/admin.html" class="nav-item">Painel Administrativo</a>
+      <a href="features/public-site.html" class="nav-item">Site Público Vitrine</a>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <header class="page-header">
+        <h1 class="page-title">Topologia C4 & Integrações</h1>
+        <p class="page-desc">Mapeamento dos níveis Contexto, Contêineres e limites de fronteira com canais externos.</p>
+      </header>
+
+      <!-- Seção Nível 1: Contexto -->
+      <h2 style="font-size:1.3rem; font-weight:600; margin-bottom:1rem;">Nível 1: Contexto de Sistema</h2>
+      <div class="card" style="margin-bottom:2rem;">
+        <div class="grid-3" style="text-align:center;">
+          <div style="padding:1.5rem; background:var(--bg-secondary); border-radius:8px; border:1px solid var(--border-subtle);">
+            <div style="font-size:1.5rem; margin-bottom:0.5rem;">👤</div>
+            <div style="font-weight:600; color:var(--text-primary);">Cliente & Comprador</div>
+            <div style="font-size:0.8rem; color:var(--text-secondary); margin-top:0.3rem;">Navega na vitrine, usa simuladores 3D/2D e solicita orçamentos via WhatsApp.</div>
+          </div>
+          <div style="padding:1.5rem; background:rgba(245, 158, 11, 0.08); border-radius:8px; border:1px solid var(--accent);">
+            <div style="font-size:1.5rem; margin-bottom:0.5rem;">🏢</div>
+            <div style="font-weight:600; color:var(--accent);">678 Estudio (Sistema)</div>
+            <div style="font-size:0.8rem; color:var(--text-secondary); margin-top:0.3rem;">Monólito modular Astro SSR híbrido com renderização interativa e persistência SQLite.</div>
+          </div>
+          <div style="padding:1.5rem; background:var(--bg-secondary); border-radius:8px; border:1px solid var(--border-subtle);">
+            <div style="font-size:1.5rem; margin-bottom:0.5rem;">💬</div>
+            <div style="font-weight:600; color:var(--text-primary);">WhatsApp & Instagram</div>
+            <div style="font-size:0.8rem; color:var(--text-secondary); margin-top:0.3rem;">Canais externos para atendimento, orçamentos e portfólio de peças produzidas.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Seção Nível 2: Contêineres -->
+      <h2 style="font-size:1.3rem; font-weight:600; margin-bottom:1rem;">Nível 2: Contêineres Tecnológicos</h2>
+      <div class="grid-3" style="margin-bottom:2rem;">
+        <div class="card">
+          <span class="badge badge-green" style="margin-bottom:0.75rem;">Client-side</span>
+          <div class="card-title">Astro Islands Frontend</div>
+          <div class="card-desc">HTML semântico pré-renderizado com ilhas hidratadas para Three.js (caneca 3D) e Canvas 2D (quadro no ambiente). Zero overhead de frameworks em páginas estáticas.</div>
+        </div>
+        <div class="card">
+          <span class="badge badge-blue" style="margin-bottom:0.75rem;">Server-side</span>
+          <div class="card-title">Node.js SSR Runtime</div>
+          <div class="card-desc">Adaptador híbrido <code>@astrojs/node</code> gerenciando endpoints REST, geração de snapshots e invocação em subprocesso do compilador Typst.</div>
+        </div>
+        <div class="card">
+          <span class="badge badge-yellow" style="margin-bottom:0.75rem;">Armazenamento</span>
+          <div class="card-title">SQLite Local (@libsql/client)</div>
+          <div class="card-desc">Arquivo único <code>data/studio678.db</code> com transações ACID, chaves estrangeiras, migrações versionadas e zero configuração de servidores externos.</div>
+        </div>
+      </div>
+
+      <!-- Decisões de Integração -->
+      <h2 style="font-size:1.3rem; font-weight:600; margin-bottom:1rem;">Fronteiras e Integrações Críticas</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Canal / Serviço</th>
+            <th>Protocolo</th>
+            <th>Módulo Responsável</th>
+            <th>Garantia / Resiliência</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td style="font-weight:600; color:var(--text-primary);">WhatsApp API Schema</td>
+            <td><code>HTTPS (wa.me)</code></td>
+            <td>Simuladores 3D / 2D</td>
+            <td>Snapshot de mockup pré-salvo com URL permanente antes do redirecionamento.</td>
+          </tr>
+          <tr>
+            <td style="font-weight:600; color:var(--text-primary);">Typst CLI Subprocess</td>
+            <td><code>ChildProcess (STDIN/OUT)</code></td>
+            <td><code>agenda-compiler</code></td>
+            <td>Timeout rigoroso de 15s/60s com isolamento em pasta temporária descartável.</td>
+          </tr>
+          <tr>
+            <td style="font-weight:600; color:var(--text-primary);">Instagram Links</td>
+            <td><code>HTTPS</code></td>
+            <td><code>admin / trabalhos</code></td>
+            <td>Validação estrita de domínio <code>instagram.com</code> e protocolos seguros.</td>
+          </tr>
+        </tbody>
+      </table>
+    </main>
+  </div>
+</body>
+</html>
+

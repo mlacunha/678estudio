@@ -1,0 +1,53 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-11-11T18:25:00Z",
+  "projectName": "678 Estudio",
+  "interview": {
+    "readerProfile": "novo_dev",
+    "depth": "full",
+    "visualStyle": "sober"
+  },
+  "seed": {
+    "hash": "sha256:ce64f4a104159ef323416ce23004d3f621a74690264c2fefe61e9008cfd1661f",
+    "source": "project_name",
+    "explicitOverride": null
+  },
+  "knowledgeSources": {
+    "soul": false,
+    "chronicle": false,
+    "topology": true,
+    "sddSpecs": [
+      "catalog",
+      "database",
+      "customizer-caneca-3d",
+      "customizer-quadro-ambiente",
+      "agenda-compiler",
+      "admin",
+      "public-site"
+    ],
+    "sourceCode": true
+  },
+  "pagesPlanned": [
+    "arquitetura.html",
+    "modulos.html",
+    "topologia.html",
+    "metricas.html",
+    "glossario.html",
+    "deck.html",
+    "features/catalog.html",
+    "features/database.html",
+    "features/customizer-caneca-3d.html",
+    "features/customizer-quadro-ambiente.html",
+    "features/agenda-compiler.html",
+    "features/admin.html",
+    "features/public-site.html",
+    "index.html"
+  ],
+  "pagesOmitted": [
+    {
+      "page": "timeline.html",
+      "reason": "Arquivo .reversa/chronicle.md não encontrado no projeto legado."
+    }
+  ]
+}
+

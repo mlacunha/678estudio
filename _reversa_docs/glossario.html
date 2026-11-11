@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Glossário do Sistema — 678 Estudio</title>
+  <link rel="stylesheet" href="assets/css/docs.css">
+  <script src="assets/js/data.js"></script>
+</head>
+<body>
+  <div class="layout">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="brand">
+        <img src="assets/img/seal-mini.svg" alt="Selo">
+        <div>
+          <div class="brand-title">678 Estudio</div>
+          <div class="brand-badge">REVERSA DOCS</div>
+        </div>
+      </div>
+      <div class="nav-section">Visão Geral</div>
+      <a href="index.html" class="nav-item">Início</a>
+      <a href="arquitetura.html" class="nav-item">Arquitetura 3D</a>
+      <a href="modulos.html" class="nav-item">Mapa de Módulos</a>
+      <a href="topologia.html" class="nav-item">Topologia C4</a>
+      <div class="nav-section">Análise & Dados</div>
+      <a href="metricas.html" class="nav-item">Dashboard de Métricas</a>
+      <div class="nav-section">Conhecimento & Onboarding</div>
+      <a href="glossario.html" class="nav-item active">Glossário do Sistema</a>
+      <a href="deck.html" class="nav-item">Slide Deck Executivo</a>
+      <div class="nav-section">Features & Specs</div>
+      <a href="features/catalog.html" class="nav-item">Catálogo & Produtos</a>
+      <a href="features/database.html" class="nav-item">Banco SQLite & Migrações</a>
+      <a href="features/customizer-caneca-3d.html" class="nav-item">Caneca 3D (Three.js)</a>
+      <a href="features/customizer-quadro-ambiente.html" class="nav-item">Quadro Ambiente (Canvas)</a>
+      <a href="features/agenda-compiler.html" class="nav-item">Compilador Typst (Agendas)</a>
+      <a href="features/admin.html" class="nav-item">Painel Administrativo</a>
+      <a href="features/public-site.html" class="nav-item">Site Público Vitrine</a>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <header class="page-header">
+        <h1 class="page-title">Glossário & Conceitos de Domínio</h1>
+        <p class="page-desc">Definições formais, regras de negócio e termos operacionais utilizados na plataforma.</p>
+      </header>
+
+      <!-- Search Input -->
+      <input type="text" id="glossarySearch" class="search-box" placeholder="Filtrar termos ou conceitos (ex: sublimação, caneca, passe-partout)...">
+
+      <!-- Cards Grid for Glossary -->
+      <div id="glossaryGrid" class="grid-2">
+        <!-- Populado dinamicamente -->
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const searchInput = document.getElementById('glossarySearch');
+    const grid = document.getElementById('glossaryGrid');
+    const terms = window.RV_DATA.glossary || [];
+
+    function renderTerms(filtered) {
+      if (filtered.length === 0) {
+        grid.innerHTML = '<div style="color:var(--text-muted); padding:1rem;">Nenhum conceito encontrado.</div>';
+        return;
+      }
+      grid.innerHTML = filtered.map(item => `
+        <div class="card">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;">
+            <div class="card-title">${item.term}</div>
+            <span class="badge badge-yellow">${item.module}</span>
+          </div>
+          <div class="card-desc">${item.def}</div>
+        </div>
+      `).join('');
+    }
+
+    renderTerms(terms);
+
+    searchInput.addEventListener('input', e => {
+      const q = e.target.value.toLowerCase();
+      const filtered = terms.filter(t => t.term.toLowerCase().includes(q) || t.def.toLowerCase().includes(q) || t.module.toLowerCase().includes(q));
+      renderTerms(filtered);
+    });
+  </script>
+</body>
+</html>
+

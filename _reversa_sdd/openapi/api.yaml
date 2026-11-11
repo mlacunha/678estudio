@@ -1,0 +1,284 @@
+openapi: 3.0.3
+info:
+  title: API 678 Estudio
+  description: API interna e pública para catálogo, personalizadores, orçamentos e uploads do 678 Estudio.
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:4321
+    description: Servidor Local de Desenvolvimento
+  - url: https://678estudio.com.br
+    description: Servidor de Produção
+
+paths:
+  /api/categories:
+    get:
+      summary: Lista categorias de produtos
+      parameters:
+        - name: all
+          in: query
+          required: false
+          schema:
+            type: boolean
+          description: Se true, retorna inclusive categorias inativas.
+      responses:
+        '200':
+          description: Sucesso
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ProductCategory'
+
+  /api/products:
+    get:
+      summary: Lista produtos do catálogo
+      parameters:
+        - name: category
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Slug da categoria para filtro.
+        - name: all
+          in: query
+          required: false
+          schema:
+            type: boolean
+          description: Se true, retorna itens inativos e sem filtro estrito.
+      responses:
+        '200':
+          description: Lista de produtos
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Product'
+    post:
+      summary: Cadastra um novo produto
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductInput'
+      responses:
+        '201':
+          description: Produto criado com sucesso
+        '400':
+          description: Campos obrigatórios ausentes
+
+  /api/products/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+    get:
+      summary: Consulta produto por ID
+      responses:
+        '200':
+          description: Produto encontrado
+        '404':
+          description: Produto não encontrado
+    put:
+      summary: Atualiza dados ou status do produto
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                toggleActive:
+                  type: boolean
+                name:
+                  type: string
+                tagline:
+                  type: string
+                description:
+                  type: string
+                imageUrl:
+                  type: string
+      responses:
+        '200':
+          description: Produto atualizado com sucesso
+        '404':
+          description: Produto não encontrado
+    delete:
+      summary: Remove produto do catálogo
+      responses:
+        '200':
+          description: Produto excluído com sucesso
+        '404':
+          description: Produto não encontrado
+
+  /api/mockup/save:
+    post:
+      summary: Salva snapshot de prévia gerado pelo simulador
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - imageBase64
+                - categorySlug
+              properties:
+                imageBase64:
+                  type: string
+                categorySlug:
+                  type: string
+      responses:
+        '200':
+          description: Mockup persistido
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  mockupUrl:
+                    type: string
+
+  /api/agenda/preview:
+    post:
+      summary: Renderiza páginas de prévia da agenda em PNG
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AgendaConfig'
+      responses:
+        '200':
+          description: Prévias compiladas com sucesso
+
+  /api/agenda/quote:
+    post:
+      summary: Registra solicitação de orçamento de agenda
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AgendaConfig'
+      responses:
+        '201':
+          description: Orçamento registrado com draft_token
+
+components:
+  schemas:
+    ProductCategory:
+      type: object
+      properties:
+        id:
+          type: string
+        slug:
+          type: string
+        title:
+          type: string
+        subtitle:
+          type: string
+        description:
+          type: string
+        badge:
+          type: string
+        displayOrder:
+          type: integer
+        isActive:
+          type: boolean
+
+    Product:
+      type: object
+      properties:
+        id:
+          type: string
+        categorySlug:
+          type: string
+        name:
+          type: string
+        tagline:
+          type: string
+        description:
+          type: string
+        featuredBadge:
+          type: string
+        imageUrl:
+          type: string
+        order:
+          type: integer
+        isActive:
+          type: boolean
+        isProvisional:
+          type: boolean
+
+    ProductInput:
+      type: object
+      required:
+        - name
+        - categorySlug
+        - imageUrl
+      properties:
+        id:
+          type: string
+        categorySlug:
+          type: string
+        name:
+          type: string
+        tagline:
+          type: string
+        description:
+          type: string
+        featuredBadge:
+          type: string
+        imageUrl:
+          type: string
+        order:
+          type: integer
+        isActive:
+          type: boolean
+
+    AgendaConfig:
+      type: object
+      required:
+        - year
+        - layout
+        - format
+        - style
+      properties:
+        year:
+          type: integer
+          example: 2026
+        layout:
+          type: string
+          enum: [daily-1dpp, daily-2dpp, weekly]
+        format:
+          type: string
+          enum: [a5, executive]
+        style:
+          type: string
+          enum: [classic, commercial, feminine]
+        colors:
+          type: object
+          properties:
+            primary:
+              type: string
+            secondary:
+              type: string
+

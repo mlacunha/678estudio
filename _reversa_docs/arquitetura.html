@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Arquitetura 3D do Sistema — 678 Estudio</title>
+  <link rel="stylesheet" href="assets/css/docs.css">
+  <script src="assets/js/data.js"></script>
+</head>
+<body>
+  <div class="layout">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="brand">
+        <img src="assets/img/seal-mini.svg" alt="Selo">
+        <div>
+          <div class="brand-title">678 Estudio</div>
+          <div class="brand-badge">REVERSA DOCS</div>
+        </div>
+      </div>
+      <div class="nav-section">Visão Geral</div>
+      <a href="index.html" class="nav-item">Início</a>
+      <a href="arquitetura.html" class="nav-item active">Arquitetura 3D</a>
+      <a href="modulos.html" class="nav-item">Mapa de Módulos</a>
+      <a href="topologia.html" class="nav-item">Topologia C4</a>
+      <div class="nav-section">Análise & Dados</div>
+      <a href="metricas.html" class="nav-item">Dashboard de Métricas</a>
+      <div class="nav-section">Conhecimento & Onboarding</div>
+      <a href="glossario.html" class="nav-item">Glossário do Sistema</a>
+      <a href="deck.html" class="nav-item">Slide Deck Executivo</a>
+      <div class="nav-section">Features & Specs</div>
+      <a href="features/catalog.html" class="nav-item">Catálogo & Produtos</a>
+      <a href="features/database.html" class="nav-item">Banco SQLite & Migrações</a>
+      <a href="features/customizer-caneca-3d.html" class="nav-item">Caneca 3D (Three.js)</a>
+      <a href="features/customizer-quadro-ambiente.html" class="nav-item">Quadro Ambiente (Canvas)</a>
+      <a href="features/agenda-compiler.html" class="nav-item">Compilador Typst (Agendas)</a>
+      <a href="features/admin.html" class="nav-item">Painel Administrativo</a>
+      <a href="features/public-site.html" class="nav-item">Site Público Vitrine</a>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <header class="page-header">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <div>
+            <h1 class="page-title">Arquitetura Espacial do Sistema</h1>
+            <p class="page-desc">Visualização tridimensional dos blocos operacionais e densidade de código do monólito modular.</p>
+          </div>
+          <span class="badge badge-green">Confiança: 90.6%</span>
+        </div>
+      </header>
+
+      <!-- 3D Canvas / Code City Simulation -->
+      <div class="interactive-canvas" style="height: 480px; margin-bottom: 2rem; display:flex; flex-direction:column; align-items:center; justify-content:center; background: radial-gradient(circle at center, #18181b 0%, #09090b 100%);">
+        <canvas id="cityCanvas" width="900" height="420" style="display:block; max-width:100%;"></canvas>
+        <div style="font-family:var(--font-mono); font-size:0.75rem; color:var(--text-muted); margin-top:0.5rem;">
+          Arraste com o mouse para girar o ângulo de perspectiva isométrica.
+        </div>
+      </div>
+
+      <!-- Resumo Estrutural -->
+      <div class="grid-3" style="margin-bottom: 2rem;">
+        <div class="card">
+          <div class="card-title">Frontend & Ilhas</div>
+          <div class="card-desc">Astro 4.16 com renderização híbrida e ilhas de hidratação sob demanda (Three.js e Canvas 2D) para os personalizadores.</div>
+        </div>
+        <div class="card">
+          <div class="card-title">Backend & API</div>
+          <div class="card-desc">Endpoints REST leves operando no adaptador `@astrojs/node` com rotas de upload e persistência de snapshots.</div>
+        </div>
+        <div class="card">
+          <div class="card-title">Persistência SQLite</div>
+          <div class="card-desc">Banco em arquivo local operado por `@libsql/client`, garantindo isolamento total sem dependências externas.</div>
+        </div>
+      </div>
+
+      <!-- Tabela de Módulos & Densidade -->
+      <h2 style="font-size:1.25rem; font-weight:600; margin-bottom:1rem;">Densidade por Módulo Físico</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Módulo</th>
+            <th>Localização Física</th>
+            <th>Linhas de Código</th>
+            <th>Arquivos</th>
+            <th>Complexidade</th>
+            <th>Confiança</th>
+          </tr>
+        </thead>
+        <tbody id="modulesTableBody">
+          <!-- Populado via data.js -->
+        </tbody>
+      </table>
+    </main>
+  </div>
+
+  <script>
+    // Popula tabela a partir do data.js
+    const tbody = document.getElementById('modulesTableBody');
+    if (window.RV_DATA && window.RV_DATA.modules) {
+      tbody.innerHTML = window.RV_DATA.modules.map(m => `
+        <tr>
+          <td style="font-weight:600; color:var(--text-primary);">${m.name}</td>
+          <td style="font-family:var(--font-mono); font-size:0.8rem;">${m.id}</td>
+          <td style="font-family:var(--font-mono);">${m.loc} LOC</td>
+          <td style="font-family:var(--font-mono);">${m.files}</td>
+          <td><span class="badge ${m.complexity === 'Alta' ? 'badge-yellow' : m.complexity === 'Média' ? 'badge-blue' : 'badge-green'}">${m.complexity}</span></td>
+          <td><span class="badge badge-green">${m.confidence}</span></td>
+        </tr>
+      `).join('');
+    }
+
+    // Renderizador Isométrico 3D Code City (Universal, sem dependência externa quebrada)
+    const canvas = document.getElementById('cityCanvas');
+    const ctx = canvas.getContext('2d');
+    let angle = 0.55;
+    let isDragging = false;
+    let startX = 0;
+
+    canvas.addEventListener('mousedown', e => { isDragging = true; startX = e.clientX; });
+    window.addEventListener('mouseup', () => isDragging = false);
+    window.addEventListener('mousemove', e => {
+      if (!isDragging) return;
+      const dx = e.clientX - startX;
+      angle += dx * 0.006;
+      startX = e.clientX;
+      drawCity();
+    });
+
+    const buildings = [
+      { name: "Admin", loc: 820, x: -140, y: -90, color: "#3b82f6" },
+      { name: "Public Site", loc: 735, x: 10, y: -90, color: "#10b981" },
+      { name: "Quadro", loc: 645, x: 160, y: -90, color: "#f59e0b" },
+      { name: "Caneca 3D", loc: 610, x: -140, y: 70, color: "#ec4899" },
+      { name: "Typst CLI", loc: 480, x: 10, y: 70, color: "#8b5cf6" },
+      { name: "Catálogo", loc: 315, x: 160, y: 70, color: "#6366f1" },
+      { name: "SQLite", loc: 235, x: 10, y: 200, color: "#64748b" }
+    ];
+
+    function drawCity() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      const cx = canvas.width / 2;
+      const cy = canvas.height / 2 + 30;
+
+      // Grid Base
+      ctx.strokeStyle = "rgba(63, 63, 70, 0.4)";
+      ctx.lineWidth = 1;
+      for (let i = -300; i <= 300; i += 60) {
+        const x1 = Math.cos(angle) * i - Math.sin(angle) * (-300);
+        const y1 = (Math.sin(angle) * i + Math.cos(angle) * (-300)) * 0.5;
+        const x2 = Math.cos(angle) * i - Math.sin(angle) * 300;
+        const y2 = (Math.sin(angle) * i + Math.cos(angle) * 300) * 0.5;
+        ctx.beginPath();
+        ctx.moveTo(cx + x1, cy + y1);
+        ctx.lineTo(cx + x2, cy + y2);
+        ctx.stroke();
+      }
+
+      // Ordena edifícios por profundidade Y
+      const rotated = buildings.map(b => {
+        const rx = Math.cos(angle) * b.x - Math.sin(angle) * b.y;
+        const ry = (Math.sin(angle) * b.x + Math.cos(angle) * b.y) * 0.5;
+        return { ...b, rx, ry, height: b.loc * 0.16 };
+      }).sort((a, b) => a.ry - b.ry);
+
+      // Renderiza blocos 3D
+      rotated.forEach(b => {
+        const bx = cx + b.rx;
+        const by = cy + b.ry;
+        const w = 48;
+        const h = b.height;
+
+        // Sombra
+        ctx.fillStyle = "rgba(0, 0, 0, 0.4)";
+        ctx.beginPath();
+        ctx.ellipse(bx, by, w * 0.8, w * 0.4, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Coluna 3D
+        ctx.fillStyle = b.color;
+        ctx.globalAlpha = 0.85;
+        ctx.fillRect(bx - w/2, by - h, w, h);
+        ctx.globalAlpha = 1.0;
+
+        // Topo iluminado
+        ctx.fillStyle = "#ffffff";
+        ctx.globalAlpha = 0.3;
+        ctx.fillRect(bx - w/2, by - h, w, 6);
+        ctx.globalAlpha = 1.0;
+
+        // Borda
+        ctx.strokeStyle = "#ffffff";
+        ctx.lineWidth = 1;
+        ctx.strokeRect(bx - w/2, by - h, w, h);
+
+        // Rótulo
+        ctx.fillStyle = "#f4f4f5";
+        ctx.font = "11px var(--font-mono)";
+        ctx.textAlign = "center";
+        ctx.fillText(b.name, bx, by - h - 10);
+      });
+    }
+
+    drawCity();
+  </script>
+</body>
+</html>
+

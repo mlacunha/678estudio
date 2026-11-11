@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Feature: Catálogo & Produtos — 678 Estudio</title>
+  <link rel="stylesheet" href="../assets/css/docs.css">
+  <script src="../assets/js/data.js"></script>
+</head>
+<body>
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="brand">
+        <img src="../assets/img/seal-mini.svg" alt="Selo">
+        <div>
+          <div class="brand-title">678 Estudio</div>
+          <div class="brand-badge">REVERSA DOCS</div>
+        </div>
+      </div>
+      <div class="nav-section">Visão Geral</div>
+      <a href="../index.html" class="nav-item">Início</a>
+      <a href="../arquitetura.html" class="nav-item">Arquitetura 3D</a>
+      <a href="../modulos.html" class="nav-item">Mapa de Módulos</a>
+      <a href="../topologia.html" class="nav-item">Topologia C4</a>
+      <div class="nav-section">Análise & Dados</div>
+      <a href="../metricas.html" class="nav-item">Dashboard de Métricas</a>
+      <div class="nav-section">Conhecimento & Onboarding</div>
+      <a href="../glossario.html" class="nav-item">Glossário do Sistema</a>
+      <a href="../deck.html" class="nav-item">Slide Deck Executivo</a>
+      <div class="nav-section">Features & Specs</div>
+      <a href="catalog.html" class="nav-item active">Catálogo & Produtos</a>
+      <a href="database.html" class="nav-item">Banco SQLite & Migrações</a>
+      <a href="customizer-caneca-3d.html" class="nav-item">Caneca 3D (Three.js)</a>
+      <a href="customizer-quadro-ambiente.html" class="nav-item">Quadro Ambiente (Canvas)</a>
+      <a href="agenda-compiler.html" class="nav-item">Compilador Typst (Agendas)</a>
+      <a href="admin.html" class="nav-item">Painel Administrativo</a>
+      <a href="public-site.html" class="nav-item">Site Público Vitrine</a>
+    </aside>
+
+    <main class="main-content">
+      <header class="page-header">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <div>
+            <h1 class="page-title">Catálogo de Produtos & Categorias</h1>
+            <p class="page-desc">Especificação da unit <code>catalog</code> — contratos, CRUD e filtros de visibilidade.</p>
+          </div>
+          <span class="badge badge-green">Confiança: 96.4%</span>
+        </div>
+      </header>
+
+      <div class="card" style="margin-bottom:2rem;">
+        <div class="card-title">Resumo Operacional</div>
+        <div class="card-desc">
+          O módulo gerencia os produtos e categorias comercializados. Expõe endpoints REST protegidos contra SQL Injection via queries parametrizadas em <code>catalogRepository.ts</code>. Suporta alternância lógica de status (<code>toggleActive</code>), reordenação e categorização estrita em quatro linhas principais (Quadros, Canecas, Papelaria e Artesanato).
+        </div>
+      </div>
+
+      <div class="grid-2" style="margin-bottom:2rem;">
+        <div class="card">
+          <div class="card-title">Regras de Negócio Centrais</div>
+          <ul style="font-size:0.875rem; color:var(--text-secondary); margin-left:1.25rem; line-height:1.7;">
+            <li><strong>RN-CAT-01</strong>: Consultas públicas filtram estritamente por <code>is_active = 1</code>.</li>
+            <li><strong>RN-CAT-02</strong>: A ordenação respeita <code>display_order ASC</code>; itens novos recebem 99 por padrão.</li>
+            <li><strong>RN-CAT-03</strong>: Criação exige obrigatoriamente <code>name</code>, <code>categorySlug</code> e <code>imageUrl</code>.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <div class="card-title">Arquivos-Chave no Código</div>
+          <ul style="font-size:0.85rem; font-family:var(--font-mono); color:var(--text-muted); line-height:1.8;">
+            <li>src/types/catalog.ts</li>
+            <li>src/db/catalogRepository.ts</li>
+            <li>src/pages/api/products/index.ts</li>
+            <li>src/pages/api/products/[id].ts</li>
+            <li>src/pages/api/categories.ts</li>
+          </ul>
+        </div>
+      </div>
+
+      <h2 style="font-size:1.25rem; font-weight:600; margin-bottom:1rem;">Contratos REST da API</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Método</th>
+            <th>Endpoint</th>
+            <th>Descrição</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>GET</td><td>/api/categories</td><td>Retorna categorias ativas (ou todas se ?all=true)</td><td>200</td></tr>
+          <tr><td>GET</td><td>/api/products</td><td>Lista produtos com filtro opcional por ?category=slug</td><td>200</td></tr>
+          <tr><td>POST</td><td>/api/products</td><td>Cadastra novo produto no catálogo</td><td>201, 400</td></tr>
+          <tr><td>PUT</td><td>/api/products/[id]</td><td>Atualiza dados ou alterna status com { toggleActive }</td><td>200, 404</td></tr>
+          <tr><td>DELETE</td><td>/api/products/[id]</td><td>Exclui registro do catálogo</td><td>200, 404</td></tr>
+        </tbody>
+      </table>
+    </main>
+  </div>
+</body>
+</html>
+

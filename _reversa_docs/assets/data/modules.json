@@ -1,0 +1,80 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-11-11T18:25:00Z",
+  "project": "678 Estudio",
+  "totalLoc": 3840,
+  "totalFiles": 45,
+  "modules": [
+    {
+      "id": "catalog",
+      "name": "Catálogo & Produtos",
+      "folder": "src/db, src/pages/api/products",
+      "loc": 315,
+      "files": 6,
+      "complexity": "Baixa",
+      "purpose": "CRUD de produtos, mapeamento de linhas e filtros de vitrine",
+      "confidence": "confirmed"
+    },
+    {
+      "id": "database",
+      "name": "Banco de Dados & Migrações",
+      "folder": "src/db",
+      "loc": 235,
+      "files": 2,
+      "complexity": "Média",
+      "purpose": "Bootstrap SQLite (@libsql/client), WeakMap de inicialização e migrações transacionais",
+      "confidence": "confirmed"
+    },
+    {
+      "id": "customizer-caneca-3d",
+      "name": "Personalizador 3D de Canecas",
+      "folder": "src/pages/personalizar/caneca.astro, src/components/customizers/Mug.astro",
+      "loc": 610,
+      "files": 4,
+      "complexity": "Média",
+      "purpose": "Renderização 3D WebGL (Three.js), rotação 360°, projeção cilíndrica métrica e WhatsApp CTA",
+      "confidence": "confirmed"
+    },
+    {
+      "id": "customizer-quadro-ambiente",
+      "name": "Personalizador de Quadros em Ambientes",
+      "folder": "src/pages/personalizar/quadro.astro, src/components/customizers/Frame.astro",
+      "loc": 645,
+      "files": 4,
+      "complexity": "Média",
+      "purpose": "Composição 2D em 5 camadas (ambiente, sombra, moldura, madeira clara, foto) e proporção 15 px/cm",
+      "confidence": "confirmed"
+    },
+    {
+      "id": "agenda-compiler",
+      "name": "Compilador de Agendas (Typst)",
+      "folder": "src/server/agenda",
+      "loc": 480,
+      "files": 7,
+      "complexity": "Alta",
+      "purpose": "Execução via subprocesso do Typst CLI, validação de contraste WCAG e geração de prévias PNG",
+      "confidence": "confirmed"
+    },
+    {
+      "id": "admin",
+      "name": "Painel Administrativo",
+      "folder": "src/pages/admin",
+      "loc": 820,
+      "files": 12,
+      "complexity": "Média",
+      "purpose": "Edição de catálogo em tempo real, configurações de contato, portfólio de entregas e backup",
+      "confidence": "confirmed"
+    },
+    {
+      "id": "public-site",
+      "name": "Site Público & Vitrine",
+      "folder": "src/pages, src/components",
+      "loc": 735,
+      "files": 10,
+      "complexity": "Baixa",
+      "purpose": "Hero editorial, 4 carrosséis de categorias, layout responsivo e botão flutuante",
+      "confidence": "confirmed"
+    }
+  ]
+}
+

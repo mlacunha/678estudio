@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Feature: Personalizador 3D de Canecas — 678 Estudio</title>
+  <link rel="stylesheet" href="../assets/css/docs.css">
+  <script src="../assets/js/data.js"></script>
+</head>
+<body>
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="brand">
+        <img src="../assets/img/seal-mini.svg" alt="Selo">
+        <div>
+          <div class="brand-title">678 Estudio</div>
+          <div class="brand-badge">REVERSA DOCS</div>
+        </div>
+      </div>
+      <div class="nav-section">Visão Geral</div>
+      <a href="../index.html" class="nav-item">Início</a>
+      <a href="../arquitetura.html" class="nav-item">Arquitetura 3D</a>
+      <a href="../modulos.html" class="nav-item">Mapa de Módulos</a>
+      <a href="../topologia.html" class="nav-item">Topologia C4</a>
+      <div class="nav-section">Análise & Dados</div>
+      <a href="../metricas.html" class="nav-item">Dashboard de Métricas</a>
+      <div class="nav-section">Conhecimento & Onboarding</div>
+      <a href="../glossario.html" class="nav-item">Glossário do Sistema</a>
+      <a href="../deck.html" class="nav-item">Slide Deck Executivo</a>
+      <div class="nav-section">Features & Specs</div>
+      <a href="catalog.html" class="nav-item">Catálogo & Produtos</a>
+      <a href="database.html" class="nav-item">Banco SQLite & Migrações</a>
+      <a href="customizer-caneca-3d.html" class="nav-item active">Caneca 3D (Three.js)</a>
+      <a href="customizer-quadro-ambiente.html" class="nav-item">Quadro Ambiente (Canvas)</a>
+      <a href="agenda-compiler.html" class="nav-item">Compilador Typst (Agendas)</a>
+      <a href="admin.html" class="nav-item">Painel Administrativo</a>
+      <a href="public-site.html" class="nav-item">Site Público Vitrine</a>
+    </aside>
+
+    <main class="main-content">
+      <header class="page-header">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <div>
+            <h1 class="page-title">Personalizador 3D de Canecas</h1>
+            <p class="page-desc">Especificação da unit <code>customizer-caneca-3d</code> — Three.js WebGL, mapeamento UV e WhatsApp CTA.</p>
+          </div>
+          <span class="badge badge-green">Confiança: 95.5%</span>
+        </div>
+      </header>
+
+      <div class="card" style="margin-bottom:2rem;">
+        <div class="card-title">Resumo Operacional</div>
+        <div class="card-desc">
+          Simulador 3D interativo executado no navegador do cliente usando Three.js. Renderiza a caneca cerâmica de 325ml com rotação livre de 360°, textura dinâmica com preservação de aspecto, suporte a larguras métricas de 20, 21 e 22 cm e geração de snapshot persistido para conversão direta pelo WhatsApp.
+        </div>
+      </div>
+
+      <div class="grid-2" style="margin-bottom:2rem;">
+        <div class="card">
+          <div class="card-title">Algoritmo de Mapeamento Cilíndrico</div>
+          <p style="font-size:0.875rem; color:var(--text-secondary); line-height:1.7;">
+            A função <code>getMugPrintBand(widthCm)</code> aplica um fator métrico de 0.22 unidades por centímetro sobre um raio médio de 0.97 unidades, calculando o arco radiano exato (<code>thetaLength</code> e <code>thetaStart</code>) para garantir que a estampa não cubra a alça posicionada em $\pi/2$.
+          </p>
+        </div>
+        <div class="card">
+          <div class="card-title">Parâmetros de Ajuste Manual</div>
+          <ul style="font-size:0.85rem; color:var(--text-secondary); line-height:1.8;">
+            <li><strong>Largura</strong>: 20 cm, 21 cm (padrão), 22 cm (altura fixa de 9 cm).</li>
+            <li><strong>Deslocamento Horizontal</strong>: entre -800 e +800 pixels.</li>
+            <li><strong>Deslocamento Vertical</strong>: entre -350 e +350 pixels.</li>
+            <li><strong>Zoom da Arte</strong>: 50% a 250% da escala padrão.</li>
+          </ul>
+        </div>
+      </div>
+    </main>
+  </div>
+</body>
+</html>
+

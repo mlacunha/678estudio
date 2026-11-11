@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-11-11T18:25:00Z",
+  "summary": {
+    "totalLoc": 3840,
+    "totalFiles": 45,
+    "totalModules": 7,
+    "languages": [
+      { "name": "TypeScript", "percentage": 42.5, "files": 8 },
+      { "name": "Astro", "percentage": 35.8, "files": 10 },
+      { "name": "JavaScript", "percentage": 12.2, "files": 6 },
+      { "name": "Typst", "percentage": 7.5, "files": 5 },
+      { "name": "CSS / Tailwind", "percentage": 2.0, "files": 1 }
+    ],
+    "confidenceScore": 90.6
+  },
+  "treemap_loc": [
+    { "name": "Painel Admin", "value": 820, "color": "#3b82f6" },
+    { "name": "Site Público", "value": 735, "color": "#10b981" },
+    { "name": "Quadro Ambiente", "value": 645, "color": "#f59e0b" },
+    { "name": "Caneca 3D", "value": 610, "color": "#ec4899" },
+    { "name": "Compilador Typst", "value": 480, "color": "#8b5cf6" },
+    { "name": "Catálogo", "value": 315, "color": "#6366f1" },
+    { "name": "Banco SQLite", "value": 235, "color": "#64748b" }
+  ],
+  "complexity_distribution": [
+    { "level": "Baixa", "count": 2, "modules": ["catalog", "public-site"] },
+    { "level": "Média", "count": 4, "modules": ["database", "customizer-caneca-3d", "customizer-quadro-ambiente", "admin"] },
+    { "level": "Alta", "count": 1, "modules": ["agenda-compiler"] }
+  ]
+}
+
