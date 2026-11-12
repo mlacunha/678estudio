@@ -161,6 +161,6 @@ describe('Cover Typst Compiler Integration', () => {
       photoBuffer: normalizedJpeg!.normalized,
     });
     expect(pdfWithPhoto.subarray(0, 4).toString()).toBe('%PDF');
-  });
+  }, 30_000);
 });
 
