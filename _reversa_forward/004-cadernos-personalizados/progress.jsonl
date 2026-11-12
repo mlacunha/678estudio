@@ -1,0 +1,15 @@
+{"task":"T001","status":"done","timestamp":"2026-11-12T10:57:34-03:00","files":["src/server/caderno/options.mjs"]}
+{"task":"T002","status":"done","timestamp":"2026-11-12T10:58:08-03:00","files":["src/server/caderno/quoteConfig.ts","src/server/caderno/drafts.ts"]}
+{"task":"T003","status":"done","timestamp":"2026-11-12T10:59:29-03:00","files":["src/db/database.ts","src/db/notebookQuotes.ts","src/server/backup/engine.py","src/server/backup/test_engine.py"]}
+{"task":"T004","status":"done","timestamp":"2026-11-12T10:59:31-03:00","files":["src/data/stationery.ts"]}
+{"task":"T005","status":"done","timestamp":"2026-11-12T11:00:42-03:00","files":["src/db/notebookQuotes.test.ts"]}
+{"task":"T006","status":"done","timestamp":"2026-11-12T11:01:27-03:00","files":["src/server/caderno/typst/lib/shared.typ","src/server/caderno/typst/brand-678.png"]}
+{"task":"T007","status":"done","timestamp":"2026-11-12T11:02:38-03:00","files":["src/server/caderno/typst/lib/receitas.typ"]}
+{"task":"T008","status":"done","timestamp":"2026-11-12T11:03:42-03:00","files":["src/server/caderno/typst/lib/diario.typ"]}
+{"task":"T009","status":"done","timestamp":"2026-11-12T11:05:01-03:00","files":["src/server/caderno/typst/lib/memorias.typ"]}
+{"task":"T010","status":"done","timestamp":"2026-11-12T11:05:57-03:00","files":["src/server/caderno/typst/caderno.typ","src/server/caderno/compiler.mjs"]}
+{"task":"T011","status":"done","timestamp":"2026-11-12T11:07:06-03:00","files":["src/pages/api/caderno/preview.ts","src/pages/api/caderno/quote.ts","src/pages/caderno/orcamento/[id]/index.astro","src/pages/caderno/orcamento/[id]/previa/[section].ts"]}
+{"task":"T012","status":"done","timestamp":"2026-11-12T11:09:51-03:00","files":["src/pages/personalizar/caderno.astro","src/scripts/notebookCustomizer.ts"]}
+{"task":"T013","status":"done","timestamp":"2026-11-12T11:10:51-03:00","files":["src/pages/admin/cadernos/index.astro","src/pages/admin/cadernos/[id]/index.astro","src/pages/admin/cadernos/[id]/pdf.ts","src/pages/admin/cadernos/[id]/arquivo/[file].ts","src/pages/admin/index.astro","Dockerfile"]}
+{"task":"T014","status":"done","timestamp":"2026-11-12T11:15:03-03:00","files":["src/server/caderno/compiler.test.ts"]}
+

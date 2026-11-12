@@ -1,0 +1,140 @@
+---
+import BaseLayout from '../../../../layouts/BaseLayout.astro';
+import AdminA4PrintPanel from '../../../../components/admin/AdminA4PrintPanel.astro';
+import { getNotebookQuote } from '../../../../db/notebookQuotes';
+import {
+  formatNotebookQuoteDate,
+  notebookQuoteLabels,
+  notebookQuotePath,
+} from '../../../../server/caderno/quoteConfig';
+import { notebookSectionsByModel, notebookTotalPages } from '../../../../server/caderno/options.mjs';
+
+export const prerender = false;
+
+const id = Astro.params.id ?? '';
+const quote = await getNotebookQuote(id);
+if (!quote) return new Response('Solicitação de caderno não encontrada.', { status: 404 });
+
+const { config } = quote;
+const files = `/admin/cadernos/${quote.id}/arquivo`;
+const sections = notebookSectionsByModel[config.model] ?? notebookSectionsByModel['caderno-receitas'];
+const totalPages = notebookTotalPages[config.model] ?? 140;
+const labelClass = 'text-xs font-semibold uppercase tracking-wider text-ink-muted';
+---
+
+<BaseLayout title={`Produção: ${quote.product} | 678 Estudio`}>
+  <section class="mx-auto max-w-5xl px-4 py-10 sm:px-6">
+    <a href="/admin/cadernos" class="text-sm font-semibold text-accent hover:underline">
+      ← Voltar às solicitações de cadernos
+    </a>
+    <h1 class="editorial-heading mt-4 text-4xl">{quote.product}</h1>
+    <p class="mt-2 text-sm text-ink-secondary">Solicitado · {formatNotebookQuoteDate(quote.createdAt)}</p>
+    <p class="mt-2 break-all font-mono text-xs text-ink-muted">{quote.id}</p>
+
+    <div class="mt-6 rounded-xl border border-line bg-surface p-4 sm:p-6">
+      <h2 class="text-xl font-semibold">Especificações do produto</h2>
+
+      <dl class="mt-4 grid grid-cols-2 gap-4 md:grid-cols-4">
+        {notebookQuoteLabels(config).map((value, index) => (
+          <div>
+            <dt class={labelClass}>{['Modelo', 'Estilo visual', 'Tipografia', 'Formato'][index]}</dt>
+            <dd class="mt-1 text-sm font-medium">{value}</dd>
+          </div>
+        ))}
+        <div>
+          <dt class={labelClass}>Título personalizado</dt>
+          <dd class="mt-1 text-sm font-medium">{config.title || quote.product}</dd>
+        </div>
+        <div>
+          <dt class={labelClass}>Identificação</dt>
+          <dd class="mt-1 text-sm font-medium">{config.personalizationName || 'Não informada'}</dd>
+        </div>
+        <div>
+          <dt class={labelClass}>Paginação A5</dt>
+          <dd class="mt-1 text-sm font-medium">{totalPages} páginas ({totalPages / 2} folhas A5)</dd>
+        </div>
+        <div>
+          <dt class={labelClass}>Cores {config.customColors ? 'personalizadas' : 'do estilo'}</dt>
+          <dd class="mt-1 flex items-center gap-1.5 font-mono text-xs">
+            <span class="inline-block size-3.5 rounded border border-line" style={`background:${config.colors.primary}`} />
+            <span>{config.colors.primary}</span>
+            <span>/</span>
+            <span class="inline-block size-3.5 rounded border border-line" style={`background:${config.colors.secondary}`} />
+            <span>{config.colors.secondary}</span>
+          </dd>
+        </div>
+        <div class="min-w-0">
+          <dt class={labelClass}>Logomarca</dt>
+          <dd class="mt-1 break-all text-sm font-medium">{config.logo?.originalName || 'Sem logomarca'}</dd>
+        </div>
+        <div>
+          <dt class={labelClass}>Marca-d’água</dt>
+          <dd class="mt-1 text-sm font-medium">{config.watermark ? 'Sim' : 'Não'}</dd>
+        </div>
+        <div>
+          <dt class={labelClass}>Template Typst</dt>
+          <dd class="mt-1 text-sm font-medium">{config.template} (v{quote.configVersion})</dd>
+        </div>
+      </dl>
+
+      {config.dedication && (
+        <div class="mt-4 rounded-lg border border-line bg-surface-muted p-3">
+          <p class={labelClass}>Dedicatória do Livro de Memórias</p>
+          <p class="mt-1 text-sm italic text-ink">“{config.dedication}”</p>
+        </div>
+      )}
+
+      <div class="mt-6 flex flex-wrap items-center gap-3 border-t border-line pt-5">
+        <a
+          href={`/admin/cadernos/${quote.id}/pdf`}
+          class="inline-flex min-h-11 items-center justify-center rounded-md bg-action px-5 text-sm font-semibold text-on-action hover:bg-action-hover"
+        >
+          Baixar PDF de produção (A5 original)
+        </a>
+        <a class="p-2 text-sm font-semibold text-accent hover:underline" href={`${files}/configuracao`}>
+          Baixar configuração JSON
+        </a>
+        {config.logo && (
+          <>
+            <a class="p-2 text-sm font-semibold text-accent hover:underline" href={`${files}/original`}>
+              Baixar logo original
+            </a>
+            <a class="p-2 text-sm font-semibold text-accent hover:underline" href={`${files}/logo`}>
+              Baixar logo processada
+            </a>
+          </>
+        )}
+      </div>
+
+      <AdminA4PrintPanel
+        pdfEndpoint={`/admin/cadernos/${quote.id}/pdf`}
+        productLabel={`${quote.product} A5`}
+      />
+    </div>
+
+    <div class="mt-8">
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <h2 class="text-xl font-semibold">Prévias reais salvas no banco</h2>
+        <a href={notebookQuotePath(quote.id)} class="text-sm font-semibold text-accent hover:underline">
+          Abrir referência do cliente
+        </a>
+      </div>
+
+      <div class="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
+        {sections.map((section) => (
+          <div class="rounded-xl border border-line bg-surface p-2">
+            <img
+              src={`${files}/preview-${section.id}`}
+              alt={`Prévia da seção ${section.label}`}
+              loading="lazy"
+              class="block aspect-[148/210] w-full rounded bg-white object-contain shadow-inner"
+            />
+            <span class="mt-2 block px-1 text-xs font-semibold text-ink">{section.label}</span>
+            <span class="block px-1 text-[11px] text-ink-muted">{section.detail}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+

@@ -37,6 +37,12 @@ SCHEMA = {
     "agenda_quotes": "id draft_token product created_at status config_version config_json",
     "agenda_quote_assets": "quote_id name mime content",
 }
+OPTIONAL_SCHEMA = {
+    "planner_quotes": "id draft_token product created_at status config_version config_json",
+    "planner_quote_assets": "quote_id name mime content",
+    "notebook_quotes": "id draft_token product created_at status config_version config_json",
+    "notebook_quote_assets": "quote_id name mime content",
+}
 
 
 class InvalidBackup(Exception):
@@ -175,12 +181,14 @@ def verify_database(path, names=None):
         check(all(kind in ("table", "index") and not re.match(r"^\s*CREATE\s+VIRTUAL\b", sql or "", re.I)
                   for _, kind, sql in objects), "O SQLite contém objetos incompatíveis.")
         tables = {name for name, kind, _ in objects if kind == "table"}
-        check(set(SCHEMA) <= tables <= set(SCHEMA) | {"schema_migrations"}, "Esquema do SQLite incompatível.")
+        allowed_tables = set(SCHEMA) | set(OPTIONAL_SCHEMA) | {"schema_migrations"}
+        check(set(SCHEMA) <= tables <= allowed_tables, "Esquema do SQLite incompatível.")
         if "schema_migrations" in tables:
             check({row[1] for row in db.execute('PRAGMA table_info("schema_migrations")')} == {"id"}, "Tabela de migrações incompatível.")
-        for table, columns in SCHEMA.items():
-            existing = {row[1] for row in db.execute(f'PRAGMA table_info("{table}")')}
-            check(set(columns.split()) <= existing, "Esquema do SQLite incompleto.")
+        for table, columns in (SCHEMA | OPTIONAL_SCHEMA).items():
+            if table in tables:
+                existing = {row[1] for row in db.execute(f'PRAGMA table_info("{table}")')}
+                check(set(columns.split()) <= existing, "Esquema do SQLite incompleto.")
         check(db.execute("PRAGMA foreign_key_check").fetchone() is None, "O SQLite contém referências inválidas.")
         if names is None:
             return

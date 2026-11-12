@@ -2,7 +2,11 @@
 export const stationeryFamilies = {
   'family-agendas': { route: '/personalizar/agenda', available: true, models: ['agenda-classica-v2'] },
   'family-planners': { route: '/personalizar/planner', available: true, models: ['planner-essencial'] },
-  'family-cadernos': { route: '/personalizar/caderno', available: false, models: [] },
+  'family-cadernos': {
+    route: '/personalizar/caderno',
+    available: true,
+    models: ['caderno-receitas', 'diario-pessoal', 'livro-memorias'],
+  },
 } as const;
 
 export function stationeryCustomizer(id: string) {

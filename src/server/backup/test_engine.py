@@ -73,6 +73,13 @@ class BackupTest(unittest.TestCase):
         with closing(sqlite3.connect(self.db)) as db:
             db.execute("CREATE TABLE schema_migrations (id TEXT PRIMARY KEY)")
             db.execute("INSERT INTO schema_migrations VALUES ('stationery-families-v2')")
+            db.execute("INSERT INTO schema_migrations VALUES ('stationery-notebooks-v1')")
+            for table, columns in engine.OPTIONAL_SCHEMA.items():
+                db.execute(f"CREATE TABLE {table} ({', '.join(columns.split())})")
+            db.execute("INSERT INTO planner_quotes (id, status) VALUES ('planner', 'requested')")
+            db.execute("INSERT INTO planner_quote_assets VALUES ('planner', 'preview-abertura', 'image/png', ?)", (b"planner preview",))
+            db.execute("INSERT INTO notebook_quotes (id, status) VALUES ('notebook', 'requested')")
+            db.execute("INSERT INTO notebook_quote_assets VALUES ('notebook', 'preview-abertura', 'image/png', ?)", (b"notebook preview",))
             for page in range(1, 9):
                 db.execute("INSERT INTO agenda_quote_assets VALUES ('agenda', ?, 'image/png', ?)",
                            (f"preview-{page}", bytes([page])))
@@ -83,6 +90,8 @@ class BackupTest(unittest.TestCase):
         self.assertEqual(self.read_status(), "committed")
         with closing(sqlite3.connect(self.db)) as db:
             self.assertEqual(db.execute("SELECT id FROM schema_migrations").fetchone()[0], "stationery-families-v2")
+            self.assertEqual(db.execute("SELECT content FROM planner_quote_assets WHERE quote_id = 'planner'").fetchone()[0], b"planner preview")
+            self.assertEqual(db.execute("SELECT content FROM notebook_quote_assets WHERE quote_id = 'notebook'").fetchone()[0], b"notebook preview")
             for page in range(1, 9):
                 self.assertEqual(db.execute("SELECT content FROM agenda_quote_assets WHERE name = ?", (f"preview-{page}",)).fetchone()[0], bytes([page]))
 

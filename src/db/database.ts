@@ -114,6 +114,17 @@ async function createSchemaAndSeed(client: Client): Promise<void> {
       mime TEXT NOT NULL, content BLOB NOT NULL, PRIMARY KEY (quote_id, name)
     )`,
     'CREATE INDEX IF NOT EXISTS planner_quotes_created ON planner_quotes (created_at DESC, id DESC)',
+    `CREATE TABLE IF NOT EXISTS notebook_quotes (
+      id TEXT PRIMARY KEY, draft_token TEXT NOT NULL UNIQUE, product TEXT NOT NULL,
+      created_at TEXT NOT NULL, status TEXT NOT NULL,
+      config_version INTEGER NOT NULL, config_json TEXT NOT NULL
+    )`,
+    `CREATE TABLE IF NOT EXISTS notebook_quote_assets (
+      quote_id TEXT NOT NULL REFERENCES notebook_quotes(id) ON DELETE CASCADE,
+      name TEXT NOT NULL,
+      mime TEXT NOT NULL, content BLOB NOT NULL, PRIMARY KEY (quote_id, name)
+    )`,
+    'CREATE INDEX IF NOT EXISTS notebook_quotes_created ON notebook_quotes (created_at DESC, id DESC)',
   ], 'write');
   await migrateStationery(client);
 
@@ -176,6 +187,24 @@ export async function migrateStationery(client: Client): Promise<void> {
       await tx.execute('DROP TABLE agenda_quote_assets');
       await tx.execute('ALTER TABLE agenda_quote_assets_v2 RENAME TO agenda_quote_assets');
       await tx.execute("INSERT INTO schema_migrations VALUES ('stationery-families-v2')");
+    }
+    const notebooksApplied = await tx.execute("SELECT id FROM schema_migrations WHERE id = 'stationery-notebooks-v1'");
+    if (!notebooksApplied.rows.length) {
+      await tx.execute({
+        sql: "UPDATE products SET description = ?, tagline = ? WHERE id = 'family-cadernos'",
+        args: [
+          'Caderno de Receitas (140 págs), Diário Pessoal não datado (160 págs) e Livro de Memórias com 52 aberturas duplas (120 págs). Estilos Clássico, Executivo e Afetivo.',
+          'Caderno de Receitas, Diário Pessoal e Livro de Memórias em A5',
+        ],
+      });
+      await tx.execute({
+        sql: "UPDATE products SET description = ?, tagline = ? WHERE id = 'family-planners'",
+        args: [
+          'Planner Essencial: planejamento anual, mensal e semanal, metas, finanças, hábitos, revisão mensal e anotações. Estilos Clássico, Comercial e Feminino.',
+          'Planner Essencial A5 datado ou permanente',
+        ],
+      });
+      await tx.execute("INSERT INTO schema_migrations VALUES ('stationery-notebooks-v1')");
     }
     await tx.commit();
   } catch (error) { await tx.rollback(); throw error; }

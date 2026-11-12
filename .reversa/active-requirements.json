@@ -1,13 +1,12 @@
 {
   "schema-version": 1,
-  "feature-dir": "_reversa_forward/003-evolucao-agendas-e-impressao-a4",
-  "feature-id": "003",
-  "short-name": "evolucao-agendas-e-impressao-a4",
-  "started-at": "2026-11-11T20:47:00-03:00",
+  "feature-dir": "_reversa_forward/004-cadernos-personalizados",
+  "feature-id": "004",
+  "short-name": "cadernos-personalizados",
+  "started-at": "2026-11-12T10:40:00-03:00",
   "current-stage": "sync",
   "stages-completed": [
     "requirements",
-    "quality",
     "plan",
     "to-do",
     "audit",

@@ -1,0 +1,322 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import {
+  notebookFormats,
+  notebookModels,
+  notebookStyles,
+  notebookTypographies,
+} from '../../server/caderno/options.mjs';
+
+const fieldClass = 'w-full min-h-11 rounded-lg border border-control bg-canvas px-3 text-sm text-ink';
+---
+
+<BaseLayout
+  title="Personalize seu Caderno Temático | 678 Estudio"
+  description="Personalize o miolo do seu Caderno de Receitas, Diário Pessoal ou Livro de Memórias em formato A5. Veja páginas reais antes de pedir seu orçamento."
+>
+  <div class="mx-auto max-w-7xl px-4 py-8 sm:px-6 md:py-12 lg:px-8">
+    <header class="mb-7 border-b border-line pb-7 lg:mb-9">
+      <p class="mb-2 text-xs font-semibold uppercase tracking-[.2em] text-accent">Papelaria personalizada</p>
+      <h1 class="text-4xl font-light leading-tight text-ink sm:text-5xl">
+        Cadernos <span class="font-normal text-accent">Personalizados</span>
+      </h1>
+      <p class="mt-3 max-w-2xl text-sm leading-relaxed text-ink-secondary sm:text-base">
+        Escolha entre o Caderno de Receitas (140 páginas), o Diário Pessoal não datado (160 páginas) e o Livro de
+        Memórias com 52 aberturas duplas (120 páginas). Personalize estilo, tipografia, título, cores e confira prévias
+        reais do miolo A5.
+      </p>
+    </header>
+
+    <div class="grid items-start gap-6 lg:grid-cols-[minmax(18rem,23rem)_minmax(0,1fr)] lg:gap-8">
+      <form
+        id="notebook-form"
+        action="/api/caderno/preview"
+        method="post"
+        enctype="multipart/form-data"
+        class="rounded-2xl border border-line bg-surface p-4 sm:p-6"
+      >
+        <fieldset id="notebook-fields" class="min-w-0 space-y-5">
+          <legend class="mb-5 text-lg font-semibold text-ink">Personalize seu caderno</legend>
+
+          <fieldset class="space-y-2">
+            <legend class="mb-2 text-sm font-medium">Modelo temático</legend>
+            <div class="grid grid-cols-1 gap-2">
+              {Object.entries(notebookModels).map(([id, model], index) => (
+                <label class="cursor-pointer">
+                  <input type="radio" name="model" value={id} checked={index === 0} class="peer sr-only" />
+                  <span class="block w-full rounded-lg border border-control px-3 py-2.5 text-left transition peer-checked:border-accent peer-checked:bg-accent/10">
+                    <span class="block text-xs font-semibold text-ink peer-checked:text-accent">{model.label}</span>
+                    <span class="mt-0.5 block text-[11px] text-ink-muted">{model.subtitle}</span>
+                  </span>
+                </label>
+              ))}
+            </div>
+            <p id="notebook-model-detail" class="mt-1 text-xs text-ink-muted">
+              {notebookModels['caderno-receitas'].detail}
+            </p>
+          </fieldset>
+
+          <div>
+            <label class="space-y-1 text-sm font-medium">
+              <span>Formato</span>
+              <select name="format" class={fieldClass}>
+                {Object.entries(notebookFormats).map(([id, format]) => (
+                  <option value={id}>{format.label}</option>
+                ))}
+              </select>
+            </label>
+            <small class="mt-1 block text-xs font-normal text-ink-muted">{notebookFormats.a5.detail}</small>
+          </div>
+
+          <fieldset>
+            <legend class="mb-2 text-sm font-medium">Estilo visual</legend>
+            <div class="grid grid-cols-3 gap-2">
+              {Object.entries(notebookStyles).map(([id, style], index) => (
+                <label class="cursor-pointer">
+                  <input type="radio" name="style" value={id} checked={index === 0} class="peer sr-only" />
+                  <span class="block rounded-lg border border-control px-1 py-2.5 text-center text-xs font-semibold text-ink-secondary peer-checked:border-accent peer-checked:bg-accent/10 peer-checked:text-accent peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-accent">
+                    {style.label}
+                  </span>
+                </label>
+              ))}
+            </div>
+            <p id="notebook-style-detail" class="mt-2 text-xs text-ink-muted">{notebookStyles.classic.detail}</p>
+          </fieldset>
+
+          <fieldset>
+            <legend class="mb-2 text-sm font-medium">Tipografia</legend>
+            <div class="grid grid-cols-3 gap-2">
+              {Object.entries(notebookTypographies).map(([id, typo], index) => (
+                <label class="cursor-pointer">
+                  <input type="radio" name="typography" value={id} checked={index === 0} class="peer sr-only" />
+                  <span class="block rounded-lg border border-control px-1 py-2.5 text-center text-xs font-semibold text-ink-secondary peer-checked:border-accent peer-checked:bg-accent/10 peer-checked:text-accent peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-accent">
+                    {typo.label}
+                  </span>
+                </label>
+              ))}
+            </div>
+            <p id="notebook-typography-detail" class="mt-2 text-xs text-ink-muted">{notebookTypographies.modern.detail}</p>
+          </fieldset>
+
+          <div class="space-y-3 border-t border-line pt-4">
+            <h2 class="text-sm font-semibold">
+              Identificação e acabamento <span class="font-normal text-ink-muted">· Opcional</span>
+            </h2>
+
+            <label class="block space-y-1 text-sm">
+              <span>Título personalizado do caderno</span>
+              <input
+                type="text"
+                name="title"
+                maxlength="60"
+                placeholder="Ex.: Receitas da Família Rocha"
+                class={fieldClass}
+              />
+            </label>
+
+            <label class="block space-y-1 text-sm">
+              <span>Nome ou identificação do proprietário</span>
+              <input
+                type="text"
+                name="personalizationName"
+                maxlength="60"
+                placeholder="Ex.: Helena Rocha"
+                class={fieldClass}
+              />
+            </label>
+            <p class="text-xs text-ink-muted">Aparece na página de abertura e identificação do miolo.</p>
+
+            <div id="notebook-dedication-container" hidden>
+              <label class="block space-y-1 text-sm">
+                <span>Dedicatória especial (Livro de Memórias)</span>
+                <textarea
+                  id="notebook-dedication"
+                  name="dedication"
+                  rows="3"
+                  maxlength="240"
+                  disabled
+                  placeholder="Ex.: Para guardar cada viagem, encontro e risada da nossa história."
+                  class="w-full rounded-lg border border-control bg-canvas p-3 text-sm text-ink"
+                ></textarea>
+              </label>
+              <p class="mt-1 text-xs text-ink-muted">Impressa na página 2 (Dedicatória) do Livro de Memórias.</p>
+            </div>
+
+            <label class="block space-y-1 text-sm" for="notebook-logo">
+              <span>Imagem ou logomarca</span>
+              <input
+                type="file"
+                id="notebook-logo"
+                name="logo"
+                accept="image/png,image/jpeg"
+                aria-describedby="notebook-logo-help"
+                class="block w-full min-w-0 text-xs text-ink-secondary file:mr-2 file:rounded-md file:border-0 file:bg-surface-muted file:px-2 file:py-2 file:font-semibold file:text-ink"
+              />
+            </label>
+            <p id="notebook-logo-help" class="text-xs text-ink-muted">
+              PNG ou JPEG de até 2 MB. Aparece nos rodapés e na abertura.
+            </p>
+            <button
+              id="notebook-remove-logo"
+              type="button"
+              class="min-h-10 rounded-md px-2 text-xs font-semibold text-accent hover:bg-surface-muted"
+              hidden
+            >
+              Remover logomarca
+            </button>
+
+            <label class="flex items-center gap-2 text-sm has-[:disabled]:opacity-60">
+              <input
+                id="notebook-watermark"
+                type="checkbox"
+                name="watermark"
+                value="true"
+                disabled
+                class="size-4 accent-accent"
+              />
+              Usar a logo como marca-d’água
+            </label>
+
+            <label class="flex items-center gap-2 text-sm">
+              <input id="notebook-custom-colors" type="checkbox" class="size-4 accent-accent" />
+              Usar minhas cores
+            </label>
+            <fieldset id="notebook-colors" disabled hidden class="grid grid-cols-2 gap-3">
+              <label class="flex items-center gap-2 text-xs">
+                <input
+                  type="color"
+                  name="primary"
+                  value={notebookStyles.classic.primary}
+                  class="h-10 w-10 cursor-pointer rounded border border-control bg-canvas"
+                />
+                Principal
+              </label>
+              <label class="flex items-center gap-2 text-xs">
+                <input
+                  type="color"
+                  name="secondary"
+                  value={notebookStyles.classic.secondary}
+                  class="h-10 w-10 cursor-pointer rounded border border-control bg-canvas"
+                />
+                Destaque
+              </label>
+              <p class="col-span-2 text-xs text-ink-muted">Prefira tons escuros para manter o contraste no papel.</p>
+            </fieldset>
+          </div>
+
+          <button
+            id="notebook-submit"
+            type="submit"
+            class="min-h-12 w-full rounded-lg bg-action px-4 text-sm font-semibold text-on-action hover:bg-action-hover disabled:cursor-wait disabled:opacity-70"
+          >
+            Visualizar meu caderno
+          </button>
+        </fieldset>
+
+        <p id="notebook-error" role="alert" class="mt-3 text-sm font-medium text-danger" hidden></p>
+        <noscript><p class="mt-3 text-sm text-ink-secondary">Ative o JavaScript para abrir a galeria de prévias.</p></noscript>
+      </form>
+
+      <section
+        id="notebook-results"
+        aria-labelledby="notebook-preview-title"
+        class="min-w-0 scroll-mt-24 rounded-2xl border border-line bg-surface p-4 sm:p-6"
+      >
+        <div class="flex flex-wrap items-center justify-between gap-2 border-b border-line pb-4">
+          <h2 id="notebook-preview-title" class="text-lg font-semibold">Prévias reais do miolo</h2>
+          <p id="notebook-status" role="status" class="text-xs text-ink-secondary"></p>
+        </div>
+
+        <p id="notebook-summary" class="mt-4 text-sm text-ink-secondary" hidden></p>
+
+        <div class="my-4 rounded-xl border border-line bg-surface-muted p-3 sm:p-4">
+          <p id="notebook-quote-status" role="status" class="text-sm text-ink-secondary">
+            Gere as prévias para solicitar seu orçamento.
+          </p>
+          <button
+            id="notebook-quote"
+            type="button"
+            disabled
+            aria-describedby="notebook-quote-status"
+            class="mt-3 min-h-12 w-full rounded-lg bg-action px-4 text-sm font-semibold text-on-action hover:bg-action-hover disabled:opacity-50 sm:w-auto"
+          >
+            Solicitar orçamento pelo WhatsApp
+          </button>
+          <a
+            id="notebook-quote-reference"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="mt-3 block text-sm font-semibold text-accent underline"
+            hidden
+          >
+            Consultar última referência salva
+          </a>
+        </div>
+
+        <div
+          id="notebook-placeholder"
+          class="flex min-h-64 flex-col items-center justify-center rounded-xl bg-surface-muted px-5 py-10 text-center sm:min-h-96"
+        >
+          <svg aria-hidden="true" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="1.5" class="mb-5 size-16 text-accent">
+            <rect x="12" y="8" width="40" height="48" rx="4" />
+            <path d="M20 8v48M28 18h20M28 26h20M28 34h14M28 42h16" stroke-linecap="round" />
+            <circle cx="16" cy="18" r="1.5" fill="currentColor" />
+            <circle cx="16" cy="30" r="1.5" fill="currentColor" />
+            <circle cx="16" cy="42" r="1.5" fill="currentColor" />
+          </svg>
+          <p class="text-base font-semibold">Seu Caderno Personalizado começa aqui</p>
+          <p class="mt-2 max-w-sm text-sm leading-relaxed text-ink-secondary">
+            Selecione o modelo temático à esquerda e clique em “Visualizar meu caderno” para renderizar 6 páginas reais
+            do seu miolo A5.
+          </p>
+        </div>
+
+        <div id="notebook-gallery" class="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3"></div>
+      </section>
+    </div>
+  </div>
+
+  <dialog
+    id="notebook-dialog"
+    aria-labelledby="notebook-dialog-title"
+    class="m-auto max-h-[94dvh] w-[min(96vw,52rem)] max-w-none rounded-2xl border border-line bg-surface p-3 text-ink backdrop:bg-scrim/80 sm:p-4"
+  >
+    <div class="flex items-center justify-between gap-4 pb-2">
+      <h2 id="notebook-dialog-title" class="text-sm font-semibold">Página do Caderno</h2>
+      <form method="dialog">
+        <button type="submit" autofocus class="min-h-11 rounded-md border border-control px-3 text-sm">Fechar</button>
+      </form>
+    </div>
+    <div
+      id="notebook-image-viewport"
+      class="max-h-[70dvh] overflow-auto rounded bg-surface-muted"
+      tabindex="0"
+      role="region"
+      aria-label="Visualização da página"
+    >
+      <img id="notebook-enlarged" class="mx-auto block max-h-[70dvh] max-w-full object-contain" alt="" />
+    </div>
+    <div class="mt-3 flex justify-between gap-2">
+      <button id="notebook-prev" type="button" class="min-h-11 rounded-md border border-control px-3 text-sm disabled:opacity-40">Anterior</button>
+      <button id="notebook-zoom" type="button" aria-pressed="false" class="min-h-11 rounded-md border border-control px-3 text-sm">Zoom 150%</button>
+      <button id="notebook-next" type="button" class="min-h-11 rounded-md border border-control px-3 text-sm disabled:opacity-40">Próxima</button>
+    </div>
+  </dialog>
+</BaseLayout>
+
+<style>
+  #notebook-enlarged[data-zoom] {
+    width: 150%;
+    max-width: none;
+    max-height: none;
+  }
+  [hidden] {
+    display: none;
+  }
+</style>
+
+<script>
+  import { initNotebookCustomizer } from '../../scripts/notebookCustomizer';
+  initNotebookCustomizer();
+</script>
+
