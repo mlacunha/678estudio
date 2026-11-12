@@ -31,7 +31,7 @@
 
 ## 2. Diff Conceitual por Componente
 
-- **`agenda-compiler`:** O template `classic.typ` deixou de agrupar os 12 planejamentos mensais no início e uma única folha financeira no fim do ano. Agora cada mês $m \in \{1..12\}$ abre com `monthly-plan`, apresenta suas páginas diárias/semanais sem misturar meses e encerra com `monthly-finance`. Ao final de dezembro, entram 4 páginas de Contatos (24 registros), páginas de Anotações de fechamento par, o Calendário Anual real de `year + 1` e a Página Institucional do 678 Estudio.
+- **`agenda-compiler`:** O template `classic.typ` deixou de agrupar os 12 planejamentos mensais no início e uma única folha financeira no fim do ano. Agora cada mês $m \in \{1..12\}$ abre com `monthly-plan`, apresenta suas páginas diárias/semanais sem misturar meses e encerra com `monthly-finance`. Ao final de dezembro, entram 4 páginas de Contatos (36 registros, 9 por página), páginas de Anotações de fechamento par, o Calendário Anual real de `year + 1` e a Página Institucional do 678 Estudio.
 - **`print-a4-imposition`:** Novo módulo compartilhado (`src/server/print/a4Imposition.ts`) que recebe qualquer PDF A5 vetorial e monta folhas A4 paisagem (`297 × 210 mm`) com duas páginas A5 lado a lado para corte reto central (`148,5 mm`) no padrão Cut & Stack.
 - **`admin`:** As páginas de detalhes de pedidos de Agendas e Planners agora contam com controles dedicados para baixar o PDF A5 original, o PDF A4 de Frentes, o PDF A4 de Versos e a Folha de Calibração A4.
 

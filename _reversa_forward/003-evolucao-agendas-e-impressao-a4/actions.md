@@ -37,7 +37,7 @@
 | ID | Descrição | Dependências | Paralelismo | Arquivo alvo | Confidência | Status |
 |----|-----------|--------------|-------------|--------------|-------------|--------|
 | T005 | Atualizar `daily.typ` para suportar o bloco complementar "Notas e Pendências do Mês" na metade direita da última página de meses com 29 ou 31 dias no layout `daily-2dpp` | - | - | `src/server/agenda/typst/lib/daily.typ` | 🟢 | `[X]` |
-| T006 | Expandir `sections.typ` com `monthly-finance` completo (Contas e Vencimentos, Controle de Pagamento, Receitas, Despesas, Totais e Saldo do Mês), `contacts-page` (6 contatos por página) e `studio-colophon` (Página Institucional 678 Estudio) | T002 | - | `src/server/agenda/typst/lib/sections.typ` | 🟢 | `[X]` |
+| T006 | Expandir `sections.typ` com `monthly-finance` completo (Contas e Vencimentos, Controle de Pagamento, Receitas, Despesas, Totais e Saldo do Mês), `contacts-page` (9 contatos por página, 36 no total) e `studio-colophon` (Página Institucional 678 Estudio) | T002 | - | `src/server/agenda/typst/lib/sections.typ` | 🟢 | `[X]` |
 | T007 | Refatorar `classic.typ` para organizar os 3 layouts (`daily-1dpp`, `daily-2dpp`, `weekly`) em 12 ciclos mensais (`monthly-plan` + compromissos do mês + `monthly-finance`), seguidos por 4 páginas de Contatos, Anotações com fechamento par, Calendário de `year + 1` e Página Institucional final | T005, T006 | - | `src/server/agenda/typst/classic.typ` | 🟢 | `[X]` |
 | T008 | Atualizar `classic.mjs` com o cálculo exato de índices das 8 prévias em `agendaPreviewSections`, contagem de páginas por layout e passagem dos dados institucionais reais do 678 Estudio via `--input` | T007 | - | `src/server/agenda/classic.mjs` | 🟢 | `[X]` |
 

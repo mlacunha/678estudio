@@ -137,47 +137,40 @@
 
 #let finance(colors, style) = monthly-finance("Anual", "", colors, style)
 
+#let _contact-field(label, label-color, line-color) = grid(
+  columns: (auto, 1fr),
+  column-gutter: 1.5mm,
+  align: bottom,
+  text(weight: "bold", fill: label-color, label),
+  box(width: 100%, height: 5.0mm, stroke: (bottom: 0.35pt + line-color)),
+)
+
 #let contacts-page(colors, style) = block(width: 100%, above: 0pt, below: 0pt)[
   #heading("Cadastro de contatos", colors, style)
-  #set text(size: 7.3pt, fill: colors.primary)
+  #set text(size: 7.2pt, fill: colors.primary)
   #stack(
-    spacing: 2.4mm,
-    ..range(6).map(_ => block(
+    spacing: 2.0mm,
+    ..range(9).map(_ => block(
       width: 100%,
-      inset: (x: 6pt, y: 4.5pt),
+      inset: (x: 6pt, y: 4.4pt),
       stroke: 0.4pt + colors.lines,
       radius: 2pt,
       above: 0pt,
       below: 0pt,
-      stack(
-        spacing: 3.2mm,
+      grid(
+        columns: (1fr,),
+        row-gutter: 2.7mm,
         grid(
-          columns: (1.35fr, 1fr),
+          columns: (1.3fr, 1fr),
           column-gutter: 3mm,
-          stack(
-            spacing: 1.5mm,
-            text(weight: "bold", fill: colors.secondary)[Nome:],
-            line(length: 100%, stroke: 0.3pt + colors.writing-lines),
-          ),
-          stack(
-            spacing: 1.5mm,
-            text(weight: "bold", fill: colors.secondary)[Telefone / WhatsApp:],
-            line(length: 100%, stroke: 0.3pt + colors.writing-lines),
-          ),
+          _contact-field("Nome:", colors.secondary, colors.writing-lines),
+          _contact-field("Telefone / WhatsApp:", colors.secondary, colors.writing-lines),
         ),
         grid(
           columns: (1fr, 1fr),
           column-gutter: 3mm,
-          stack(
-            spacing: 1.5mm,
-            text(weight: "bold", fill: colors.primary.lighten(20%))[E-mail:],
-            line(length: 100%, stroke: 0.3pt + colors.writing-lines),
-          ),
-          stack(
-            spacing: 1.5mm,
-            text(weight: "bold", fill: colors.primary.lighten(20%))[Observações:],
-            line(length: 100%, stroke: 0.3pt + colors.writing-lines),
-          ),
+          _contact-field("E-mail:", colors.primary.lighten(20%), colors.writing-lines),
+          _contact-field("Observações:", colors.primary.lighten(20%), colors.writing-lines),
         ),
       ),
     )),
