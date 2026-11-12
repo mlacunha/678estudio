@@ -16,6 +16,7 @@
     "src/pages/api/agenda/**",
     "src/pages/api/planner/**",
     "src/server/agenda-preview.test.ts",
-    "src/components/CustomizerNav.astro"
+    "src/components/CustomizerNav.astro",
+    ".github/workflows/publish-image.yml"
   ]
 }

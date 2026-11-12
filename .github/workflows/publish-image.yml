@@ -14,8 +14,43 @@ permissions:
   packages: write
 
 jobs:
+  validate:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Instalar pnpm e Typst
+        shell: bash
+        run: |
+          npm install --global pnpm@10.29.3
+          sha="a6d077d0a95eed5a2eba715b2dae06be954f624ccbf85758a03f389ded33118c"
+          release="typst-x86_64-unknown-linux-musl"
+          curl --fail --show-error --silent --location --retry 3 \
+            "https://github.com/typst/typst/releases/download/v0.15.1/$release.tar.xz" -o /tmp/typst.tar.xz
+          echo "$sha  /tmp/typst.tar.xz" | sha256sum -c -
+          sudo tar -xJf /tmp/typst.tar.xz -C /usr/local/bin --strip-components=1 "$release/typst"
+          typst --version
+      - name: Instalar dependências
+        run: pnpm install --frozen-lockfile
+      - name: Validar suíte completa, backup, Astro Check e build
+        env:
+          AGENDA_TYPST_TEST: '1'
+          ASTRO_TELEMETRY_DISABLED: '1'
+        run: |
+          pnpm test
+          python3 -B src/server/backup/test_engine.py
+          pnpm exec astro check
+          pnpm build
+
   publish:
     if: github.ref == 'refs/heads/main'
+    needs: validate
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:

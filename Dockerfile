@@ -34,7 +34,7 @@ COPY astro.config.mjs tailwind.config.mjs tsconfig.json vitest.config.ts ./
 COPY src ./src
 COPY public ./public
 COPY --from=typst /typst/typst /usr/local/bin/typst
-RUN --network=none AGENDA_TYPST_TEST=1 pnpm test && python3 -B src/server/backup/test_engine.py && pnpm exec astro check && pnpm build
+RUN --network=none pnpm build
 
 FROM dependencies AS production-dependencies
 RUN pnpm install --prod --frozen-lockfile
@@ -51,6 +51,10 @@ COPY --from=build /app/src/server/backup/engine.py /app/src/server/backup/superv
 COPY --from=build /app/src/server/planner ./src/server/planner
 COPY --from=build /app/src/server/caderno ./src/server/caderno
 COPY --from=build /app/src/server/cover ./src/server/cover
+RUN typst --version \
+  && python3 --version \
+  && test -f dist/server/entry.mjs \
+  && node -e "import('./src/server/cover/compiler.mjs').then(() => console.log('runtime-smoke-ok'))"
 RUN install -d -o node -g node /app/data /app/public/uploads
 USER node
 EXPOSE 4321
