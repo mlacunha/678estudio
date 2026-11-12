@@ -1,12 +1,13 @@
 {
   "schema-version": 1,
-  "feature-dir": "_reversa_forward/004-cadernos-personalizados",
-  "feature-id": "004",
-  "short-name": "cadernos-personalizados",
-  "started-at": "2026-11-12T10:40:00-03:00",
+  "feature-dir": "_reversa_forward/005-capas-personalizadas",
+  "feature-id": "005",
+  "short-name": "capas-personalizadas",
+  "started-at": "2026-11-12T14:10:00-03:00",
   "current-stage": "sync",
   "stages-completed": [
     "requirements",
+    "clarify",
     "plan",
     "to-do",
     "audit",

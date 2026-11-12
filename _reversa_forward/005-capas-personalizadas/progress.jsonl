@@ -1,0 +1,15 @@
+{"ts":"2026-11-12T14:50:31-03:00","action":"T001","status":"done","files":["src/server/cover/options.mjs"]}
+{"ts":"2026-11-12T14:50:45-03:00","action":"T002","status":"done","files":["src/server/cover/coverConfig.ts"]}
+{"ts":"2026-11-12T14:50:54-03:00","action":"T003","status":"done","files":["src/server/cover/quoteAdapter.ts"]}
+{"ts":"2026-11-12T14:51:26-03:00","action":"T004","status":"done","files":["src/server/cover/coverConfig.test.ts"]}
+{"ts":"2026-11-12T14:51:43-03:00","action":"T005","status":"done","files":["src/server/cover/typst/lib/shared.typ"]}
+{"ts":"2026-11-12T14:51:53-03:00","action":"T006","status":"done","files":["src/server/cover/typst/lib/classic.typ"]}
+{"ts":"2026-11-12T14:52:03-03:00","action":"T007","status":"done","files":["src/server/cover/typst/lib/modern.typ"]}
+{"ts":"2026-11-12T14:52:11-03:00","action":"T008","status":"done","files":["src/server/cover/typst/lib/photographic.typ"]}
+{"ts":"2026-11-12T14:52:20-03:00","action":"T009","status":"done","files":["src/server/cover/typst/lib/combined_a4.typ"]}
+{"ts":"2026-11-12T14:52:44-03:00","action":"T010","status":"done","files":["src/server/cover/typst/cover.typ","src/server/cover/compiler.mjs"]}
+{"ts":"2026-11-12T14:53:19-03:00","action":"T011","status":"done","files":["src/pages/api/cover/preview.ts","src/components/customizer/CoverCustomizerTab.astro","src/scripts/coverCustomizer.ts"]}
+{"ts":"2026-11-12T14:55:22-03:00","action":"T012","status":"done","files":["src/pages/personalizar/caderno.astro"]}
+{"ts":"2026-11-12T15:08:50-03:00","action":"T013","status":"done","files":["src/pages/admin/capas/[family]/[id]/pdf.ts","src/pages/admin/cadernos/[id]/index.astro"]}
+{"ts":"2026-11-12T15:15:00-03:00","action":"T014","status":"done","files":["Dockerfile","src/server/cover/compiler.test.ts"]}
+

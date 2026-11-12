@@ -1,0 +1,89 @@
+---
+import { coverStyles, coverTypographies, defaultCoverPalettes } from '../../server/cover/options.mjs';
+
+interface Props {
+  defaultTitle?: string;
+}
+
+const { defaultTitle = '678 Estudio' } = Astro.props;
+const fieldClass = 'w-full min-h-11 rounded-lg border border-control bg-canvas px-3 text-sm text-ink';
+---
+
+<div id="cover-tab-content" class="space-y-5">
+  <fieldset class="space-y-3">
+    <legend class="text-sm font-semibold text-ink">Estilo visual da capa</legend>
+    <div class="grid grid-cols-1 gap-2 sm:grid-cols-3">
+      {Object.entries(coverStyles).map(([id, style], index) => (
+        <label class="cursor-pointer">
+          <input type="radio" name="cover_style" value={id} checked={index === 0} class="peer sr-only" />
+          <span class="block h-full rounded-lg border border-control p-3 text-left transition peer-checked:border-accent peer-checked:bg-accent/10">
+            <span class="block text-xs font-semibold text-ink peer-checked:text-accent">{style.label}</span>
+            <span class="mt-1 block text-[11px] leading-tight text-ink-muted">{style.subtitle}</span>
+          </span>
+        </label>
+      ))}
+    </div>
+  </fieldset>
+
+  <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+    <label class="space-y-1 text-xs font-medium text-ink">
+      Tipografia da capa
+      <select name="cover_typography" class={fieldClass}>
+        {Object.entries(coverTypographies).map(([id, typo]) => (
+          <option value={id}>{typo.label} — {typo.detail}</option>
+        ))}
+      </select>
+    </label>
+
+    <label class="space-y-1 text-xs font-medium text-ink">
+      Paleta de cores
+      <select name="cover_palette" class={fieldClass} id="cover-palette-select">
+        {defaultCoverPalettes.map(pal => (
+          <option value={pal.id} data-primary={pal.primary} data-secondary={pal.secondary} data-text={pal.text} data-accent={pal.accent}>
+            {pal.label}
+          </option>
+        ))}
+      </select>
+    </label>
+  </div>
+
+  <div class="grid grid-cols-2 gap-3">
+    <label class="space-y-1 text-xs font-medium text-ink">
+      Título principal
+      <input type="text" name="cover_title" value={defaultTitle} maxlength="100" class={fieldClass} placeholder="Ex: Minhas Memórias" />
+    </label>
+    <label class="space-y-1 text-xs font-medium text-ink">
+      Nome personalizado
+      <input type="text" name="cover_name" value="" maxlength="80" class={fieldClass} placeholder="Ex: Mariana Silva" />
+    </label>
+  </div>
+
+  <div class="grid grid-cols-2 gap-3">
+    <label class="space-y-1 text-xs font-medium text-ink">
+      Subtítulo ou ano (opcional)
+      <input type="text" name="cover_subtitle" value="" maxlength="80" class={fieldClass} placeholder="Ex: Edição Especial • 2027" />
+    </label>
+    <div class="grid grid-cols-2 gap-2">
+      <label class="space-y-1 text-xs font-medium text-ink">
+        Cor base
+        <input type="color" name="cover_color_primary" value="#1e293b" class="h-11 w-full cursor-pointer rounded-lg border border-control bg-canvas p-1" />
+      </label>
+      <label class="space-y-1 text-xs font-medium text-ink">
+        Cor detalhe
+        <input type="color" name="cover_color_accent" value="#c5a059" class="h-11 w-full cursor-pointer rounded-lg border border-control bg-canvas p-1" />
+      </label>
+    </div>
+  </div>
+
+  <!-- Upload e controle de imagem para capa fotográfica -->
+  <div id="cover-photo-section" class="rounded-xl border border-line bg-surface-alt p-3.5 space-y-3">
+    <div class="flex items-center justify-between">
+      <span class="text-xs font-semibold text-ink">Fotografia ou arte personalizada</span>
+      <span class="text-[11px] text-ink-muted">PNG ou JPEG até 5 MB</span>
+    </div>
+    <input type="file" name="cover_photo" id="cover-photo-input" accept="image/png,image/jpeg" class="w-full text-xs text-ink-muted file:mr-3 file:rounded-md file:border-0 file:bg-accent file:px-3 file:py-1.5 file:text-xs file:font-medium file:text-white hover:file:bg-accent-hover" />
+    <p class="text-[11px] text-ink-muted">
+      A foto é ajustada para escala e contraste seguros. A furação Wire-O de 15 mm preserva os detalhes importantes da sua imagem.
+    </p>
+  </div>
+</div>

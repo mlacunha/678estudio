@@ -50,6 +50,7 @@ COPY --from=build /app/src/server/agenda ./src/server/agenda
 COPY --from=build /app/src/server/backup/engine.py /app/src/server/backup/supervisor.mjs ./src/server/backup/
 COPY --from=build /app/src/server/planner ./src/server/planner
 COPY --from=build /app/src/server/caderno ./src/server/caderno
+COPY --from=build /app/src/server/cover ./src/server/cover
 RUN install -d -o node -g node /app/data /app/public/uploads
 USER node
 EXPOSE 4321
