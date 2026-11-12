@@ -8,22 +8,72 @@ import { agendaFormats, agendaLayouts, agendaStyles } from './options.mjs';
 const run = promisify(execFile);
 
 export const classicLayouts = Object.keys(agendaLayouts);
+
+/** @param {number} year @param {number} monthIndex0 */
+function daysInMonthUtc(year, monthIndex0) {
+  const start = Date.UTC(year, monthIndex0, 1);
+  const end = Date.UTC(year, monthIndex0 + 1, 1);
+  return Math.round((end - start) / 86400000);
+}
+
+/** @param {{ year: number, layout: string }} config */
+export function agendaTotalPages({ year, layout }) {
+  if (layout === 'daily-1dpp') return 400;
+  if (layout === 'daily-2dpp') return 222;
+  if (layout === 'weekly') return 90;
+  throw new RangeError(`Layout desconhecido: ${layout} (${year})`);
+}
+
+/** @param {{ year: number, layout: string }} config */
 export function agendaPreviewSections({ year, layout }) {
   const start = new Date(Date.UTC(year, 0, 1));
-  const days = (new Date(Date.UTC(year + 1, 0, 1)) - start) / 86400000;
+  const days = Math.round((Date.UTC(year + 1, 0, 1) - start.getTime()) / 86400000);
   const weekday = (start.getUTCDay() + 6) % 7;
-  const count = layout === 'daily-1dpp' ? days : layout === 'daily-2dpp' ? Math.ceil(days / 2) : Math.ceil((days + weekday) / 7);
+  const firstOffset = -weekday;
+  const janCommitmentPages = layout === 'daily-1dpp'
+    ? 31
+    : layout === 'daily-2dpp'
+      ? 16
+      : Math.ceil((31 - firstOffset) / 7);
+
+  const totalCommitmentPages = layout === 'daily-1dpp'
+    ? days
+    : layout === 'daily-2dpp'
+      ? Array.from({ length: 12 }, (_, m) => Math.ceil(daysInMonthUtc(year, m) / 2)).reduce((a, b) => a + b, 0)
+      : Math.ceil((days + weekday) / 7);
+
+  const janFinancePage = 4 + janCommitmentPages + 1;
+  const firstContactsPage = 3 + 12 + totalCommitmentPages + 12 + 1;
+  const nextYearCalendarPage = agendaTotalPages({ year, layout }) - 1;
+
   /** @type {[number, string][]} */
   const sections = [
-    [1, 'Abertura'], [2, 'Calendário anual'], [3, 'Dados pessoais'], [4, 'Planejamento mensal'],
-    [16, layout === 'weekly' ? 'Layout semanal' : 'Layout diário'], [17, 'Continuação do layout'],
-    [16 + count, 'Controle financeiro'], [17 + count, 'Anotações'],
+    [1, 'Abertura'],
+    [2, 'Calendário anual'],
+    [3, 'Dados pessoais'],
+    [4, 'Planejamento mensal'],
+    [5, layout === 'weekly' ? 'Layout semanal' : 'Layout diário'],
+    [janFinancePage, 'Controle financeiro mensal'],
+    [firstContactsPage, 'Cadastro de contatos'],
+    [nextYearCalendarPage, 'Calendário do ano seguinte'],
   ];
   return sections.map(([pdfPage, section], index) => ({ page: index + 1, pdfPage, section }));
 }
 
-/** @typedef {{ layout: string, year: number, style?: string, format?: string,
- * colors?: { primary: string, secondary: string }, customColors?: boolean, logo?: Buffer, watermark?: boolean, template?: string }} AgendaConfig */
+/**
+ * @typedef {{
+ *   layout: string,
+ *   year: number,
+ *   style?: string,
+ *   format?: string,
+ *   colors?: { primary: string, secondary: string },
+ *   customColors?: boolean,
+ *   logo?: Buffer,
+ *   watermark?: boolean,
+ *   template?: string,
+ *   studio?: { instagram?: string, site?: string, whatsapp?: string, email?: string }
+ * }} AgendaConfig
+ */
 
 /** @param {unknown} color */
 export function isAgendaColor(color) {
@@ -46,7 +96,7 @@ export function isClassicAgendaConfig(layout, year) {
  * @param {{ pages: number[], output: string, prefix?: boolean }} [preview]
  */
 export async function compileClassicAgenda(config, preview) {
-  const { layout, year, style = 'classic', format = 'a5', colors, customColors = Boolean(colors), logo, watermark } = config;
+  const { layout, year, style = 'classic', format = 'a5', colors, customColors = Boolean(colors), logo, watermark, studio } = config;
   if (!isClassicAgendaConfig(layout, year) || !Object.hasOwn(agendaStyles, style)
     || !Object.hasOwn(agendaFormats, format) || (watermark && !logo)
     || (config.template !== undefined && !['agenda-classica-v1', 'agenda-classica-v2'].includes(config.template))
@@ -73,6 +123,10 @@ export async function compileClassicAgenda(config, preview) {
     if (customColors) args.push('--input', 'custom-colors=true');
     if (logo) args.push('--input', 'logo=true');
     if (watermark) args.push('--input', 'watermark=true');
+    if (studio?.instagram) args.push('--input', `studio-instagram=${studio.instagram}`);
+    if (studio?.site) args.push('--input', `studio-site=${studio.site}`);
+    if (studio?.whatsapp) args.push('--input', `studio-whatsapp=${studio.whatsapp}`);
+    if (studio?.email) args.push('--input', `studio-email=${studio.email}`);
     if (preview?.prefix) args.push('--input', `preview-limit=${Math.max(...preview.pages)}`);
     if (preview) args.push('--format', 'png', '--pages', preview.pages.join(','));
     else args.push('--format', 'pdf');
@@ -80,7 +134,7 @@ export async function compileClassicAgenda(config, preview) {
 
     const { stdout, stderr } = await run(process.env.TYPST_BINARY || 'typst', args, {
       encoding: 'buffer',
-      maxBuffer: preview?.prefix ? 256 * 1024 : 16 * 1024 * 1024,
+      maxBuffer: preview?.prefix ? 256 * 1024 : 24 * 1024 * 1024,
       timeout: preview?.prefix ? 15_000 : 60_000,
       windowsHide: true,
     });

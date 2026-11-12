@@ -24,17 +24,17 @@ it.each([
 
 describe.runIf(process.env.AGENDA_TYPST_TEST === '1')('compilação local com Typst', () => {
   it.each([
-    ['daily-1dpp', 2027, 365],
-    ['daily-1dpp', 2028, 366],
-    ['daily-2dpp', 2027, 183],
-    ['weekly', 2027, 53],
-    ['weekly', 2012, 54],
-  ])('gera %s de %i com %i páginas', async (layout, year, pages) => {
+    ['daily-1dpp', 2027, 400],
+    ['daily-1dpp', 2028, 400],
+    ['daily-2dpp', 2027, 222],
+    ['weekly', 2027, 90],
+    ['weekly', 2012, 90],
+  ])('gera %s de %i com %i páginas', async (layout, year, expectedPages) => {
     const pdf = await compileClassicAgenda({ layout, year });
     expect(pdf.subarray(0, 5).toString()).toBe('%PDF-');
     // Na saída da versão fixada do Typst, a árvore de páginas é um objeto em texto.
     const count = pdf.subarray(0, 4096).toString('latin1').match(/\/Type\s*\/Pages\s*\/Count\s+(\d+)/);
-    expect(Number(count?.[1])).toBe(pages + 17);
+    expect(Number(count?.[1])).toBe(expectedPages);
   }, 70_000);
 
   it('exporta somente as páginas solicitadas para prévia', async () => {
@@ -55,16 +55,16 @@ describe.runIf(process.env.AGENDA_TYPST_TEST === '1')('compilação local com Ty
   }, 70_000);
 
   it.each([
-    ['daily-1dpp', 366],
-    ['daily-2dpp', 183],
-    ['weekly', 53],
-  ])('gera os três estilos no layout %s com a mesma paginação', async (layout, pages) => {
+    ['daily-1dpp', 400],
+    ['daily-2dpp', 222],
+    ['weekly', 90],
+  ])('gera os três estilos no layout %s com a mesma paginação', async (layout, expectedPages) => {
     const outputs = [];
     for (const style of ['classic', 'commercial', 'feminine']) {
       const config = { year: 2028, layout, style, format: 'a5' };
       const pdf = await compileClassicAgenda(config);
       const count = pdf.subarray(0, 4096).toString('latin1').match(/\/Type\s*\/Pages\s*\/Count\s+(\d+)/);
-      expect(Number(count?.[1])).toBe(pages + 17);
+      expect(Number(count?.[1])).toBe(expectedPages);
       const images = await renderAgendaPreview(config);
       expect(images.map(image => image.page)).toEqual([1, 2, 3, 4, 5, 6, 7, 8]);
       outputs.push(images[0].src);

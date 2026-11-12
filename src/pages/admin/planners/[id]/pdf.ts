@@ -1,11 +1,17 @@
 import type { APIRoute } from 'astro';
 import { getPlannerQuote, getPlannerQuoteAsset } from '../../../../db/plannerQuotes';
 import { compilePlannerEssencial } from '../../../../server/planner/essencial.mjs';
+import { parseA4PrintQuery, renderSelectedA4Output } from '../../../../server/print/a4Imposition';
 
 export const prerender = false;
 let compiling = false;
 
-export const GET: APIRoute = async ({ params }) => {
+export const GET: APIRoute = async ({ params, url }) => {
+  const parsedPrint = parseA4PrintQuery(url.searchParams);
+  if (!parsedPrint.valid) {
+    return new Response(parsedPrint.error, { status: 400 });
+  }
+
   const id = params.id ?? '';
   const quote = await getPlannerQuote(id);
   if (!quote) {
@@ -29,21 +35,23 @@ export const GET: APIRoute = async ({ params }) => {
         ...quote.config,
         logo: logoBuffer,
       },
-      { format: 'pdf' }
+      { format: 'pdf' },
     );
 
-    const filename = `planner-essencial-${quote.config.mode}-${quote.id}.pdf`;
-    return new Response(new Uint8Array(pdfBuffer), {
+    const finalPdf = await renderSelectedA4Output(new Uint8Array(pdfBuffer), parsedPrint.mode, parsedPrint.options);
+    const suffix = parsedPrint.mode === 'a5' ? '' : `-${parsedPrint.mode}`;
+    const filename = `planner-essencial-${quote.config.mode}-${quote.id}${suffix}.pdf`;
+
+    return new Response(new Uint8Array(finalPdf), {
       headers: {
         'Content-Type': 'application/pdf',
         'Content-Disposition': `attachment; filename="${filename}"`,
         'Cache-Control': 'no-store',
       },
     });
-  } catch (error) {
+  } catch {
     return new Response('Falha ao gerar o PDF de produção do planner.', { status: 500 });
   } finally {
     compiling = false;
   }
 };
-

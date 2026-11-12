@@ -1,5 +1,6 @@
 ---
 import BaseLayout from '../../../../layouts/BaseLayout.astro';
+import AdminA4PrintPanel from '../../../../components/admin/AdminA4PrintPanel.astro';
 import { getPlannerQuote } from '../../../../db/plannerQuotes';
 import {
   formatPlannerQuoteDate,
@@ -69,7 +70,7 @@ const labelClass = 'text-xs font-semibold uppercase tracking-wider text-ink-mute
           href={`/admin/planners/${quote.id}/pdf`}
           class="inline-flex min-h-11 items-center justify-center rounded-md bg-action px-5 text-sm font-semibold text-on-action hover:bg-action-hover"
         >
-          Baixar PDF de produção (A5)
+          Baixar PDF de produção (A5 original)
         </a>
         <a class="p-2 text-sm font-semibold text-accent hover:underline" href={`${files}/configuracao`}>
           Baixar configuração JSON
@@ -85,6 +86,11 @@ const labelClass = 'text-xs font-semibold uppercase tracking-wider text-ink-mute
           </>
         )}
       </div>
+
+      <AdminA4PrintPanel
+        pdfEndpoint={`/admin/planners/${quote.id}/pdf`}
+        productLabel="Planner Essencial A5"
+      />
     </div>
 
     <div class="mt-8">
@@ -112,4 +118,3 @@ const labelClass = 'text-xs font-semibold uppercase tracking-wider text-ink-mute
     </div>
   </section>
 </BaseLayout>
-

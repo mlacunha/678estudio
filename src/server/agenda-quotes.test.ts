@@ -129,7 +129,7 @@ it.runIf(process.env.AGENDA_TYPST_TEST === '1')('associa as oito prévias exatas
     expect(result.status).toBe(200);
     const annual = Buffer.from(await result.arrayBuffer());
     expect(annual.subarray(0, 5).toString()).toBe('%PDF-');
-    expect(annual.subarray(0, 4096).toString('latin1')).toMatch(/\/Type\s*\/Pages\s*\/Count\s+200\b/);
+    expect(annual.subarray(0, 4096).toString('latin1')).toMatch(/\/Type\s*\/Pages\s*\/Count\s+222\b/);
     expect(annual.includes(Buffer.from('/Subtype/Image'))).toBe(true);
     expect((await getAgendaQuote(id))?.config).toEqual({ ...config, template: 'agenda-classica-v2', previews: images.map(({ page, pdfPage, section }: { page: number; pdfPage: number; section: string }) => ({ page, pdfPage, section })) });
   } finally {

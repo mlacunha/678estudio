@@ -96,8 +96,6 @@
     let rule = if commercial { line(length: 100%, stroke: style.stroke-soft + colors.lines) } else { _dotted-rule(colors, style) }
     cells.push(align(horizon + left, rule))
   }
-  // A altura fica na célula da grade. Medir com layout() usava a página inteira
-  // e a última linha encostava na caixa de anotações.
   block(
     width: 100%,
     height: 100%,
@@ -142,6 +140,47 @@
   schedule(colors, style),
 )
 
+#let month-closing-column(month-name, colors, style) = {
+  let rule = if style.id == "commercial" {
+    line(length: 100%, stroke: style.stroke-soft + colors.lines)
+  } else {
+    _dotted-rule(colors, style)
+  }
+  grid(
+    rows: (auto, 1fr),
+    row-gutter: 6pt,
+    stack(
+      spacing: 3pt,
+      text(
+        font: style.font-sans,
+        size: 7.5pt,
+        weight: "bold",
+        fill: colors.secondary,
+        tracking: 0.14em,
+        upper(month-name),
+      ),
+      text(
+        font: style.font-display,
+        size: 13pt,
+        weight: "bold",
+        fill: colors.primary,
+        "Notas e Pendências do Mês",
+      ),
+      line(length: 100%, stroke: 0.6pt + colors.secondary),
+    ),
+    block(
+      width: 100%,
+      height: 100%,
+      grid(
+        columns: (1fr,),
+        rows: (1fr,) * 16,
+        align: horizon,
+        ..range(16).map(_ => rule),
+      ),
+    ),
+  )
+}
+
 #let daily-1dpp(day, colors: default-colors, style: classic-style) = block(
   height: 100%,
   width: 100%,
@@ -160,16 +199,16 @@
   width: 100%,
   grid(
     rows: (1fr, 6mm, 0.32fr),
-    if right-day == none {
-      day-column(left-day, colors, style)
-    } else {
-      grid(
-        columns: (1fr, 1fr),
-        column-gutter: 11pt,
-        day-column(left-day, colors, style, compact: true),
-        day-column(right-day, colors, style, compact: true),
-      )
-    },
+    grid(
+      columns: (1fr, 1fr),
+      column-gutter: 11pt,
+      day-column(left-day, colors, style, compact: true),
+      if right-day == none {
+        month-closing-column(left-day.at("month_name", default: ""), colors, style)
+      } else {
+        day-column(right-day, colors, style, compact: true)
+      },
+    ),
     [],
     daily-notes-panel(colors, style),
   ),

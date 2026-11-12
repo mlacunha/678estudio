@@ -2,14 +2,13 @@
   "version": 1,
   "allowLegacyEdits": false,
   "allowedPaths": [
-    "src/server/planner/**",
-    "src/pages/personalizar/planner.astro",
-    "src/scripts/plannerCustomizer.ts",
-    "src/pages/api/planner/**",
+    "package.json",
+    "pnpm-lock.yaml",
+    "src/server/agenda/**",
+    "src/server/print/**",
+    "src/components/admin/**",
     "src/pages/admin/**",
-    "src/pages/planner/**",
-    "src/db/plannerQuotes*",
-    "src/db/database.ts",
-    "src/data/stationery.ts"
+    "src/server/agenda.test.mjs",
+    "src/server/agenda-quotes.test.ts"
   ]
 }

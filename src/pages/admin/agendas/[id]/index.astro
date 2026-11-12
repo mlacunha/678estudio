@@ -1,6 +1,7 @@
 ---
 import BaseLayout from '../../../../layouts/BaseLayout.astro';
 import AgendaQuotePreviews from '../../../../components/AgendaQuotePreviews.astro';
+import AdminA4PrintPanel from '../../../../components/admin/AdminA4PrintPanel.astro';
 import { getAgendaQuote } from '../../../../db/agendaQuotes';
 import { agendaQuoteLabels, agendaQuotePath, formatAgendaQuoteDate } from '../../../../server/agenda/quoteConfig';
 export const prerender = false;
@@ -28,9 +29,11 @@ const labelClass = 'text-xs font-semibold uppercase tracking-wider text-ink-mute
         <div class="min-w-0"><dt class={labelClass}>Logomarca</dt><dd class="mt-1 break-all text-sm">{config.logo?.originalName || 'Sem logomarca'}</dd></div>
         <div><dt class={labelClass}>Esquema</dt><dd class="mt-1 text-sm">Versão {quote.configVersion}</dd></div>
       </dl>
-      <div class="mt-6 flex flex-wrap items-center gap-3">
+      <div class="mt-6 flex flex-wrap items-center gap-3 border-t border-line pt-5">
         <form method="post" action={`/admin/agenda-classica.pdf?pedido=${quote.id}`}>
-          <button class="min-h-11 rounded-md bg-action px-4 text-sm font-semibold text-on-action hover:bg-action-hover">Gerar PDF completo</button>
+          <button class="min-h-11 rounded-md bg-action px-4 text-sm font-semibold text-on-action hover:bg-action-hover">
+            Baixar PDF de produção (A5 original)
+          </button>
         </form>
         <a class="p-2 text-sm font-semibold text-accent hover:underline" href={`${files}/configuracao`}>Baixar configuração JSON</a>
         {config.logo && <>
@@ -38,6 +41,12 @@ const labelClass = 'text-xs font-semibold uppercase tracking-wider text-ink-mute
           <a class="p-2 text-sm font-semibold text-accent hover:underline" href={`${files}/logo`}>Baixar PNG de produção</a>
         </>}
       </div>
+
+      <AdminA4PrintPanel
+        pdfEndpoint="/admin/agenda-classica.pdf"
+        baseParams={{ pedido: quote.id }}
+        productLabel={`Agenda ${config.year}`}
+      />
     </div>
     <div class="mt-8 flex flex-wrap items-center justify-between gap-3">
       <h2 class="text-xl font-semibold">Prévias salvas</h2>
