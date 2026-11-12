@@ -4,11 +4,13 @@ import { normalizeAgendaLogo } from '../../../server/agenda/logo';
 import { storeAgendaDraft } from '../../../server/agenda/drafts';
 import type { PreviewName, QuoteAsset, QuoteConfig } from '../../../server/agenda/quoteConfig';
 import { agendaFormats, agendaLayouts, agendaStyles, agendaYears, maxAgendaLogoBytes } from '../../../server/agenda/options.mjs';
+import { extractCoverFromForm } from '../../../server/cover/orderAdapter';
+import { maxCoverPhotoBytes } from '../../../server/cover/photo';
 import { getPublicOrigin } from '../../../utils/publicOrigin';
 import { readBoundedForm } from '../../../utils/webpUpload';
 
 export const prerender = false;
-const maxBodyBytes = maxAgendaLogoBytes + 16 * 1024;
+const maxBodyBytes = maxAgendaLogoBytes + maxCoverPhotoBytes + 64 * 1024;
 let generating = false;
 
 function reply(body: object, status = 200, headers?: HeadersInit) {
@@ -35,7 +37,7 @@ export const POST: APIRoute = async ({ request, url }) => {
 
   generating = true;
   try {
-    const deadline = AbortSignal.any([request.signal, AbortSignal.timeout(8_000)]);
+    const deadline = AbortSignal.any([request.signal, AbortSignal.timeout(15_000)]);
     const form = await readBoundedForm(request, contentType, maxBodyBytes, deadline).catch(() => null);
     if (deadline.aborted) return reply({ error: 'O envio demorou demais. Tente novamente.' }, 408);
     if (form === null) return reply({ error: 'O formulário enviado está incompleto.' }, 400);
@@ -71,6 +73,14 @@ export const POST: APIRoute = async ({ request, url }) => {
     const watermark = form.get('watermark') === 'true';
     if (watermark && !logo) return reply({ error: 'Envie uma logomarca para usar a marca-d’água.' }, 400);
 
+    const hasCoverFields = form.has('cover_style') || form.has('cover_title') || form.has('cover_name') || form.has('cover_photo');
+    const coverResult = hasCoverFields
+      ? await extractCoverFromForm(form, { title: `Agenda ${year}` })
+      : null;
+    if (coverResult && !coverResult.ok) {
+      return reply({ error: coverResult.error }, coverResult.status);
+    }
+
     const palette = agendaStyles[style as QuoteConfig['style']];
     const config: QuoteConfig = {
       template: 'agenda-classica-v2', year, layout: layout as QuoteConfig['layout'],
@@ -78,6 +88,7 @@ export const POST: APIRoute = async ({ request, url }) => {
       colors: colors ?? { primary: palette.primary, secondary: palette.secondary },
       customColors: Boolean(colors), watermark,
       logo: logo && logoFile ? { originalName: logoFile.name.slice(0, 255), original: 'original', normalized: 'logo' } : null,
+      ...(coverResult?.ok ? { cover: coverResult.cover } : {}),
     };
     const images = await renderAgendaPreview({ ...config, logo: logo?.normalized });
     config.previews = images.map(({ page, pdfPage, section }) => ({ page, pdfPage, section }));
@@ -90,6 +101,9 @@ export const POST: APIRoute = async ({ request, url }) => {
         { name: 'original', mime: logoFile.type, content: logo.original },
         { name: 'logo', mime: 'image/png', content: logo.normalized },
       );
+    }
+    if (coverResult?.ok) {
+      assets.push(...coverResult.assets);
     }
     return reply({ images, draft: storeAgendaDraft(config, assets) });
   } catch (error) {

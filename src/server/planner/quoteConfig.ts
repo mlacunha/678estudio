@@ -1,4 +1,5 @@
 import { plannerFormats, plannerModels, plannerModes, plannerStyles, plannerTypographies } from './options.mjs';
+import type { CoverConfig } from '../cover/coverConfig';
 
 export const plannerProduct = 'Planner Essencial';
 export const plannerConfigVersion = 1;
@@ -32,11 +33,14 @@ export type PlannerQuoteConfig = {
   personalizationName?: string;
   logo: null | { originalName: string; original: 'original'; normalized: 'logo' };
   sections?: string[];
+  cover?: CoverConfig;
 };
 
 export type PlannerAssetRole =
   | 'original'
   | 'logo'
+  | 'cover_image'
+  | 'cover_image_original'
   | `preview-${PlannerPreviewSection}`;
 
 export type PlannerQuoteAsset = {

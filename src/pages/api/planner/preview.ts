@@ -13,11 +13,13 @@ import {
   plannerSections,
   maxPlannerLogoBytes,
 } from '../../../server/planner/options.mjs';
+import { extractCoverFromForm } from '../../../server/cover/orderAdapter';
+import { maxCoverPhotoBytes } from '../../../server/cover/photo';
 import { getPublicOrigin } from '../../../utils/publicOrigin';
 import { readBoundedForm } from '../../../utils/webpUpload';
 
 export const prerender = false;
-const maxBodyBytes = maxPlannerLogoBytes + 16 * 1024;
+const maxBodyBytes = maxPlannerLogoBytes + maxCoverPhotoBytes + 64 * 1024;
 let generating = false;
 
 function reply(body: object, status = 200, headers?: HeadersInit) {
@@ -106,6 +108,17 @@ export const POST: APIRoute = async ({ request, url }) => {
       return reply({ error: 'Envie uma logomarca para usar a marca-d’água.' }, 400);
     }
 
+    const hasCoverFields = form.has('cover_style') || form.has('cover_title') || form.has('cover_name') || form.has('cover_photo');
+    const coverResult = hasCoverFields
+      ? await extractCoverFromForm(form, {
+          title: plannerModels[model as keyof typeof plannerModels].label,
+          name: personalizationName,
+        })
+      : null;
+    if (coverResult && !coverResult.ok) {
+      return reply({ error: coverResult.error }, coverResult.status);
+    }
+
     const palette = plannerStyles[style as keyof typeof plannerStyles];
     const config: PlannerQuoteConfig = {
       template: 'planner-essencial-v1',
@@ -123,6 +136,7 @@ export const POST: APIRoute = async ({ request, url }) => {
         ? { originalName: logoFile.name.slice(0, 255), original: 'original', normalized: 'logo' }
         : null,
       sections: plannerSections.map(s => s.id),
+      ...(coverResult?.ok ? { cover: coverResult.cover } : {}),
     };
 
     const assets: PlannerQuoteAsset[] = [];
@@ -131,6 +145,9 @@ export const POST: APIRoute = async ({ request, url }) => {
         { name: 'original', mime: logoFile.type, content: logo.original },
         { name: 'logo', mime: 'image/png', content: logo.normalized }
       );
+    }
+    if (coverResult?.ok) {
+      assets.push(...coverResult.assets);
     }
 
     // Renderizar as prévias reais Typst para as seções em memória

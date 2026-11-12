@@ -99,7 +99,7 @@ async function createSchemaAndSeed(client: Client): Promise<void> {
     )`,
     `CREATE TABLE IF NOT EXISTS agenda_quote_assets (
       quote_id TEXT NOT NULL REFERENCES agenda_quotes(id) ON DELETE CASCADE,
-      name TEXT NOT NULL CHECK (name IN ('original', 'logo', 'preview-1', 'preview-2', 'preview-3')),
+      name TEXT NOT NULL,
       mime TEXT NOT NULL, content BLOB NOT NULL, PRIMARY KEY (quote_id, name)
     )`,
     'CREATE INDEX IF NOT EXISTS agenda_quotes_created ON agenda_quotes (created_at DESC, id DESC)',
@@ -205,6 +205,17 @@ export async function migrateStationery(client: Client): Promise<void> {
         ],
       });
       await tx.execute("INSERT INTO schema_migrations VALUES ('stationery-notebooks-v1')");
+    }
+    const agendaCoverApplied = await tx.execute("SELECT id FROM schema_migrations WHERE id = 'agenda-cover-assets-v1'");
+    if (!agendaCoverApplied.rows.length) {
+      await tx.execute(`CREATE TABLE agenda_quote_assets_v3 (
+        quote_id TEXT NOT NULL REFERENCES agenda_quotes(id) ON DELETE CASCADE,
+        name TEXT NOT NULL,
+        mime TEXT NOT NULL, content BLOB NOT NULL, PRIMARY KEY (quote_id, name))`);
+      await tx.execute('INSERT INTO agenda_quote_assets_v3 SELECT * FROM agenda_quote_assets');
+      await tx.execute('DROP TABLE agenda_quote_assets');
+      await tx.execute('ALTER TABLE agenda_quote_assets_v3 RENAME TO agenda_quote_assets');
+      await tx.execute("INSERT INTO schema_migrations VALUES ('agenda-cover-assets-v1')");
     }
     await tx.commit();
   } catch (error) { await tx.rollback(); throw error; }

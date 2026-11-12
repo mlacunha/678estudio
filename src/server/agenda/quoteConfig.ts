@@ -1,4 +1,5 @@
 import { agendaFormats, agendaLayouts, agendaStyles } from './options.mjs';
+import type { CoverConfig } from '../cover/coverConfig';
 
 export const agendaProduct = 'Agenda Clássica';
 export const agendaConfigVersion = 1;
@@ -16,11 +17,12 @@ export type QuoteConfig = {
   customColors: boolean;
   watermark: boolean;
   logo: null | { originalName: string; original: 'original'; normalized: 'logo' };
+  cover?: CoverConfig;
 };
 
 export type PreviewName = `preview-${typeof previewNumbers[number]}`;
 export type QuoteAsset = {
-  name: PreviewName | 'original' | 'logo';
+  name: PreviewName | 'original' | 'logo' | 'cover_image' | 'cover_image_original';
   mime: string;
   content: Buffer;
 };

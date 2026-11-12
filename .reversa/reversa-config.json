@@ -2,13 +2,19 @@
   "version": 1,
   "allowLegacyEdits": false,
   "allowedPaths": [
-    "package.json",
-    "pnpm-lock.yaml",
-    "src/server/agenda/**",
-    "src/server/print/**",
-    "src/components/admin/**",
+    "Dockerfile",
+    "src/server/cover/**",
+    "src/components/customizer/**",
+    "src/scripts/**",
+    "src/pages/api/cover/**",
+    "src/pages/personalizar/**",
     "src/pages/admin/**",
-    "src/server/agenda.test.mjs",
-    "src/server/agenda-quotes.test.ts"
+    "src/server/agenda/**",
+    "src/server/planner/**",
+    "src/server/caderno/**",
+    "src/db/**",
+    "src/pages/api/agenda/**",
+    "src/pages/api/planner/**",
+    "src/server/agenda-preview.test.ts"
   ]
 }

@@ -1,3 +1,4 @@
+import type { CoverConfig } from '../cover/coverConfig';
 import {
   notebookFormats,
   notebookModels,
@@ -45,11 +46,14 @@ export type NotebookQuoteConfig = {
   dedication?: string;
   logo: null | { originalName: string; original: 'original'; normalized: 'logo' };
   sections?: string[];
+  cover?: CoverConfig;
 };
 
 export type NotebookAssetRole =
   | 'original'
   | 'logo'
+  | 'cover_image'
+  | 'cover_image_original'
   | `preview-${NotebookPreviewSection}`;
 
 export type NotebookQuoteAsset = {

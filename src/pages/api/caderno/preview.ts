@@ -2,6 +2,8 @@ import type { APIRoute } from 'astro';
 import { normalizeAgendaLogo } from '../../../server/agenda/logo';
 import { compileNotebook, isNotebookColor } from '../../../server/caderno/compiler.mjs';
 import { storeNotebookDraft } from '../../../server/caderno/drafts';
+import { parseCoverConfig } from '../../../server/cover/coverConfig';
+import { maxCoverPhotoBytes, normalizeCoverPhotoFile } from '../../../server/cover/photo';
 import type {
   NotebookAssetRole,
   NotebookQuoteAsset,
@@ -19,7 +21,7 @@ import { getPublicOrigin } from '../../../utils/publicOrigin';
 import { readBoundedForm } from '../../../utils/webpUpload';
 
 export const prerender = false;
-const maxBodyBytes = maxNotebookLogoBytes + 16 * 1024;
+const maxBodyBytes = maxNotebookLogoBytes + maxCoverPhotoBytes + 64 * 1024;
 let generating = false;
 
 function reply(body: object, status = 200, headers?: HeadersInit) {
@@ -157,6 +159,32 @@ export const POST: APIRoute = async ({ request, url }) => {
       return reply({ error: 'Envie uma logomarca para usar a marca-d’água.' }, 400);
     }
 
+    const coverPhotoFile = form.get('cover_photo');
+    if (coverPhotoFile !== null && !(coverPhotoFile instanceof File)) {
+      return reply({ error: 'Envie a fotografia da capa em PNG ou JPEG.' }, 400);
+    }
+    const normalizedCoverPhoto = coverPhotoFile?.size
+      ? await normalizeCoverPhotoFile(coverPhotoFile, 2400)
+      : undefined;
+    if ((coverPhotoFile?.size || coverPhotoFile?.name) && !normalizedCoverPhoto) {
+      return reply({ error: 'Use uma fotografia de capa PNG ou JPEG válida de até 5 MB.' }, 400);
+    }
+
+    const coverConfig = parseCoverConfig({
+      style: form.get('cover_style'),
+      typography: form.get('cover_typography'),
+      title: form.get('cover_title') || title || notebookModels[model as keyof typeof notebookModels].label,
+      name: form.get('cover_name') || personalizationName,
+      subtitle: form.get('cover_subtitle'),
+      colors: {
+        primary: (form.get('cover_color_primary') as string) || undefined,
+        secondary: (form.get('cover_color_secondary') as string) || undefined,
+        text: (form.get('cover_color_text') as string) || undefined,
+        accent: (form.get('cover_color_accent') as string) || undefined,
+      },
+      hasCustomImage: Boolean(normalizedCoverPhoto),
+    });
+
     const modelKey = model as keyof typeof notebookModels;
     const palette = notebookStyles[style as keyof typeof notebookStyles];
     const config: NotebookQuoteConfig = {
@@ -175,6 +203,7 @@ export const POST: APIRoute = async ({ request, url }) => {
         ? { originalName: logoFile.name.slice(0, 255), original: 'original', normalized: 'logo' }
         : null,
       sections: notebookSectionsByModel[modelKey].map(s => s.id),
+      cover: coverConfig,
     };
 
     const assets: NotebookQuoteAsset[] = [];
@@ -182,6 +211,12 @@ export const POST: APIRoute = async ({ request, url }) => {
       assets.push(
         { name: 'original', mime: logoFile.type, content: logo.original },
         { name: 'logo', mime: 'image/png', content: logo.normalized },
+      );
+    }
+    if (normalizedCoverPhoto) {
+      assets.push(
+        { name: 'cover_image', mime: 'image/png', content: normalizedCoverPhoto.normalized },
+        { name: 'cover_image_original', mime: normalizedCoverPhoto.mime, content: normalizedCoverPhoto.original },
       );
     }
 

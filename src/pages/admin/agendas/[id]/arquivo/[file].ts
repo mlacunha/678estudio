@@ -11,7 +11,12 @@ export const GET: APIRoute = async ({ params }) => {
     if (quote) return Response.json({ version: quote.configVersion, ...quote.config }, {
       headers: { ...headers, 'Content-Disposition': `attachment; filename="agenda-${id}.json"` },
     });
-  } else if (params.file === 'original' || params.file === 'logo') {
+  } else if (
+    params.file === 'original'
+    || params.file === 'logo'
+    || params.file === 'cover_image'
+    || params.file === 'cover_image_original'
+  ) {
     const asset = await getAgendaQuoteAsset(id, params.file);
     if (asset && ['image/jpeg', 'image/png'].includes(asset.mime)) {
       const extension = asset.mime === 'image/jpeg' ? 'jpg' : 'png';

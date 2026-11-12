@@ -109,9 +109,30 @@ const labelClass = 'text-xs font-semibold uppercase tracking-wider text-ink-mute
       <!-- Seção de Produção Gráfica da Capa -->
       <div class="mt-6 rounded-lg border border-accent/20 bg-accent/5 p-4">
         <h3 class="text-sm font-semibold text-ink">Produção gráfica de capas personalizadas</h3>
-        <p class="mt-1 text-xs text-ink-muted">
-          Gere os PDFs de capa frontal e contracapa com corte milimétrico, sangrias configuráveis e furação Wire-O de 15 mm preservada.
-        </p>
+        {config.cover ? (
+          <dl class="mt-2 grid grid-cols-2 gap-3 text-xs sm:grid-cols-4">
+            <div>
+              <dt class={labelClass}>Estilo da capa</dt>
+              <dd class="mt-0.5 font-medium">{config.cover.style}</dd>
+            </div>
+            <div>
+              <dt class={labelClass}>Tipografia</dt>
+              <dd class="mt-0.5 font-medium">{config.cover.typography}</dd>
+            </div>
+            <div>
+              <dt class={labelClass}>Título / Nome</dt>
+              <dd class="mt-0.5 font-medium">{config.cover.title || '—'} / {config.cover.name || '—'}</dd>
+            </div>
+            <div>
+              <dt class={labelClass}>Cores (base / detalhe)</dt>
+              <dd class="mt-0.5 font-mono">{config.cover.colors.primary} / {config.cover.colors.accent}</dd>
+            </div>
+          </dl>
+        ) : (
+          <p class="mt-1 text-xs text-ink-muted">
+            Gere os PDFs de capa frontal e contracapa com corte milimétrico, sangrias configuráveis e furação Wire-O de 15 mm preservada.
+          </p>
+        )}
         <div class="mt-3 flex flex-wrap gap-2">
           <a
             href={`/admin/capas/cadernos/${quote.id}/pdf?format=front-a5&bleed=3mm`}
@@ -137,6 +158,14 @@ const labelClass = 'text-xs font-semibold uppercase tracking-wider text-ink-mute
           >
             Folha combinada A4 (corte ao meio)
           </a>
+          {config.cover?.hasCustomImage && (
+            <a
+              href={`${files}/cover_image_original`}
+              class="inline-flex items-center rounded border border-control bg-surface px-3 py-1.5 text-xs font-semibold text-accent hover:border-accent"
+            >
+              Baixar foto original da capa
+            </a>
+          )}
         </div>
       </div>
 

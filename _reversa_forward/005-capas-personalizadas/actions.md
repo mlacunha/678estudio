@@ -63,3 +63,5 @@
 |------|-----------|-------|
 | 2026-11-12 | Versão inicial gerada por `/reversa-to-do` com 14 tarefas atômicas | reversa |
 | 2026-11-12 | Implementação completa de `T001` a `T014` com testes aprovados | reversa |
+| 2026-11-12 | Correção pós-publicação: `prerender = false` em `/api/cover/preview`, normalização `sharp`, `--root` Typst determinístico, persistência `cover`/`cover_image` no pedido e validação HTTP/E2E/Browser | reversa |
+| 2026-11-12 | Conclusão da feature 005 nas 3 famílias: integração de `CoverCustomizerTab`, persistência e PDF administrativo em Agendas e Planners, validados em produção | reversa |

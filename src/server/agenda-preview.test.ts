@@ -4,6 +4,8 @@ import { afterEach, expect, it, vi } from 'vitest';
 import { POST } from '../pages/api/agenda/preview';
 import { renderAgendaPreview } from './agenda/classic.mjs';
 import { getAgendaDraft } from './agenda/drafts';
+import { maxAgendaLogoBytes } from './agenda/options.mjs';
+import { maxCoverPhotoBytes } from './cover/photo';
 
 vi.mock('./agenda/classic.mjs', async importOriginal => ({
   ...await importOriginal<typeof import('./agenda/classic.mjs')>(),
@@ -39,10 +41,11 @@ it.each([
 
 it('rejeita origem externa e corpo maior que o limite', async () => {
   vi.stubEnv('PUBLIC_ORIGIN', url.origin);
+  const oversizedBytes = maxAgendaLogoBytes + maxCoverPhotoBytes + 128 * 1024;
   expect((await post(options(), { Origin: 'https://other.example' })).status).toBe(403);
-  expect((await post(options(), { 'Content-Length': '3000000' })).status).toBe(413);
+  expect((await post(options(), { 'Content-Length': String(oversizedBytes) })).status).toBe(413);
   const oversized = options();
-  oversized.set('logo', new File([new Uint8Array(3_000_000)], 'logo.png', { type: 'image/png' }));
+  oversized.set('logo', new File([new Uint8Array(oversizedBytes)], 'logo.png', { type: 'image/png' }));
   expect((await post(oversized)).status).toBe(413);
   expect(render).not.toHaveBeenCalled();
 });

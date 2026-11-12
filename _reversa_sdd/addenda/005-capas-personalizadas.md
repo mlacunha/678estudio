@@ -32,6 +32,13 @@ Implementação completa do subsistema compartilhado de **Capas Personalizadas**
 
 - `W001`, `W002`, `W003`, `W004` documentados em [`_reversa_forward/005-capas-personalizadas/regression-watch.md`](file:///d:/Projetos/site678Estudio/_reversa_forward/005-capas-personalizadas/regression-watch.md).
 
+## Correção de produção e estado das famílias (2026-11-12)
+
+- **Endpoint dinâmico (`/api/cover/preview.ts`):** Adicionado `export const prerender = false;` para registro dinâmico em produção (`output: 'hybrid'`) e normalização de fotos JPEG/PNG via `sharp` (`src/server/cover/photo.ts`).
+- **Isolamento Typst (`src/server/cover/compiler.mjs`):** Compilação em workspace temporário isolado (`--root`), saída determinística (`cover-rendered.png` / `cover-rendered.pdf`) e entrada `--input photo=/input-photo.<ext>`.
+- **Frontend e persistência:** Tratamento explícito de erros/carregamento em `src/scripts/coverCustomizer.ts` e `src/pages/personalizar/caderno.astro`; persistência de `config.cover`, `cover_image` e `cover_image_original` em `src/pages/api/caderno/preview.ts`, `src/pages/admin/cadernos/[id]/index.astro` e `src/pages/admin/capas/[family]/[id]/pdf.ts`.
+- **Escopo concluído nas três famílias:** Integração ativa em **Cadernos Personalizados** ([caderno.astro](file:///d:/Projetos/site678Estudio/src/pages/personalizar/caderno.astro)), **Agendas Clássicas** ([agenda.astro](file:///d:/Projetos/site678Estudio/src/pages/personalizar/agenda.astro)) e **Planners Essenciais** ([planner.astro](file:///d:/Projetos/site678Estudio/src/pages/personalizar/planner.astro)), com persistência unificada via `extractCoverFromForm` ([orderAdapter.ts](file:///d:/Projetos/site678Estudio/src/server/cover/orderAdapter.ts)), migração `agenda-cover-assets-v1` em [database.ts](file:///d:/Projetos/site678Estudio/src/db/database.ts) e geração administrativa compartilhada em [pdf.ts](file:///d:/Projetos/site678Estudio/src/pages/admin/capas/[family]/[id]/pdf.ts).
+
 ## Fontes
 
 - `_reversa_forward/005-capas-personalizadas/requirements.md`
