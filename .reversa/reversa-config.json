@@ -15,6 +15,7 @@
     "src/db/**",
     "src/pages/api/agenda/**",
     "src/pages/api/planner/**",
-    "src/server/agenda-preview.test.ts"
+    "src/server/agenda-preview.test.ts",
+    "src/components/CustomizerNav.astro"
   ]
 }
