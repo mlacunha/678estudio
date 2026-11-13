@@ -87,29 +87,42 @@ const [categories, artes] = await Promise.all([
               <p id="upload-files-hint" class="mt-1 text-xs text-ink-muted">Nenhum arquivo selecionado.</p>
             </div>
 
+            <div class="sm:col-span-2">
+              <label for="input-arte-group-description" class="block text-xs font-semibold text-ink-secondary mb-1">
+                Descrição do grupo (opcional)
+              </label>
+              <textarea
+                id="input-arte-group-description"
+                rows="2"
+                maxlength="500"
+                placeholder="Ex.: Artes com frases motivacionais, mensagens positivas e temas de superação."
+                class="w-full rounded-md border border-control bg-canvas px-3 py-2 text-sm text-ink focus:border-accent focus:outline-none"
+              ></textarea>
+            </div>
+
             <div id="single-arte-fields" class="sm:col-span-2 grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div>
                 <label for="input-arte-title" class="block text-xs font-semibold text-ink-secondary mb-1">
-                  Título (opcional no lote)
+                  Título da arte (somente envio individual)
                 </label>
                 <input
                   id="input-arte-title"
                   type="text"
                   maxlength="120"
                   placeholder="Usa o nome do arquivo se vazio"
-                  class="w-full rounded-md border border-control bg-canvas px-3 py-2 text-sm text-ink focus:border-accent focus:outline-none"
+                  class="w-full rounded-md border border-control bg-canvas px-3 py-2 text-sm text-ink focus:border-accent focus:outline-none disabled:opacity-50"
                 />
               </div>
               <div>
                 <label for="input-arte-code" class="block text-xs font-semibold text-ink-secondary mb-1">
-                  Código único (automático se vazio)
+                  Código único (somente envio individual)
                 </label>
                 <input
                   id="input-arte-code"
                   type="text"
                   maxlength="32"
-                  placeholder="Ex.: ART-0001"
-                  class="w-full rounded-md border border-control bg-canvas px-3 py-2 text-sm uppercase text-ink focus:border-accent focus:outline-none"
+                  placeholder="Automático se vazio (ex.: ART-0001)"
+                  class="w-full rounded-md border border-control bg-canvas px-3 py-2 text-sm uppercase text-ink focus:border-accent focus:outline-none disabled:opacity-50"
                 />
               </div>
             </div>
@@ -233,13 +246,17 @@ const [categories, artes] = await Promise.all([
             <input id="edit-arte-code" type="text" required maxlength="32" class="w-full rounded-md border border-control bg-canvas px-3 py-2 text-sm uppercase text-ink" />
           </div>
           <div>
-            <label for="edit-arte-title" class="block text-xs font-semibold text-ink-secondary mb-1">Título *</label>
+            <label for="edit-arte-title" class="block text-xs font-semibold text-ink-secondary mb-1">Título da arte *</label>
             <input id="edit-arte-title" type="text" required maxlength="120" class="w-full rounded-md border border-control bg-canvas px-3 py-2 text-sm text-ink" />
           </div>
         </div>
         <div>
           <label for="edit-arte-description" class="block text-xs font-semibold text-ink-secondary mb-1">Descrição</label>
           <textarea id="edit-arte-description" rows="2" maxlength="500" class="w-full rounded-md border border-control bg-canvas px-3 py-2 text-sm text-ink"></textarea>
+        </div>
+        <div>
+          <label for="edit-arte-group-description" class="block text-xs font-semibold text-ink-secondary mb-1">Descrição do grupo</label>
+          <textarea id="edit-arte-group-description" rows="2" maxlength="500" placeholder="Opcional — compartilhada inicialmente pelo lote e editável individualmente" class="w-full rounded-md border border-control bg-canvas px-3 py-2 text-sm text-ink"></textarea>
         </div>
         <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>

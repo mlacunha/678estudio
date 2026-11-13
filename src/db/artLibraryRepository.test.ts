@@ -188,4 +188,81 @@ describe('artLibraryRepository', () => {
     expect(await getPublicArteVersion(frameOnlyId, 'caneca', 1, client)).toBeNull();
     expect(await getPublicArteVersion(draftMugId, 'caneca', 1, client)).toBeNull();
   });
+
+  it('should search by code, title, individual description, and groupDescription in admin and public queries', async () => {
+    const client = await createTempDb();
+    const cat = await createArtCategory({ name: 'Motivacional' }, client);
+    const groupDescription = 'Artes com frases motivacionais, mensagens positivas e temas de superação.';
+    const baseVer = {
+      originalFilename: 'frase.png',
+      originalMime: 'image/png',
+      originalExt: 'png',
+      width: 1000,
+      height: 1000,
+      thumbWidth: 400,
+      thumbHeight: 400,
+      previewWidth: 1000,
+      previewHeight: 1000,
+      fileSize: 12000,
+    };
+
+    const id1 = randomUUID();
+    const id2 = randomUUID();
+    const id3 = randomUUID();
+    await createArteWithVersion({ id: id1, code: 'MOT-01', title: 'Frase Coragem', description: 'Detalhe dourado', groupDescription, categoryIds: [cat.id], productTypes: ['caneca', 'quadro'], isPublished: true, version: baseVer }, client);
+    await createArteWithVersion({ id: id2, code: 'MOT-02', title: 'Frase Paz', description: 'Fundo aquarela', groupDescription, categoryIds: [cat.id], productTypes: ['caneca'], isPublished: true, version: baseVer }, client);
+    await createArteWithVersion({ id: id3, code: 'MOT-03', title: 'Frase Foco', description: 'Tipografia minimalista', groupDescription, categoryIds: [cat.id], productTypes: ['quadro'], isPublished: true, version: baseVer }, client);
+
+    for (const term of ['motivacionais', 'positivas', 'superação', groupDescription]) {
+      const adminFound = await listAdminArtes({ q: term }, client);
+      expect(adminFound).toHaveLength(3);
+      expect(adminFound.map(a => a.title).sort()).toEqual(['Frase Coragem', 'Frase Foco', 'Frase Paz']);
+
+      expect((await listPublicArtes({ productType: 'caneca', q: term }, client)).items).toHaveLength(2);
+      expect((await listPublicArtes({ productType: 'quadro', q: term }, client)).items).toHaveLength(2);
+    }
+
+    expect((await listPublicArtes({ productType: 'caneca', q: 'MOT-02' }, client)).items.map(i => i.id)).toEqual([id2]);
+    expect((await listPublicArtes({ productType: 'quadro', q: 'minimalista' }, client)).items.map(i => i.id)).toEqual([id3]);
+
+    const updated = await updateArteMetadata(id1, { groupDescription: 'Coleção Gratidão Diária' }, client);
+    expect(updated.groupDescription).toBe('Coleção Gratidão Diária');
+    expect(updated.description).toBe('Detalhe dourado');
+    expect((await getAdminArte(id2, client))?.groupDescription).toBe(groupDescription);
+    expect((await getAdminArte(id3, client))?.groupDescription).toBe(groupDescription);
+    expect((await listPublicArtes({ productType: 'caneca', q: 'Gratidão' }, client)).items.map(i => i.id)).toEqual([id1]);
+  });
+
+  it('should migrate existing DB with art-library-batch-title-v1 and run idempotently on fresh DB', async () => {
+    const dir = await mkdtemp(join(tmpdir(), 'art-lib-mig-'));
+    const client = createClient({ url: `file:${join(dir, 'legacy.db').replace(/\\/g, '/')}` });
+    cleanups.push(async () => {
+      client.close();
+      await rm(dir, { recursive: true, force: true, maxRetries: 5, retryDelay: 50 }).catch(() => undefined);
+    });
+
+    await client.batch([
+      'CREATE TABLE schema_migrations (id TEXT PRIMARY KEY)',
+      `CREATE TABLE arte_categorias (id TEXT PRIMARY KEY, slug TEXT NOT NULL UNIQUE, name TEXT NOT NULL, display_order INTEGER NOT NULL DEFAULT 0, is_active INTEGER NOT NULL DEFAULT 1, created_at TEXT NOT NULL, updated_at TEXT NOT NULL)`,
+      `CREATE TABLE artes (id TEXT PRIMARY KEY, code TEXT NOT NULL UNIQUE, title TEXT NOT NULL, description TEXT NOT NULL DEFAULT '', current_version INTEGER NOT NULL DEFAULT 1, is_published INTEGER NOT NULL DEFAULT 0, is_active INTEGER NOT NULL DEFAULT 1, created_at TEXT NOT NULL, updated_at TEXT NOT NULL, batch_title TEXT NOT NULL DEFAULT '')`,
+      `CREATE TABLE arte_versoes (arte_id TEXT NOT NULL, version INTEGER NOT NULL, original_filename TEXT NOT NULL, original_mime TEXT NOT NULL, original_ext TEXT NOT NULL, width INTEGER NOT NULL, height INTEGER NOT NULL, thumb_width INTEGER NOT NULL, thumb_height INTEGER NOT NULL, preview_width INTEGER NOT NULL, preview_height INTEGER NOT NULL, file_size INTEGER NOT NULL, created_at TEXT NOT NULL, PRIMARY KEY (arte_id, version))`,
+      `CREATE TABLE arte_categoria_rel (arte_id TEXT NOT NULL, categoria_id TEXT NOT NULL, PRIMARY KEY (arte_id, categoria_id))`,
+      `CREATE TABLE arte_produtos (arte_id TEXT NOT NULL, product_type TEXT NOT NULL, PRIMARY KEY (arte_id, product_type))`,
+      "INSERT INTO schema_migrations VALUES ('art-library-v1')",
+      "INSERT INTO schema_migrations VALUES ('art-library-batch-title-v1')",
+      `INSERT INTO artes (id, code, title, description, batch_title, current_version, is_published, is_active, created_at, updated_at)
+       VALUES ('legacy-1', 'ART-0001', 'Arte Legada', 'Desc antiga', 'Lote Antigo', 1, 1, 1, '2026-11-13T00:00:00Z', '2026-11-13T00:00:00Z')`,
+    ], 'write');
+
+    await migrateArtLibrary(client);
+    await migrateArtLibrary(client);
+
+    const arte = await getAdminArte('legacy-1', client);
+    expect(arte?.title).toBe('Arte Legada');
+    expect(arte?.groupDescription).toBe('');
+
+    const migs = await client.execute('SELECT id FROM schema_migrations ORDER BY id');
+    expect(migs.rows.map(r => String(r.id))).toContain('art-library-batch-title-v1');
+    expect(migs.rows.map(r => String(r.id))).toContain('art-library-group-description-v1');
+  });
 });

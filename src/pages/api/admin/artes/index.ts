@@ -61,6 +61,7 @@ export const POST: APIRoute = async ({ request }) => {
   const categoryIds = form.getAll('categories').map(v => String(v).trim()).filter(Boolean);
   const isPublished = String(form.get('published') ?? 'true') !== 'false';
   const customTitle = String(form.get('title') ?? '').trim();
+  const groupDescription = String(form.get('groupDescription') ?? '').trim();
   const customCode = String(form.get('code') ?? '').trim();
   const description = String(form.get('description') ?? '').trim();
   const isSingle = files.length === 1;
@@ -78,6 +79,7 @@ export const POST: APIRoute = async ({ request }) => {
         code: isSingle && customCode ? customCode : undefined,
         title: isSingle && customTitle ? customTitle : titleFromFilename(file.name),
         description,
+        groupDescription,
         categoryIds,
         productTypes,
         isPublished,

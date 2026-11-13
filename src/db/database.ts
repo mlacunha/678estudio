@@ -280,6 +280,24 @@ export async function migrateArtLibrary(client: Client): Promise<void> {
       await tx.execute('CREATE INDEX IF NOT EXISTS arte_produtos_type ON arte_produtos (product_type, arte_id)');
       await tx.execute("INSERT INTO schema_migrations VALUES ('art-library-v1')");
     }
+    const batchTitleApplied = await tx.execute("SELECT id FROM schema_migrations WHERE id = 'art-library-batch-title-v1'");
+    if (!batchTitleApplied.rows.length) {
+      const cols = await tx.execute("PRAGMA table_info('artes')");
+      const hasBatchTitle = cols.rows.some(row => String(row.name) === 'batch_title');
+      if (!hasBatchTitle) {
+        await tx.execute("ALTER TABLE artes ADD COLUMN batch_title TEXT NOT NULL DEFAULT ''");
+      }
+      await tx.execute("INSERT INTO schema_migrations VALUES ('art-library-batch-title-v1')");
+    }
+    const groupDescApplied = await tx.execute("SELECT id FROM schema_migrations WHERE id = 'art-library-group-description-v1'");
+    if (!groupDescApplied.rows.length) {
+      const cols = await tx.execute("PRAGMA table_info('artes')");
+      const hasGroupDesc = cols.rows.some(row => String(row.name) === 'group_description');
+      if (!hasGroupDesc) {
+        await tx.execute("ALTER TABLE artes ADD COLUMN group_description TEXT NOT NULL DEFAULT ''");
+      }
+      await tx.execute("INSERT INTO schema_migrations VALUES ('art-library-group-description-v1')");
+    }
     await tx.commit();
   } catch (error) {
     await tx.rollback();

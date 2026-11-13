@@ -33,6 +33,7 @@ export const PATCH: APIRoute = async ({ params, request }) => {
       code: typeof body.code === 'string' ? body.code : undefined,
       title: typeof body.title === 'string' ? body.title : undefined,
       description: typeof body.description === 'string' ? body.description : undefined,
+      groupDescription: typeof body.groupDescription === 'string' ? body.groupDescription : undefined,
       categoryIds: Array.isArray(body.categoryIds)
         ? body.categoryIds.map((v: unknown) => String(v).trim()).filter(Boolean)
         : undefined,

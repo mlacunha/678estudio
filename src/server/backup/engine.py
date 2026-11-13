@@ -44,7 +44,7 @@ OPTIONAL_SCHEMA = {
     "notebook_quotes": "id draft_token product created_at status config_version config_json",
     "notebook_quote_assets": "quote_id name mime content",
     "arte_categorias": "id slug name display_order is_active created_at updated_at",
-    "artes": "id code title description current_version is_published is_active created_at updated_at",
+    "artes": "id code title description group_description current_version is_published is_active created_at updated_at",
     "arte_versoes": "arte_id version original_filename original_mime original_ext width height thumb_width thumb_height preview_width preview_height file_size created_at",
     "arte_categoria_rel": "arte_id categoria_id",
     "arte_produtos": "arte_id product_type",

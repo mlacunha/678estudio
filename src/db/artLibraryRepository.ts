@@ -38,6 +38,7 @@ export interface ArtItem {
   code: string;
   title: string;
   description: string;
+  groupDescription: string;
   currentVersion: number;
   isPublished: boolean;
   isActive: boolean;
@@ -284,8 +285,8 @@ export async function listAdminArtes(
 
   if (filters.q?.trim()) {
     const pattern = `%${filters.q.trim()}%`;
-    clauses.push('(a.code LIKE ? OR a.title LIKE ? OR a.description LIKE ?)');
-    args.push(pattern, pattern, pattern);
+    clauses.push('(a.code LIKE ? OR a.title LIKE ? OR a.description LIKE ? OR a.group_description LIKE ?)');
+    args.push(pattern, pattern, pattern, pattern);
   }
   if (filters.categoryId?.trim()) {
     clauses.push('EXISTS (SELECT 1 FROM arte_categoria_rel r WHERE r.arte_id = a.id AND r.categoria_id = ?)');
@@ -318,6 +319,7 @@ export async function listAdminArtes(
       code: String(row.code),
       title: String(row.title),
       description: String(row.description),
+      groupDescription: String(row.group_description ?? ''),
       currentVersion: Number(row.current_version),
       isPublished: Boolean(row.is_published),
       isActive: Boolean(row.is_active),
@@ -352,6 +354,7 @@ export async function getAdminArte(id: string, client: Client = getDbClient()): 
     code: String(row.code),
     title: String(row.title),
     description: String(row.description),
+    groupDescription: String(row.group_description ?? ''),
     currentVersion,
     isPublished: Boolean(row.is_published),
     isActive: Boolean(row.is_active),
@@ -388,6 +391,7 @@ export async function createArteWithVersion(
     code?: string;
     title: string;
     description?: string;
+    groupDescription?: string;
     categoryIds: string[];
     productTypes: string[];
     isPublished: boolean;
@@ -399,6 +403,10 @@ export async function createArteWithVersion(
   const title = input.title.trim();
   if (!title || title.length > 120) {
     throw new ArtRepositoryError('Informe um título válido para a arte (até 120 caracteres).', 400);
+  }
+  const groupDescription = (input.groupDescription ?? '').trim();
+  if (groupDescription.length > 500) {
+    throw new ArtRepositoryError('A descrição do grupo deve ter no máximo 500 caracteres.', 400);
   }
   const code = input.code?.trim() ? normalizeArtCode(input.code) : await generateNextArtCode(client);
   if (!ART_CODE_PATTERN.test(code)) {
@@ -415,9 +423,9 @@ export async function createArteWithVersion(
     if (dup.rows.length) throw new ArtRepositoryError(`Já existe uma arte com o código ${code}.`, 409);
 
     await tx.execute({
-      sql: `INSERT INTO artes (id, code, title, description, current_version, is_published, is_active, created_at, updated_at)
-            VALUES (?, ?, ?, ?, 1, ?, 1, ?, ?)`,
-      args: [input.id, code, title, (input.description ?? '').trim(), Number(input.isPublished), now, now],
+      sql: `INSERT INTO artes (id, code, title, description, group_description, current_version, is_published, is_active, created_at, updated_at)
+            VALUES (?, ?, ?, ?, ?, 1, ?, 1, ?, ?)`,
+      args: [input.id, code, title, (input.description ?? '').trim(), groupDescription, Number(input.isPublished), now, now],
     });
     await tx.execute({
       sql: `INSERT INTO arte_versoes (
@@ -531,6 +539,7 @@ export async function updateArteMetadata(
     code?: string;
     title?: string;
     description?: string;
+    groupDescription?: string;
     categoryIds?: string[];
     productTypes?: string[];
     isPublished?: boolean;
@@ -551,6 +560,10 @@ export async function updateArteMetadata(
     throw new ArtRepositoryError('Informe um título válido (até 120 caracteres).', 400);
   }
   const description = input.description !== undefined ? input.description.trim() : current.description;
+  const groupDescription = input.groupDescription !== undefined ? input.groupDescription.trim() : current.groupDescription;
+  if (groupDescription.length > 500) {
+    throw new ArtRepositoryError('A descrição do grupo deve ter no máximo 500 caracteres.', 400);
+  }
   const isActive = input.isActive !== undefined ? input.isActive : current.isActive;
   const isPublished = isActive
     ? (input.isPublished !== undefined ? input.isPublished : current.isPublished)
@@ -567,8 +580,8 @@ export async function updateArteMetadata(
     if (dup.rows.length) throw new ArtRepositoryError(`Já existe outra arte com o código ${code}.`, 409);
 
     await tx.execute({
-      sql: `UPDATE artes SET code = ?, title = ?, description = ?, is_published = ?, is_active = ?, updated_at = ? WHERE id = ?`,
-      args: [code, title, description, Number(isPublished), Number(isActive), now, id],
+      sql: `UPDATE artes SET code = ?, title = ?, description = ?, group_description = ?, is_published = ?, is_active = ?, updated_at = ? WHERE id = ?`,
+      args: [code, title, description, groupDescription, Number(isPublished), Number(isActive), now, id],
     });
     if (input.categoryIds !== undefined) {
       await tx.execute({ sql: 'DELETE FROM arte_categoria_rel WHERE arte_id = ?', args: [id] });
@@ -609,6 +622,7 @@ export interface PublicArtItem {
   code: string;
   title: string;
   description: string;
+  groupDescription: string;
   version: number;
   width: number;
   height: number;
@@ -655,13 +669,13 @@ export async function listPublicArtes(
   }
   if (filters.q?.trim()) {
     const pattern = `%${filters.q.trim()}%`;
-    clauses.push('(a.code LIKE ? OR a.title LIKE ?)');
-    args.push(pattern, pattern);
+    clauses.push('(a.code LIKE ? OR a.title LIKE ? OR a.description LIKE ? OR a.group_description LIKE ?)');
+    args.push(pattern, pattern, pattern, pattern);
   }
 
   const [rowsRes, catsRes] = await Promise.all([
     client.execute({
-      sql: `SELECT a.id, a.code, a.title, a.description, a.current_version, v.width, v.height
+      sql: `SELECT a.id, a.code, a.title, a.description, a.group_description, a.current_version, v.width, v.height
             FROM artes a
             JOIN arte_versoes v ON v.arte_id = a.id AND v.version = a.current_version
             WHERE ${clauses.join(' AND ')}
@@ -693,6 +707,7 @@ export async function listPublicArtes(
       code: String(row.code),
       title: String(row.title),
       description: String(row.description),
+      groupDescription: String(row.group_description ?? ''),
       version,
       width: Number(row.width),
       height: Number(row.height),

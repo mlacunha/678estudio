@@ -21,6 +21,7 @@ interface ArtItem {
   code: string;
   title: string;
   description: string;
+  groupDescription: string;
   currentVersion: number;
   isPublished: boolean;
   isActive: boolean;
@@ -69,6 +70,7 @@ function initAdminArtes(): void {
   const inputFiles = document.getElementById('input-arte-files') as HTMLInputElement | null;
   const filesHintEl = document.getElementById('upload-files-hint');
   const singleFieldsEl = document.getElementById('single-arte-fields');
+  const inputGroupDesc = document.getElementById('input-arte-group-description') as HTMLTextAreaElement | null;
   const inputTitle = document.getElementById('input-arte-title') as HTMLInputElement | null;
   const inputCode = document.getElementById('input-arte-code') as HTMLInputElement | null;
   const inputUploadPublished = document.getElementById('input-upload-published') as HTMLInputElement | null;
@@ -97,6 +99,7 @@ function initAdminArtes(): void {
   const editCodeEl = document.getElementById('edit-arte-code') as HTMLInputElement | null;
   const editTitleEl = document.getElementById('edit-arte-title') as HTMLInputElement | null;
   const editDescEl = document.getElementById('edit-arte-description') as HTMLTextAreaElement | null;
+  const editGroupDescEl = document.getElementById('edit-arte-group-description') as HTMLTextAreaElement | null;
   const editCatsEl = document.getElementById('edit-categories-container');
   const editPublishedEl = document.getElementById('edit-arte-published') as HTMLInputElement | null;
   const editActiveEl = document.getElementById('edit-arte-active') as HTMLInputElement | null;
@@ -261,6 +264,9 @@ function initAdminArtes(): void {
       const body = createEl('div', 'flex flex-1 flex-col p-4 space-y-2');
       body.appendChild(createEl('p', 'text-[11px] font-semibold tracking-wider text-accent', arte.code));
       body.appendChild(createEl('h3', 'text-sm font-semibold text-ink line-clamp-2', arte.title));
+      if (arte.groupDescription) {
+        body.appendChild(createEl('p', 'text-[11px] text-ink-secondary line-clamp-2', arte.groupDescription));
+      }
 
       if (arte.versionInfo) {
         body.appendChild(
@@ -353,6 +359,7 @@ function initAdminArtes(): void {
     editCodeEl.value = arte.code;
     editTitleEl.value = arte.title;
     editDescEl.value = arte.description;
+    if (editGroupDescEl) editGroupDescEl.value = arte.groupDescription;
     editPublishedEl.checked = arte.isPublished;
     editActiveEl.checked = arte.isActive;
     for (const box of document.querySelectorAll<HTMLInputElement>('input[name="edit-products"]')) {
@@ -411,6 +418,8 @@ function initAdminArtes(): void {
           : `${count} arquivos selecionados para envio em lote.`;
     }
     if (singleFieldsEl) singleFieldsEl.classList.toggle('opacity-60', count > 1);
+    if (inputTitle) inputTitle.disabled = count > 1;
+    if (inputCode) inputCode.disabled = count > 1;
   });
 
   formUpload?.addEventListener('submit', async event => {
@@ -426,6 +435,7 @@ function initAdminArtes(): void {
     for (const cat of document.querySelectorAll<HTMLInputElement>('input[name="upload-categories"]:checked')) {
       formData.append('categories', cat.value);
     }
+    if (inputGroupDesc?.value.trim()) formData.append('groupDescription', inputGroupDesc.value.trim());
     if (files.length === 1) {
       if (inputTitle?.value.trim()) formData.append('title', inputTitle.value.trim());
       if (inputCode?.value.trim()) formData.append('code', inputCode.value.trim());
@@ -446,6 +456,8 @@ function initAdminArtes(): void {
             : `${createdCount} arte(s) enviada(s) com sucesso.`;
         }
         formUpload.reset();
+        if (inputTitle) inputTitle.disabled = false;
+        if (inputCode) inputCode.disabled = false;
         for (const box of document.querySelectorAll<HTMLInputElement>('input[name="upload-products"]')) box.checked = true;
         if (inputUploadPublished) inputUploadPublished.checked = true;
         if (filesHintEl) filesHintEl.textContent = 'Nenhum arquivo selecionado.';
@@ -472,6 +484,7 @@ function initAdminArtes(): void {
         code: editCodeEl?.value.trim(),
         title: editTitleEl?.value.trim(),
         description: editDescEl?.value.trim(),
+        groupDescription: editGroupDescEl?.value.trim() ?? '',
         productTypes: products,
         categoryIds,
         isPublished: Boolean(editPublishedEl?.checked),

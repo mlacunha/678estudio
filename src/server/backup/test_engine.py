@@ -190,6 +190,12 @@ class BackupTest(unittest.TestCase):
     def test_art_library_files_backup_and_restore(self):
         arte_id = "11111111-2222-4333-8444-555555555555"
         with closing(sqlite3.connect(self.db)) as db:
+            artes_cols = ", ".join(engine.OPTIONAL_SCHEMA["artes"].split()) + ", batch_title"
+            db.execute(f"CREATE TABLE artes ({artes_cols})")
+            db.execute(
+                "INSERT INTO artes VALUES (?, 'ART-0001', 'Frase 1', 'Desc ind', 'Artes com frases motivacionais, mensagens positivas e temas de superação.', 1, 1, 1, '2026-11-13T00:00:00Z', '2026-11-13T00:00:00Z', '')",
+                (arte_id,),
+            )
             cols = ", ".join(engine.OPTIONAL_SCHEMA["arte_versoes"].split())
             db.execute(f"CREATE TABLE arte_versoes ({cols})")
             db.execute(
@@ -213,6 +219,9 @@ class BackupTest(unittest.TestCase):
         self.assertEqual(self.read_status(), "committed")
         for name, data in arte_files.items():
             self.assertEqual(engine.storage_path(self.root, name).read_bytes(), data)
+        with closing(sqlite3.connect(self.db)) as db:
+            row = db.execute("SELECT group_description, batch_title FROM artes WHERE id = ?", (arte_id,)).fetchone()
+            self.assertEqual(row, ("Artes com frases motivacionais, mensagens positivas e temas de superação.", ""))
 
         engine.storage_path(self.root, f"data/artes/{arte_id}-v1-orig.png").unlink()
         with self.assertRaises(engine.InvalidBackup):
