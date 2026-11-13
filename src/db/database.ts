@@ -127,6 +127,7 @@ async function createSchemaAndSeed(client: Client): Promise<void> {
     'CREATE INDEX IF NOT EXISTS notebook_quotes_created ON notebook_quotes (created_at DESC, id DESC)',
   ], 'write');
   await migrateStationery(client);
+  await migrateArtLibrary(client);
 
 }
 
@@ -220,4 +221,70 @@ export async function migrateStationery(client: Client): Promise<void> {
     await tx.commit();
   } catch (error) { await tx.rollback(); throw error; }
   finally { tx.close(); }
+}
+
+/** Cria as tabelas da Biblioteca de Artes de forma idempotente e versionada. */
+export async function migrateArtLibrary(client: Client): Promise<void> {
+  await client.execute('CREATE TABLE IF NOT EXISTS schema_migrations (id TEXT PRIMARY KEY)');
+  const tx = await client.transaction('write');
+  try {
+    const applied = await tx.execute("SELECT id FROM schema_migrations WHERE id = 'art-library-v1'");
+    if (!applied.rows.length) {
+      await tx.execute(`CREATE TABLE IF NOT EXISTS arte_categorias (
+        id TEXT PRIMARY KEY,
+        slug TEXT NOT NULL UNIQUE,
+        name TEXT NOT NULL,
+        display_order INTEGER NOT NULL DEFAULT 0,
+        is_active INTEGER NOT NULL DEFAULT 1,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL
+      )`);
+      await tx.execute(`CREATE TABLE IF NOT EXISTS artes (
+        id TEXT PRIMARY KEY,
+        code TEXT NOT NULL UNIQUE,
+        title TEXT NOT NULL,
+        description TEXT NOT NULL DEFAULT '',
+        current_version INTEGER NOT NULL DEFAULT 1,
+        is_published INTEGER NOT NULL DEFAULT 0,
+        is_active INTEGER NOT NULL DEFAULT 1,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL
+      )`);
+      await tx.execute(`CREATE TABLE IF NOT EXISTS arte_versoes (
+        arte_id TEXT NOT NULL REFERENCES artes(id) ON DELETE CASCADE,
+        version INTEGER NOT NULL,
+        original_filename TEXT NOT NULL,
+        original_mime TEXT NOT NULL,
+        original_ext TEXT NOT NULL,
+        width INTEGER NOT NULL,
+        height INTEGER NOT NULL,
+        thumb_width INTEGER NOT NULL,
+        thumb_height INTEGER NOT NULL,
+        preview_width INTEGER NOT NULL,
+        preview_height INTEGER NOT NULL,
+        file_size INTEGER NOT NULL,
+        created_at TEXT NOT NULL,
+        PRIMARY KEY (arte_id, version)
+      )`);
+      await tx.execute(`CREATE TABLE IF NOT EXISTS arte_categoria_rel (
+        arte_id TEXT NOT NULL REFERENCES artes(id) ON DELETE CASCADE,
+        categoria_id TEXT NOT NULL REFERENCES arte_categorias(id) ON DELETE CASCADE,
+        PRIMARY KEY (arte_id, categoria_id)
+      )`);
+      await tx.execute(`CREATE TABLE IF NOT EXISTS arte_produtos (
+        arte_id TEXT NOT NULL REFERENCES artes(id) ON DELETE CASCADE,
+        product_type TEXT NOT NULL,
+        PRIMARY KEY (arte_id, product_type)
+      )`);
+      await tx.execute('CREATE INDEX IF NOT EXISTS artes_admin_filter ON artes (is_active, is_published, updated_at DESC)');
+      await tx.execute('CREATE INDEX IF NOT EXISTS arte_produtos_type ON arte_produtos (product_type, arte_id)');
+      await tx.execute("INSERT INTO schema_migrations VALUES ('art-library-v1')");
+    }
+    await tx.commit();
+  } catch (error) {
+    await tx.rollback();
+    throw error;
+  } finally {
+    tx.close();
+  }
 }

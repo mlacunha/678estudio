@@ -1,4 +1,15 @@
 import { buildWhatsAppQuotePath, WHATSAPP_UNAVAILABLE } from './whatsapp';
+import type { ArtProductType } from './artLibrary';
+
+export interface MockupArtReference {
+  arteId: string;
+  version: number;
+  product: ArtProductType;
+  scale: number;
+  posX: number;
+  posY: number;
+  printWidthCm?: number;
+}
 
 export async function loadArtwork(file: File): Promise<HTMLImageElement> {
   const image = new Image();
@@ -12,11 +23,19 @@ export async function loadArtwork(file: File): Promise<HTMLImageElement> {
   }
 }
 
+/** Carrega uma prévia de arte da biblioteca pela URL na mesma origem. */
+export async function loadImageFromUrl(url: string): Promise<HTMLImageElement> {
+  const image = new Image();
+  image.src = url;
+  await image.decode();
+  return image;
+}
+
 export function setupMockupQuote(
   button: HTMLButtonElement,
   status: HTMLElement,
   link: HTMLAnchorElement,
-  capture: () => { imageBase64: string; productName: string; details: string },
+  capture: () => { imageBase64: string; productName: string; details: string; artReference?: MockupArtReference },
 ) {
   let revision = 0;
   let generating = false;
@@ -41,11 +60,11 @@ export function setupMockupQuote(
     status.textContent = 'Gerando prévia…';
 
     try {
-      const { imageBase64, productName, details } = capture();
+      const { imageBase64, productName, details, artReference } = capture();
       const response = await fetch('/api/mockup/save', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ imageBase64 }),
+        body: JSON.stringify({ imageBase64, ...(artReference ? { artReference } : {}) }),
       });
       const data = await response.json();
       if (!response.ok || typeof data?.fullUrl !== 'string') throw new Error('Falha na exportação');
@@ -56,11 +75,19 @@ export function setupMockupQuote(
         return;
       }
 
+      const artLines = data.verifiedArt
+        ? [
+            `• Arte da biblioteca: [${data.verifiedArt.code}] ${data.verifiedArt.title} (v${data.verifiedArt.version})`,
+            `• ID da arte: ${data.verifiedArt.arteId}`,
+          ]
+        : [];
+
       link.href = buildWhatsAppQuotePath({
         customMessage: [
           'Olá, equipe 678 Estudio! Gostaria de um orçamento para a peça que personalizei no site.',
           `• Produto: *${productName}*`,
           details,
+          ...artLines,
           `• Link da prévia: ${data.fullUrl}`,
         ].join('\n'),
       });

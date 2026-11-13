@@ -4,6 +4,8 @@ import { mkdir, readdir, writeFile } from 'node:fs/promises';
 import { getUploadPath, hasImageSignature, MAX_IMAGE_BYTES, MAX_MOCKUP_PAYLOAD_BYTES } from '../../../utils/uploadImages';
 import { getPublicOrigin } from '../../../utils/publicOrigin';
 import { getRequestStudioSettings } from '../../../db/studioSettings';
+import { getPublicArteVersion } from '../../../db/artLibraryRepository';
+import { ART_PRODUCT_TYPES, ART_UUID_PATTERN } from '../../../utils/artLibrary';
 
 export const prerender = false;
 
@@ -92,15 +94,45 @@ export const POST: APIRoute = async ({ request, url, locals }) => {
       });
     }
 
-    let imageBase64: unknown;
+    let body: { imageBase64?: unknown; artReference?: unknown } | null = null;
     try {
-      imageBase64 = JSON.parse(payload.toString('utf8'))?.imageBase64;
+      body = JSON.parse(payload.toString('utf8'));
     } catch {
       return Response.json({ success: false, error: 'Dados de imagem inválidos' }, { status: 400 });
     }
 
+    const imageBase64 = body?.imageBase64;
     if (!imageBase64 || typeof imageBase64 !== 'string') {
       return Response.json({ success: false, error: 'Dados de imagem ausentes' }, { status: 400 });
+    }
+
+    let verifiedArt: { arteId: string; code: string; title: string; version: number } | undefined;
+    if (body?.artReference !== undefined && body.artReference !== null) {
+      const ref = body.artReference as Record<string, unknown>;
+      const arteId = typeof ref.arteId === 'string' ? ref.arteId : '';
+      const version = typeof ref.version === 'number' ? ref.version : Number(ref.version);
+      const product = typeof ref.product === 'string' ? ref.product.trim().toLowerCase() : '';
+      if (
+        !ART_UUID_PATTERN.test(arteId) ||
+        !Number.isInteger(version) ||
+        version < 1 ||
+        !ART_PRODUCT_TYPES.includes(product as (typeof ART_PRODUCT_TYPES)[number])
+      ) {
+        return Response.json({ success: false, error: 'Referência de arte inválida.' }, { status: 400 });
+      }
+      const official = await getPublicArteVersion(arteId, product, version);
+      if (!official) {
+        return Response.json(
+          { success: false, error: 'A arte selecionada não está disponível ou a versão é inválida.' },
+          { status: 422 },
+        );
+      }
+      verifiedArt = {
+        arteId: official.arteId,
+        code: official.code,
+        title: official.title,
+        version: official.version,
+      };
     }
 
     if (imageBase64.length > MAX_MOCKUP_PAYLOAD_BYTES) {
@@ -134,7 +166,11 @@ export const POST: APIRoute = async ({ request, url, locals }) => {
 
     const { whatsapp } = await getRequestStudioSettings(locals);
     return Response.json({
-      success: true, relativeUrl: relativePath, fullUrl: fullMockupUrl, whatsappAvailable: Boolean(whatsapp),
+      success: true,
+      relativeUrl: relativePath,
+      fullUrl: fullMockupUrl,
+      whatsappAvailable: Boolean(whatsapp),
+      ...(verifiedArt ? { verifiedArt } : {}),
     }, { status: 201 });
   } catch {
     return Response.json({ success: false, error: 'Falha ao salvar mockup temporário' }, { status: 500 });

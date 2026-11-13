@@ -25,6 +25,7 @@ DB = "data/studio678.db"
 MANIFEST = "manifest.json"
 DIRECTORIES = {
     "data/gallery-photos": re.compile(r"[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}-(?:thumb|large)\.webp"),
+    "data/artes": re.compile(r"[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}-v[1-9][0-9]*-(?:thumb\.webp|preview\.webp|orig\.(?:jpg|png|webp))"),
     "uploads": re.compile(r"[A-Za-z0-9_-]{1,200}\.(?:jpg|jpeg|png|gif|webp)", re.I),
     "uploads/mockups": re.compile(r"[A-Za-z0-9_-]{1,200}\.(?:jpg|jpeg|png|gif|webp)", re.I),
 }
@@ -42,6 +43,11 @@ OPTIONAL_SCHEMA = {
     "planner_quote_assets": "quote_id name mime content",
     "notebook_quotes": "id draft_token product created_at status config_version config_json",
     "notebook_quote_assets": "quote_id name mime content",
+    "arte_categorias": "id slug name display_order is_active created_at updated_at",
+    "artes": "id code title description current_version is_published is_active created_at updated_at",
+    "arte_versoes": "arte_id version original_filename original_mime original_ext width height thumb_width thumb_height preview_width preview_height file_size created_at",
+    "arte_categoria_rel": "arte_id categoria_id",
+    "arte_produtos": "arte_id product_type",
 }
 
 
@@ -112,7 +118,12 @@ def description(name):
     if pattern and pattern.fullmatch(filename):
         stem = filename.split(".")[0].upper()
         if stem not in {"CON", "PRN", "AUX", "NUL"} and not re.fullmatch(r"(?:COM|LPT)[1-9]", stem):
-            return {"data/gallery-photos": "Foto da galeria", "uploads": "Imagem enviada", "uploads/mockups": "Prévia de personalização"}[directory]
+            return {
+                "data/gallery-photos": "Foto da galeria",
+                "data/artes": "Arte da biblioteca",
+                "uploads": "Imagem enviada",
+                "uploads/mockups": "Prévia de personalização",
+            }[directory]
     raise InvalidBackup("O ZIP contém um caminho inseguro ou um arquivo inesperado.")
 
 
@@ -197,6 +208,14 @@ def verify_database(path, names=None):
                 check(f"data/gallery-photos/{photo_id}-{size}.webp" in names, "Há uma foto da galeria ausente.")
         for (image,) in db.execute("SELECT image_url FROM products WHERE image_url LIKE '/uploads/%'"):
             check(image[1:] in names, "Há uma imagem de catálogo ausente.")
+        if db.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='arte_versoes'").fetchone():
+            for (arte_id, version, orig_ext) in db.execute(
+                "SELECT arte_id, version, original_ext FROM arte_versoes"
+            ):
+                prefix = f"data/artes/{arte_id}-v{version}"
+                check(f"{prefix}-thumb.webp" in names, "Há uma miniatura da biblioteca de artes ausente.")
+                check(f"{prefix}-preview.webp" in names, "Há uma prévia da biblioteca de artes ausente.")
+                check(f"{prefix}-orig.{orig_ext}" in names, "Há um arquivo original da biblioteca de artes ausente.")
 
 
 def backup(root, target):

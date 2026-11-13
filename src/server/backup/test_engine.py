@@ -187,6 +187,37 @@ class BackupTest(unittest.TestCase):
         self.assertEqual(self.quote_content(), b"private artwork")
         self.assertEqual(engine.storage_path(self.root, "uploads/catalog.webp").read_bytes(), b"catalog image")
 
+    def test_art_library_files_backup_and_restore(self):
+        arte_id = "11111111-2222-4333-8444-555555555555"
+        with closing(sqlite3.connect(self.db)) as db:
+            cols = ", ".join(engine.OPTIONAL_SCHEMA["arte_versoes"].split())
+            db.execute(f"CREATE TABLE arte_versoes ({cols})")
+            db.execute(
+                "INSERT INTO arte_versoes VALUES (?, 1, 'arte.png', 'image/png', 'png', 1000, 1000, 400, 400, 1000, 1000, 1234, '2026-11-13T00:00:00Z')",
+                (arte_id,),
+            )
+            db.commit()
+        arte_files = {
+            f"data/artes/{arte_id}-v1-thumb.webp": b"arte thumb",
+            f"data/artes/{arte_id}-v1-preview.webp": b"arte preview",
+            f"data/artes/{arte_id}-v1-orig.png": b"arte original png",
+        }
+        for name, data in arte_files.items():
+            engine.storage_path(self.root, name).write_bytes(data)
+
+        self.prepare()
+        for name in arte_files:
+            engine.storage_path(self.root, name).unlink()
+
+        engine.offline(self.root)
+        self.assertEqual(self.read_status(), "committed")
+        for name, data in arte_files.items():
+            self.assertEqual(engine.storage_path(self.root, name).read_bytes(), data)
+
+        engine.storage_path(self.root, f"data/artes/{arte_id}-v1-orig.png").unlink()
+        with self.assertRaises(engine.InvalidBackup):
+            engine.backup(self.root, self.workspace / "broken.zip")
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

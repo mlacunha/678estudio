@@ -16,7 +16,7 @@ export const onRequest = defineMiddleware(async ({ request, url }, next) => {
   if (/^\/_image\/?$/.test(pathname)) return new Response(null, { status: 404 });
 
   const protectedRoute =
-    /^\/(admin|api\/products|api\/upload)(\/|$)/.test(pathname) ||
+    /^\/(admin|api\/admin|api\/products|api\/upload)(\/|$)/.test(pathname) ||
     (/^\/api\/categories\/?$/.test(pathname) && url.searchParams.get('all') === 'true');
 
   const serve = () => serveDuringMaintenance(request, pathname, next);

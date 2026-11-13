@@ -2,6 +2,7 @@
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import { FRAME_COLORS, FRAME_MARGINS, FRAME_ORIENTATIONS } from '../../utils/frameLayout';
 import type { Product } from '../../types/catalog';
+import ArtLibraryPicker from './ArtLibraryPicker.astro';
 import StudioPublication from './StudioPublication.astro';
 
 interface Props { studioProducts?: Product[] }
@@ -113,17 +114,29 @@ const { studioProducts } = Astro.props;
 
           <!-- Upload de Arte -->
           <div>
-            <label class="block text-xs uppercase tracking-wider text-ink-muted font-medium mb-2">
-              2. Enviar Fotografia ou Arte
-            </label>
-            <label class="cursor-pointer min-h-11 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-surface-raised hover:bg-surface-hover border border-control text-ink-secondary text-xs font-semibold focus-within:outline focus-within:outline-2 focus-within:outline-accent">
-              <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-              </svg>
-              <span>Carregar Imagem (JPG ou PNG)</span>
-              <input type="file" id="input-frame-art" accept="image/*" class="sr-only" />
-            </label>
-            <p id="art-filename" data-art-status role="status" class="text-xs text-accent mt-1 break-all"></p>
+            <span class="block text-xs uppercase tracking-wider text-ink-muted font-medium mb-2">
+              2. Fotografia ou Arte
+            </span>
+            {studioProducts ? (
+              <label class="cursor-pointer min-h-11 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-surface-raised hover:bg-surface-hover border border-control text-ink-secondary text-xs font-semibold focus-within:outline focus-within:outline-2 focus-within:outline-accent">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                </svg>
+                <span>Carregar Imagem (JPG ou PNG)</span>
+                <input type="file" id="input-frame-art" accept="image/*" class="sr-only" />
+              </label>
+            ) : (
+              <ArtLibraryPicker product="quadro">
+                <label slot="upload" class="cursor-pointer min-h-11 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-surface-raised hover:bg-surface-hover border border-control text-ink-secondary text-xs font-semibold focus-within:outline focus-within:outline-2 focus-within:outline-accent">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                  </svg>
+                  <span>Carregar Imagem (JPG ou PNG)</span>
+                  <input type="file" id="input-frame-art" accept="image/*" class="sr-only" />
+                </label>
+              </ArtLibraryPicker>
+            )}
+            <p id="art-filename" data-art-status role="status" class="text-xs text-accent mt-2 break-all"></p>
           </div>
 
           <fieldset>
@@ -240,6 +253,14 @@ const { studioProducts } = Astro.props;
                 </svg>
               </button>
 
+              <button
+                id="btn-reset-frame-art"
+                type="button"
+                class="w-full min-h-11 rounded-md border border-line text-ink-secondary hover:border-accent text-xs font-medium"
+              >
+                Restaurar Imagem Padrão
+              </button>
+
               <p id="frame-export-status" role="status" class="text-center text-xs text-accent"></p>
               <a id="frame-whatsapp" data-whatsapp-quote hidden target="_blank" rel="noopener noreferrer" class="min-h-11 flex items-center justify-center rounded-md border border-accent px-3 text-sm font-semibold text-accent hover:bg-accent/10 [&[hidden]]:hidden">Abrir WhatsApp com a prévia ↗</a>
             </>}
@@ -341,7 +362,8 @@ const { studioProducts } = Astro.props;
 
 <script>
   import { FRAME_COLORS, FRAME_ORIENTATIONS, getFrameLayout } from '../../utils/frameLayout';
-  import { loadArtwork, setupMockupQuote } from '../../utils/customizerClient';
+  import { loadArtwork, loadImageFromUrl, setupMockupQuote } from '../../utils/customizerClient';
+  import { connectArtLibraryPicker, type SelectedLibraryArt } from '../../utils/artLibraryClient';
   import { loadStudioArtwork, setupStudioPublication } from '../../utils/imageStudioClient';
   import { createWoodSurface, sublimateArtwork, WOOD_PROFILES } from '../../utils/woodSublimation';
   import {
@@ -362,6 +384,7 @@ const { studioProducts } = Astro.props;
     const badgeEnv = document.getElementById('badge-environment-name');
     const artFilename = document.getElementById('art-filename');
     const btnExport = document.querySelector<HTMLButtonElement>('#btn-export-frame');
+    const btnReset = document.getElementById('btn-reset-frame-art');
     const exportStatus = document.getElementById('frame-export-status');
     const quoteLink = document.querySelector<HTMLAnchorElement>('#frame-whatsapp');
     const studio = document.querySelector<HTMLFormElement>('[data-studio-publication]');
@@ -379,6 +402,8 @@ const { studioProducts } = Astro.props;
 
     let currentEnv: 'living' | 'office' = 'living';
     let userArtImage: HTMLImageElement | null = null;
+    let selectedLibraryArt: SelectedLibraryArt | null = null;
+    let libraryLoadSeq = 0;
     let artScale = 1;
     const orientation = () => orientationOptions.find(option => option.checked)?.value === 'landscape' ? 'landscape' : 'portrait';
     const frameColor = () => FRAME_COLORS[colorOptions.find(option => option.checked)?.value as keyof typeof FRAME_COLORS] ?? FRAME_COLORS.black;
@@ -587,18 +612,34 @@ const { studioProducts } = Astro.props;
     renderScene();
 
     const quote = studio ? setupStudioPublication(studio, () => stageCanvas, () => Boolean(userArtImage)) : btnExport && exportStatus && quoteLink
-      ? setupMockupQuote(btnExport, exportStatus, quoteLink, () => ({
-          imageBase64: stageCanvas.toDataURL('image/png'),
-          productName: `Quadro Decorativo ${measure()}`,
-          details: [
-            `• Ambiente: *${environmentName()}*`,
-            `• Orientação: ${FRAME_ORIENTATIONS[orientation()].label}`,
-            `• Moldura: ${frameColor().label}`,
-            `• Margem horizontal: ${marginText(marginHorizontal.valueAsNumber)} por lado`,
-            `• Margem vertical: ${marginText(marginVertical.valueAsNumber)} por lado`,
-            '• Sublimação em madeira clara',
-          ].join('\n'),
-        }))
+      ? setupMockupQuote(btnExport, exportStatus, quoteLink, () => {
+          const zoom = Number(sliderScale?.value ?? 100);
+          const posX = Number(sliderX?.value ?? 0);
+          const posY = Number(sliderY?.value ?? 0);
+          return {
+            imageBase64: stageCanvas.toDataURL('image/png'),
+            productName: `Quadro Decorativo ${measure()}`,
+            details: [
+              `• Ambiente: *${environmentName()}*`,
+              `• Orientação: ${FRAME_ORIENTATIONS[orientation()].label}`,
+              `• Moldura: ${frameColor().label}`,
+              `• Margem horizontal: ${marginText(marginHorizontal.valueAsNumber)} por lado`,
+              `• Margem vertical: ${marginText(marginVertical.valueAsNumber)} por lado`,
+              `• Ajuste da arte: escala ${zoom}%, posição X ${posX}, Y ${posY}`,
+              '• Sublimação em madeira clara',
+            ].join('\n'),
+            ...(selectedLibraryArt ? {
+              artReference: {
+                arteId: selectedLibraryArt.id,
+                version: selectedLibraryArt.version,
+                product: 'quadro' as const,
+                scale: zoom,
+                posX,
+                posY,
+              },
+            } : {}),
+          };
+        })
       : undefined;
 
     const zoomController = setupMockupZoom(stageCanvas);
@@ -647,9 +688,43 @@ const { studioProducts } = Astro.props;
       });
     }
 
+    const artPicker = studio
+      ? null
+      : connectArtLibraryPicker(document.querySelector<HTMLElement>('[data-art-picker-root]'), {
+          onSelect: async art => {
+            const seq = ++libraryLoadSeq;
+            quote?.invalidate();
+            quote?.setArtworkPending(true);
+            if (artFilename) artFilename.textContent = `Carregando ${art.code}…`;
+            try {
+              const image = await loadImageFromUrl(art.previewUrl);
+              if (seq !== libraryLoadSeq) return;
+              userArtImage = image;
+              selectedLibraryArt = art;
+              artScale = 1;
+              if (sliderScale) {
+                sliderScale.value = '100';
+                sliderScale.disabled = false;
+              }
+              if (sliderX) sliderX.value = '0';
+              if (sliderY) sliderY.value = '0';
+              if (labelScale) labelScale.textContent = '100%';
+              if (artFilename) artFilename.textContent = `[${art.code}] ${art.title} (v${art.version})`;
+              updateScene();
+            } catch {
+              if (seq === libraryLoadSeq && artFilename) {
+                artFilename.textContent = 'Não foi possível carregar a arte da biblioteca. A arte anterior foi mantida.';
+              }
+            } finally {
+              if (seq === libraryLoadSeq) quote?.setArtworkPending(false);
+            }
+          },
+        });
+
     inputArt?.addEventListener('change', async () => {
       const file = inputArt.files?.[0];
       if (!file) return;
+      libraryLoadSeq++;
       quote?.invalidate();
       quote?.setArtworkPending(true);
       if (artFilename) artFilename.textContent = 'Carregando imagem…';
@@ -658,6 +733,8 @@ const { studioProducts } = Astro.props;
         const image = await (studio ? loadStudioArtwork(file) : loadArtwork(file));
         if (inputArt.files?.[0] !== file) return;
         userArtImage = image;
+        selectedLibraryArt = null;
+        artPicker?.clearSelection();
         artScale = 1;
         if (sliderScale) {
           sliderScale.value = '100';
@@ -678,6 +755,25 @@ const { studioProducts } = Astro.props;
           quote?.setArtworkPending(false);
         }
       }
+    });
+
+    btnReset?.addEventListener('click', () => {
+      libraryLoadSeq++;
+      userArtImage = null;
+      selectedLibraryArt = null;
+      artPicker?.clearSelection();
+      artScale = 1;
+      if (inputArt) inputArt.value = '';
+      if (sliderScale) {
+        sliderScale.value = '100';
+        sliderScale.disabled = true;
+      }
+      if (sliderX) sliderX.value = '0';
+      if (sliderY) sliderY.value = '0';
+      if (labelScale) labelScale.textContent = '100%';
+      if (artFilename) artFilename.textContent = '';
+      quote?.setArtworkPending(false);
+      updateScene();
     });
 
     sliderScale?.addEventListener('input', () => {
