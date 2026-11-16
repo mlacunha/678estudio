@@ -1,0 +1,87 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import BrandMark from '../../components/BrandMark.astro';
+
+export const prerender = false;
+const currentOrigin = Astro.url.origin;
+---
+
+<BaseLayout title="Mockups Comerciais | Administração 678 Estudio" description="Acesso e instruções do gerador local de mockups comerciais PSD">
+  <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-6">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-line">
+      <div class="flex items-center gap-3">
+        <BrandMark class="size-9" />
+        <div>
+          <h1 class="text-2xl font-light text-ink">
+            Mockups <span class="font-normal text-accent">Comerciais</span>
+          </h1>
+          <p class="text-xs text-ink-muted">
+            Gerador local de imagens para catálogo e banners usando templates PSD e a Biblioteca de Artes hospedada.
+          </p>
+        </div>
+      </div>
+      <div class="flex flex-wrap gap-2">
+        <a href="/admin/artes" class="inline-flex min-h-10 items-center rounded-full border border-accent px-4 text-xs font-semibold text-accent hover:bg-accent/10">
+          Biblioteca de Artes
+        </a>
+        <a href="/admin" class="inline-flex min-h-10 items-center rounded-full border border-control px-4 text-xs font-medium text-ink-secondary hover:border-ink-muted">
+          Voltar ao Painel
+        </a>
+      </div>
+    </div>
+
+    <section class="rounded-2xl border border-line bg-surface p-6 space-y-4">
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h2 class="text-base font-semibold text-ink">Status do Gerador Local (Desktop Windows)</h2>
+          <p id="local-editor-status" class="text-xs text-ink-muted mt-1">Verificando se o editor local está ativo em http://127.0.0.1:4399…</p>
+        </div>
+        <a
+          id="btn-open-local-editor"
+          href="http://127.0.0.1:4399"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="inline-flex min-h-11 items-center rounded-xl bg-action px-5 text-xs font-semibold text-on-action hover:bg-action-hover"
+        >
+          Abrir Editor Local (127.0.0.1:4399) ↗
+        </a>
+      </div>
+      <p class="text-xs text-ink-secondary">
+        Observação: navegadores podem bloquear a verificação automática de <code>http://127.0.0.1</code> a partir de páginas HTTPS. Caso isso ocorra, inicie o comando abaixo e acesse <code>http://127.0.0.1:4399</code> diretamente em uma nova aba.
+      </p>
+    </section>
+
+    <section class="rounded-2xl border border-line bg-surface p-6 space-y-4 text-xs text-ink-secondary">
+      <h2 class="text-base font-semibold text-ink">Como usar no dia a dia</h2>
+      <ol class="list-decimal pl-5 space-y-2">
+        <li>
+          No terminal do projeto no Windows, inicie o editor local:
+          <pre class="mt-1.5 rounded-lg border border-line bg-canvas p-3 font-mono text-[11px] text-ink overflow-x-auto">node tools/mockup-commercial-poc/editor-server.mjs</pre>
+        </li>
+        <li>Abra <strong>http://127.0.0.1:4399</strong> no navegador.</li>
+        <li>Clique em <strong>Biblioteca</strong>, selecione a origem <strong>Remota (678 Estudio hospedado)</strong> e informe a URL <code>{currentOrigin}</code> com seu usuário e senha administrativos (mantidos apenas na sessão em memória).</li>
+        <li>Escolha o template (<code>3.psd</code>, <code>9.psd</code>, <code>10.psd</code> ou <code>11.psd</code>), posicione as artes e gere o PNG/WebP final.</li>
+      </ol>
+    </section>
+  </div>
+</BaseLayout>
+
+<script>
+  const statusEl = document.getElementById('local-editor-status');
+  async function checkLocalEditor() {
+    if (!statusEl) return;
+    try {
+      const controller = new AbortController();
+      const timer = window.setTimeout(() => controller.abort(), 1500);
+      const res = await fetch('http://127.0.0.1:4399/api/templates', { signal: controller.signal });
+      window.clearTimeout(timer);
+      if (res.ok) {
+        statusEl.textContent = 'Editor local ativo e pronto em http://127.0.0.1:4399.';
+        statusEl.className = 'text-xs font-semibold text-success mt-1';
+        return;
+      }
+    } catch {}
+    statusEl.textContent = 'Editor local não detectado automaticamente. Inicie o comando abaixo no Windows e abra http://127.0.0.1:4399.';
+  }
+  checkLocalEditor();
+</script>

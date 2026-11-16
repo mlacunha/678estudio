@@ -1,0 +1,54 @@
+{
+  "id": "template-11",
+  "name": "Três Canecas + Dois Papéis Sobrepostos (Fundo Colorido)",
+  "sourcePath": "data/mockups-comerciais/originais/11.psd",
+  "document": { "width": 1920, "height": 1920, "resolution": 72 },
+  "slots": [
+    {
+      "id": "caneca-esquerda",
+      "label": "Caneca Esquerda",
+      "role": "left",
+      "type": "mug",
+      "layerPath": ["ARTES DAS CANECAS", "ESQUERDA"],
+      "expectedSize": { "width": 738, "height": 665 },
+      "defaultFit": "cover",
+      "defaultPlacement": { "fit": "cover", "anchorX": 0.0, "anchorY": 0.5, "scale": 1.0 }
+    },
+    {
+      "id": "caneca-centro",
+      "label": "Caneca Centro",
+      "role": "center",
+      "type": "mug",
+      "layerPath": ["ARTES DAS CANECAS", "CENTRO"],
+      "expectedSize": { "width": 738, "height": 665 },
+      "defaultFit": "cover",
+      "defaultPlacement": { "fit": "cover", "anchorX": 0.5, "anchorY": 0.5, "scale": 1.0 }
+    },
+    {
+      "id": "caneca-direita",
+      "label": "Caneca Direita",
+      "role": "right",
+      "type": "mug",
+      "layerPath": ["ARTES DAS CANECAS", "DIREITA"],
+      "expectedSize": { "width": 738, "height": 665 },
+      "defaultFit": "cover",
+      "defaultPlacement": { "fit": "cover", "anchorX": 1.0, "anchorY": 0.5, "scale": 1.0 }
+    },
+    {
+      "id": "papeis-sobrepostos",
+      "label": "Dois Papéis Sobrepostos",
+      "role": "sheet",
+      "type": "sheet",
+      "layerPath": ["ARTE DOS PAPEIS"],
+      "expectedSize": { "width": 1607, "height": 724 },
+      "defaultFit": "cover",
+      "defaultPlacement": { "fit": "cover", "anchorX": 0.5, "anchorY": 0.5, "scale": 1.0 }
+    }
+  ],
+  "background": {
+    "layerPath": ["COR FUNDO (Opcional)"],
+    "type": "solidColor",
+    "supportsColor": true,
+    "supportsVisibility": true
+  }
+}

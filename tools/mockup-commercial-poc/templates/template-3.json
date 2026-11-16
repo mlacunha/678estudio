@@ -1,0 +1,34 @@
+{
+  "id": "template-3",
+  "name": "Duas Canecas Frente e Verso (Fundo Branco)",
+  "sourcePath": "data/mockups-comerciais/originais/3.psd",
+  "document": { "width": 3000, "height": 2500, "resolution": 72 },
+  "slots": [
+    {
+      "id": "caneca-frente",
+      "label": "Caneca da Frente",
+      "role": "left",
+      "type": "mug",
+      "layerPath": ["CANECA DA FRENTE", "SUA ARTE AQUI (FRENTE)"],
+      "expectedSize": { "width": 2301, "height": 2310 },
+      "defaultFit": "contain",
+      "defaultPlacement": { "fit": "contain", "anchorX": 0.25, "anchorY": 0.5, "scale": 1.0 }
+    },
+    {
+      "id": "caneca-fundo",
+      "label": "Caneca do Fundo",
+      "role": "right",
+      "type": "mug",
+      "layerPath": ["CANECA DO FUNDO", "SUA ARTE AQUI (TRASEIRA)"],
+      "expectedSize": { "width": 2301, "height": 2310 },
+      "defaultFit": "contain",
+      "defaultPlacement": { "fit": "contain", "anchorX": 0.75, "anchorY": 0.5, "scale": 1.0 }
+    }
+  ],
+  "background": {
+    "layerPath": ["FUNDO"],
+    "type": "layer",
+    "supportsColor": false,
+    "supportsVisibility": true
+  }
+}

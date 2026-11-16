@@ -1,0 +1,34 @@
+{
+  "id": "template-10",
+  "name": "Duas Canecas (Inclinada + Vertical)",
+  "sourcePath": "data/mockups-comerciais/originais/10.psd",
+  "document": { "width": 1000, "height": 1000, "resolution": 200 },
+  "slots": [
+    {
+      "id": "caneca-esquerda",
+      "label": "Caneca da Esquerda",
+      "role": "left",
+      "type": "mug",
+      "layerPath": ["GRUPO 1 (CANECA DA ESQUERDA)", "ARTE CANECA ESQUERDA"],
+      "expectedSize": { "width": 2301, "height": 2310 },
+      "defaultFit": "contain",
+      "defaultPlacement": { "fit": "contain", "anchorX": 0.2, "anchorY": 0.5, "scale": 1.0 }
+    },
+    {
+      "id": "caneca-direita",
+      "label": "Caneca da Direita",
+      "role": "right",
+      "type": "mug",
+      "layerPath": ["GRUPO 2 (CANECA DA DIREITA)", "CANECA DIREITA"],
+      "expectedSize": { "width": 2301, "height": 2310 },
+      "defaultFit": "contain",
+      "defaultPlacement": { "fit": "contain", "anchorX": 0.8, "anchorY": 0.5, "scale": 1.0 }
+    }
+  ],
+  "background": {
+    "layerPath": ["541"],
+    "type": "layer",
+    "supportsColor": false,
+    "supportsVisibility": true
+  }
+}
