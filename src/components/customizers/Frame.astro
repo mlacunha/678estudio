@@ -3,6 +3,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 import { FRAME_COLORS, FRAME_MARGINS, FRAME_ORIENTATIONS } from '../../utils/frameLayout';
 import type { Product } from '../../types/catalog';
 import ArtLibraryPicker from './ArtLibraryPicker.astro';
+import CustomizerMobileSteps from './CustomizerMobileSteps.astro';
 import StudioPublication from './StudioPublication.astro';
 
 interface Props { studioProducts?: Product[] }
@@ -13,20 +14,28 @@ const { studioProducts } = Astro.props;
   title={studioProducts ? 'Mockup de Quadro | Estúdio de Imagens' : 'Personalizador de Quadros em Ambientes | 678 Estudio'}
   description="Simule a sublimação da sua arte em madeira clara em dois ambientes. Escolha a orientação, as margens e a cor da moldura."
 >
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+  <div
+    data-customizer-mobile-root={!studioProducts ? 'true' : undefined}
+    data-mobile-primary-target="#btn-export-frame"
+    data-mobile-primary-label="Gerar prévia"
+    class:list={[
+      'max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 md:py-12',
+      !studioProducts && 'pb-24 lg:pb-12',
+    ]}
+  >
 
     <!-- Header da Página -->
-    <div class="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-line">
+    <div class="mb-4 pb-4 lg:mb-6 lg:pb-6 flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-line">
       <div>
-        <div class="flex items-center gap-2 text-xs uppercase tracking-wider text-accent font-semibold mb-1">
+        <div class="flex items-center gap-2 text-[11px] sm:text-xs uppercase tracking-wider text-accent font-semibold mb-0.5 sm:mb-1">
           <span>Simulação em ambiente</span>
           <span>•</span>
           <span class="whitespace-nowrap" data-frame-measure>30 × 40 cm</span>
         </div>
-        <h1 class="text-2xl sm:text-3xl font-light text-ink">
+        <h1 class="text-xl sm:text-3xl font-light text-ink">
           {studioProducts ? 'Estúdio de Imagens · Mockup de Quadro' : <>Personalizador de <span class="font-normal text-accent">Quadros no Ambiente</span></>}
         </h1>
-        <p class="mt-1 text-xs sm:text-sm text-ink-muted">
+        <p class="hidden sm:block mt-1 text-xs sm:text-sm text-ink-muted">
           Veja sua arte sublimada em madeira clara. Ajuste a orientação, as margens e a cor da moldura.
         </p>
       </div>
@@ -34,7 +43,7 @@ const { studioProducts } = Astro.props;
       <div class="flex items-center gap-3">
         <a
           href={studioProducts ? '/admin/estudio' : '/#quadros'}
-          class="inline-flex items-center gap-1.5 px-4 py-2 rounded-full border border-control hover:border-ink-muted bg-surface text-ink-secondary text-xs font-medium motion-safe:transition-colors"
+          class="inline-flex min-h-11 items-center gap-1.5 px-4 py-2 rounded-full border border-control hover:border-ink-muted bg-surface text-ink-secondary text-xs font-medium motion-safe:transition-colors"
         >
           <span>{studioProducts ? 'Voltar ao Estúdio' : 'Voltar ao Catálogo'}</span>
         </a>
@@ -45,19 +54,19 @@ const { studioProducts } = Astro.props;
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-8 items-start">
 
       <!-- Visualizador do Ambiente (Canvas / Preview) -->
-      <div class="customizer-preview min-w-0 lg:col-span-7">
-        <div class="relative w-full aspect-[16/11] bg-canvas rounded-2xl border border-line overflow-hidden">
+      <div class="customizer-preview min-w-0 lg:col-span-7 space-y-2">
+        <div class="relative w-full aspect-[16/10] min-h-[190px] max-h-[34vh] [@media(max-height:500px)]:max-h-[240px] lg:max-h-none lg:aspect-[16/11] bg-canvas rounded-2xl border border-line overflow-hidden">
 
           <!-- Elemento Canvas Principal que gera a composição -->
           <canvas id="frame-stage-canvas" width="1600" height="1100" role="img" aria-label="Prévia do quadro de 30 × 40 cm no ambiente selecionado" class="w-full h-full block"></canvas>
 
           <!-- Selo de Ambiente Atual -->
-          <div class="absolute top-4 left-4 pointer-events-none flex items-center gap-2 px-3 py-1.5 rounded-full bg-media-badge/95 backdrop-blur-md text-[11px] font-medium text-on-media">
+          <div class="absolute top-3 left-3 sm:top-4 sm:left-4 pointer-events-none flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-media-badge/95 backdrop-blur-md text-[11px] font-medium text-on-media">
             <span class="w-2 h-2 rounded-full bg-on-media"></span>
             <span id="badge-environment-name">Sala Contemporânea</span>
           </div>
 
-          <div class="absolute top-4 right-4 pointer-events-none px-2.5 py-1 rounded text-[10px] uppercase tracking-wider font-semibold bg-media-badge/95 text-on-media">
+          <div class="absolute top-3 right-3 sm:top-4 sm:right-4 pointer-events-none px-2.5 py-1 rounded text-[10px] uppercase tracking-wider font-semibold bg-media-badge/95 text-on-media">
             <span data-frame-measure>30 × 40 cm</span>
           </div>
 
@@ -67,180 +76,212 @@ const { studioProducts } = Astro.props;
             id="btn-open-mockup-zoom"
             aria-label="Ampliar mockup em detalhes"
             title="Ampliar visualização do mockup"
-            class="absolute bottom-4 right-4 z-10 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-media-badge/95 hover:bg-media-badge text-on-media text-xs font-medium shadow-md backdrop-blur-md border border-line/30 transition-all hover:scale-105 active:scale-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
+            class="absolute bottom-3 right-3 sm:bottom-4 sm:right-4 z-10 min-h-11 flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-media-badge/95 hover:bg-media-badge text-on-media text-xs font-medium shadow-md backdrop-blur-md border border-line/30 transition-all hover:scale-105 active:scale-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" class="size-3.5 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg xmlns="http://www.w3.org/2000/svg" class="size-4 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v6m3-3H7" />
             </svg>
             <span>Ampliar</span>
           </button>
         </div>
 
+        <!-- Escolha do Ambiente -->
+        <div class="grid grid-cols-2 gap-2 rounded-xl border border-line bg-surface p-1">
+          <button
+            type="button"
+            id="btn-env-living"
+            aria-pressed="true"
+            class="btn-env-select min-h-10 px-3 py-2 rounded-lg border border-accent bg-accent/10 text-accent text-xs font-semibold text-center motion-safe:transition-all"
+            data-env="living"
+          >
+            Sala Contemporânea
+          </button>
+          <button
+            type="button"
+            id="btn-env-office"
+            aria-pressed="false"
+            class="btn-env-select min-h-10 px-3 py-2 rounded-lg border border-transparent bg-canvas text-ink-secondary hover:border-control text-xs font-semibold text-center motion-safe:transition-all"
+            data-env="office"
+          >
+            Escritório Elegante
+          </button>
+        </div>
       </div>
 
       <!-- Painel de Controles -->
-      <div class="min-w-0 lg:col-span-5 flex flex-col gap-4">
+      <div class="min-w-0 lg:col-span-5 flex flex-col gap-3 lg:gap-4">
+        {!studioProducts && <CustomizerMobileSteps mode="tabs" />}
+
         <div class="p-4 sm:p-6 rounded-2xl bg-surface border border-line space-y-4 sm:space-y-5">
-          <h2 class="text-base font-semibold text-ink pb-3 border-b border-line">
+          <h2 class="hidden lg:block text-base font-semibold text-ink pb-3 border-b border-line">
             Personalizar Quadro
           </h2>
 
-          <!-- Escolha do Ambiente -->
-          <div>
-            <label class="block text-xs uppercase tracking-wider text-ink-muted font-medium mb-2">
-              1. Selecionar Ambiente
-            </label>
-            <div class="grid grid-cols-2 gap-3">
-              <button
-                type="button"
-                id="btn-env-living"
-                aria-pressed="true"
-                class="btn-env-select px-4 py-3 rounded-xl border border-accent bg-accent/10 text-accent text-xs font-semibold text-center motion-safe:transition-all"
-                data-env="living"
-              >
-                Sala Contemporânea
-              </button>
-              <button
-                type="button"
-                id="btn-env-office"
-                aria-pressed="false"
-                class="btn-env-select px-4 py-3 rounded-xl border border-line bg-canvas text-ink-secondary hover:border-control text-xs font-semibold text-center motion-safe:transition-all"
-                data-env="office"
-              >
-                Escritório Elegante
-              </button>
-            </div>
-          </div>
-
-          <!-- Upload de Arte -->
-          <div>
-            <span class="block text-xs uppercase tracking-wider text-ink-muted font-medium mb-2">
-              2. Fotografia ou Arte
-            </span>
-            {studioProducts ? (
-              <label class="cursor-pointer min-h-11 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-surface-raised hover:bg-surface-hover border border-control text-ink-secondary text-xs font-semibold focus-within:outline focus-within:outline-2 focus-within:outline-accent">
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-                </svg>
-                <span>Carregar Imagem (JPG ou PNG)</span>
-                <input type="file" id="input-frame-art" accept="image/*" class="sr-only" />
-              </label>
-            ) : (
-              <ArtLibraryPicker product="quadro">
-                <label slot="upload" class="cursor-pointer min-h-11 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-surface-raised hover:bg-surface-hover border border-control text-ink-secondary text-xs font-semibold focus-within:outline focus-within:outline-2 focus-within:outline-accent">
+          <div data-mobile-step-panel={!studioProducts ? 'arte' : undefined} class="space-y-4 sm:space-y-5 lg:!block">
+            <!-- Upload de Arte -->
+            <div>
+              <span class="block text-xs uppercase tracking-wider text-ink-muted font-medium mb-2">
+                1. Fotografia ou Arte
+              </span>
+              {studioProducts ? (
+                <label class="cursor-pointer min-h-11 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-surface-raised hover:bg-surface-hover border border-control text-ink-secondary text-xs font-semibold focus-within:outline focus-within:outline-2 focus-within:outline-accent">
                   <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
                   </svg>
                   <span>Carregar Imagem (JPG ou PNG)</span>
                   <input type="file" id="input-frame-art" accept="image/*" class="sr-only" />
                 </label>
-              </ArtLibraryPicker>
+              ) : (
+                <ArtLibraryPicker product="quadro">
+                  <label slot="upload" class="cursor-pointer min-h-11 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-surface-raised hover:bg-surface-hover border border-control text-ink-secondary text-xs font-semibold focus-within:outline focus-within:outline-2 focus-within:outline-accent">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                    </svg>
+                    <span>Carregar Imagem (JPG ou PNG)</span>
+                    <input type="file" id="input-frame-art" accept="image/*" class="sr-only" />
+                  </label>
+                </ArtLibraryPicker>
+              )}
+              <p id="art-filename" data-art-status role="status" class="text-xs text-accent mt-2 break-all"></p>
+            </div>
+          </div>
+
+          <div data-mobile-step-panel={!studioProducts ? 'ajustes' : undefined} class="space-y-4 sm:space-y-5 lg:!block">
+            <fieldset>
+              <legend class="mb-2 text-xs font-medium uppercase tracking-wider text-ink-muted">2. Orientação</legend>
+              <div class="grid grid-cols-2 gap-2">
+                {Object.entries(FRAME_ORIENTATIONS).map(([value, { label, widthCm, heightCm }]) => (
+                  <label class="relative cursor-pointer">
+                    <input type="radio" name="frame-orientation" value={value} checked={value === 'portrait'} class="peer sr-only" />
+                    <span class="flex min-h-11 flex-col items-center justify-center rounded-md border border-control px-1 py-1.5 text-xs font-semibold text-ink-secondary hover:border-accent peer-checked:border-accent peer-checked:bg-accent/10 peer-checked:text-accent peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-accent">
+                      {label}
+                      <span class="text-[11px] font-normal">{widthCm} × {heightCm} cm</span>
+                    </span>
+                  </label>
+                ))}
+              </div>
+            </fieldset>
+
+            <fieldset>
+              <legend class="mb-2 text-xs font-medium uppercase tracking-wider text-ink-muted">3. Moldura</legend>
+              <div class="grid grid-cols-3 gap-2">
+                {Object.entries(FRAME_COLORS).map(([value, { label, fill }]) => (
+                  <label class="relative cursor-pointer">
+                    <input type="radio" name="frame-color" value={value} checked={value === 'black'} class="peer sr-only" />
+                    <span class="flex min-h-11 flex-wrap items-center justify-center gap-x-1.5 rounded-md border border-control px-1 py-1 text-xs font-semibold text-ink-secondary hover:border-accent peer-checked:border-accent peer-checked:bg-accent/10 peer-checked:text-accent peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-accent">
+                      <span aria-hidden="true" class="size-3.5 rounded-full border border-control" style={{ backgroundColor: fill }}></span>
+                      {label}
+                    </span>
+                  </label>
+                ))}
+              </div>
+            </fieldset>
+
+            <fieldset class="space-y-3">
+              <legend class="text-xs font-medium uppercase tracking-wider text-ink-muted">4. Margens de madeira</legend>
+              <div class="grid grid-cols-3 gap-2">
+                <button type="button" data-margin-preset="min" class="min-h-11 rounded-md border border-control bg-canvas px-2 text-xs font-semibold text-ink-secondary hover:border-accent">
+                  Mínima
+                </button>
+                <button type="button" data-margin-preset="default" class="min-h-11 rounded-md border border-accent bg-accent/10 px-2 text-xs font-semibold text-accent hover:border-accent">
+                  Padrão
+                </button>
+                <button type="button" data-margin-preset="wide" class="min-h-11 rounded-md border border-control bg-canvas px-2 text-xs font-semibold text-ink-secondary hover:border-accent">
+                  Ampla
+                </button>
+              </div>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                <div>
+                  <div class="flex flex-wrap justify-between gap-x-1 text-xs">
+                    <label for="frame-margin-horizontal" class="font-medium text-ink-secondary">Horizontal</label>
+                    <output id="frame-margin-horizontal-value" for="frame-margin-horizontal" class="text-accent">{FRAME_MARGINS.horizontal} cm</output>
+                  </div>
+                  <input type="range" id="frame-margin-horizontal" min={FRAME_MARGINS.min} max={FRAME_MARGINS.max} step={FRAME_MARGINS.step} value={FRAME_MARGINS.horizontal} class="h-11 lg:h-8 w-full cursor-pointer accent-accent" />
+                </div>
+                <div>
+                  <div class="flex flex-wrap justify-between gap-x-1 text-xs">
+                    <label for="frame-margin-vertical" class="font-medium text-ink-secondary">Vertical</label>
+                    <output id="frame-margin-vertical-value" for="frame-margin-vertical" class="text-accent">{FRAME_MARGINS.vertical} cm</output>
+                  </div>
+                  <input type="range" id="frame-margin-vertical" min={FRAME_MARGINS.min} max={FRAME_MARGINS.max} step={FRAME_MARGINS.step} value={FRAME_MARGINS.vertical} class="h-11 lg:h-8 w-full cursor-pointer accent-accent" />
+                </div>
+              </div>
+            </fieldset>
+
+            <!-- Zoom e Recorte da Arte (exibido no mobile após selecionar imagem) -->
+            <div data-frame-crop-group class="hidden lg:block space-y-3">
+              <div>
+                <div class="flex justify-between text-xs mb-1">
+                  <label for="slider-frame-scale" class="text-ink-secondary font-medium">5. Zoom da imagem</label>
+                  <span id="label-frame-scale" class="text-accent font-semibold">100%</span>
+                </div>
+                <input
+                  type="range"
+                  id="slider-frame-scale"
+                  min="50"
+                  max="250"
+                  value="100"
+                  disabled
+                  class="w-full accent-accent h-11 lg:h-7 cursor-pointer disabled:opacity-50"
+                />
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                <div>
+                  <div class="flex justify-between text-xs mb-1">
+                    <label for="slider-frame-x" class="text-ink-secondary">Recorte horizontal</label>
+                  </div>
+                  <input
+                    type="range"
+                    id="slider-frame-x"
+                    min="-300"
+                    max="300"
+                    value="0"
+                    disabled
+                    class="w-full accent-accent h-11 lg:h-7 cursor-pointer disabled:opacity-50"
+                  />
+                </div>
+                <div>
+                  <div class="flex justify-between text-xs mb-1">
+                    <label for="slider-frame-y" class="text-ink-secondary">Recorte vertical</label>
+                  </div>
+                  <input
+                    type="range"
+                    id="slider-frame-y"
+                    min="-300"
+                    max="300"
+                    value="0"
+                    disabled
+                    class="w-full accent-accent h-11 lg:h-7 cursor-pointer disabled:opacity-50"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {!studioProducts && (
+              <button
+                id="btn-reset-frame-art"
+                type="button"
+                class="w-full min-h-11 rounded-md border border-line text-ink-secondary hover:border-accent text-xs font-medium"
+              >
+                Restaurar Imagem Padrão
+              </button>
             )}
-            <p id="art-filename" data-art-status role="status" class="text-xs text-accent mt-2 break-all"></p>
           </div>
 
-          <fieldset>
-            <legend class="mb-2 text-xs font-medium uppercase tracking-wider text-ink-muted">3. Orientação</legend>
-            <div class="grid grid-cols-2 gap-2">
-              {Object.entries(FRAME_ORIENTATIONS).map(([value, { label, widthCm, heightCm }]) => (
-                <label class="relative cursor-pointer">
-                  <input type="radio" name="frame-orientation" value={value} checked={value === 'portrait'} class="peer sr-only" />
-                  <span class="flex min-h-11 flex-col items-center justify-center rounded-md border border-control px-1 py-1.5 text-xs font-semibold text-ink-secondary hover:border-accent peer-checked:border-accent peer-checked:bg-accent/10 peer-checked:text-accent peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-accent">
-                    {label}
-                    <span class="text-[11px] font-normal">{widthCm} × {heightCm} cm</span>
-                  </span>
-                </label>
-              ))}
-            </div>
-          </fieldset>
-
-          <fieldset>
-            <legend class="text-xs font-medium uppercase tracking-wider text-ink-muted">4. Margens de madeira</legend>
-            <p class="mt-1 text-xs text-ink-muted">Medidas por lado, a partir da borda interna da moldura.</p>
-            <div class="mt-2 grid grid-cols-2 gap-4">
-              <div>
-                <div class="flex flex-wrap justify-between gap-x-1 text-xs">
-                  <label for="frame-margin-horizontal" class="font-medium text-ink-secondary">Horizontal</label>
-                  <output id="frame-margin-horizontal-value" for="frame-margin-horizontal" class="text-accent">{FRAME_MARGINS.horizontal} cm</output>
-                </div>
-                <input type="range" id="frame-margin-horizontal" min={FRAME_MARGINS.min} max={FRAME_MARGINS.max} step={FRAME_MARGINS.step} value={FRAME_MARGINS.horizontal} class="h-8 w-full cursor-pointer accent-accent" />
+          <!-- Botão de Orçamento / Concluir -->
+          <div data-mobile-step-panel={!studioProducts ? 'concluir' : undefined} class="lg:pt-4 lg:border-t lg:border-line space-y-3 lg:!block">
+            {!studioProducts && (
+              <div class="rounded-xl border border-line bg-canvas/70 p-3 text-xs space-y-1.5 lg:hidden">
+                <p class="font-semibold text-ink">Resumo do quadro</p>
+                <p class="text-ink-secondary">Ambiente: <span data-summary-env class="font-medium text-ink">Sala Contemporânea</span></p>
+                <p class="text-ink-secondary">Orientação: <span data-summary-orientation class="font-medium text-ink">Retrato (30 × 40 cm)</span></p>
+                <p class="text-ink-secondary">Moldura: <span data-summary-color class="font-medium text-ink">Preta</span></p>
+                <p class="text-ink-secondary">Margens: <span data-summary-margins class="font-medium text-ink">{FRAME_MARGINS.horizontal} × {FRAME_MARGINS.vertical} cm</span></p>
+                <p class="text-ink-secondary">Arte: <span data-summary-frame-art class="font-medium text-ink">Arte padrão do estúdio</span></p>
               </div>
-              <div>
-                <div class="flex flex-wrap justify-between gap-x-1 text-xs">
-                  <label for="frame-margin-vertical" class="font-medium text-ink-secondary">Vertical</label>
-                  <output id="frame-margin-vertical-value" for="frame-margin-vertical" class="text-accent">{FRAME_MARGINS.vertical} cm</output>
-                </div>
-                <input type="range" id="frame-margin-vertical" min={FRAME_MARGINS.min} max={FRAME_MARGINS.max} step={FRAME_MARGINS.step} value={FRAME_MARGINS.vertical} class="h-8 w-full cursor-pointer accent-accent" />
-              </div>
-            </div>
-          </fieldset>
+            )}
 
-          <fieldset>
-            <legend class="mb-2 text-xs font-medium uppercase tracking-wider text-ink-muted">5. Cor da moldura</legend>
-            <div class="grid grid-cols-3 gap-2">
-              {Object.entries(FRAME_COLORS).map(([value, { label, fill }]) => (
-                <label class="relative cursor-pointer">
-                  <input type="radio" name="frame-color" value={value} checked={value === 'black'} class="peer sr-only" />
-                  <span class="flex min-h-11 flex-wrap items-center justify-center gap-x-1.5 rounded-md border border-control px-1 py-1 text-xs font-semibold text-ink-secondary hover:border-accent peer-checked:border-accent peer-checked:bg-accent/10 peer-checked:text-accent peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-accent">
-                    <span aria-hidden="true" class="size-3.5 rounded-full border border-control" style={{ backgroundColor: fill }}></span>
-                    {label}
-                  </span>
-                </label>
-              ))}
-            </div>
-          </fieldset>
-
-          <!-- Zoom da Arte -->
-          <div>
-            <div class="flex justify-between text-xs mb-1.5">
-              <label for="slider-frame-scale" class="text-ink-secondary font-medium">6. Zoom da imagem</label>
-              <span id="label-frame-scale" class="text-accent font-semibold">100%</span>
-            </div>
-            <input
-              type="range"
-              id="slider-frame-scale"
-              min="50"
-              max="250"
-              value="100"
-              disabled
-              class="w-full accent-accent h-7 cursor-pointer disabled:opacity-50"
-            />
-          </div>
-
-          <!-- Deslocamento Horizontal e Vertical -->
-          <div class="grid grid-cols-2 gap-4">
-            <div>
-              <div class="flex justify-between text-xs mb-1">
-                <label for="slider-frame-x" class="text-ink-secondary">Recorte horizontal</label>
-              </div>
-              <input
-                type="range"
-                id="slider-frame-x"
-                min="-300"
-                max="300"
-                value="0"
-                disabled
-                class="w-full accent-accent h-7 cursor-pointer disabled:opacity-50"
-              />
-            </div>
-            <div>
-              <div class="flex justify-between text-xs mb-1">
-                <label for="slider-frame-y" class="text-ink-secondary">Recorte vertical</label>
-              </div>
-              <input
-                type="range"
-                id="slider-frame-y"
-                min="-300"
-                max="300"
-                value="0"
-                disabled
-                class="w-full accent-accent h-7 cursor-pointer disabled:opacity-50"
-              />
-            </div>
-          </div>
-
-          <!-- Botão de Orçamento -->
-          <div class="pt-4 border-t border-line space-y-3">
             {studioProducts ? <StudioPublication products={studioProducts} /> : <>
               <button
                 id="btn-export-frame"
@@ -253,14 +294,6 @@ const { studioProducts } = Astro.props;
                 </svg>
               </button>
 
-              <button
-                id="btn-reset-frame-art"
-                type="button"
-                class="w-full min-h-11 rounded-md border border-line text-ink-secondary hover:border-accent text-xs font-medium"
-              >
-                Restaurar Imagem Padrão
-              </button>
-
               <p id="frame-export-status" role="status" class="text-center text-xs text-accent"></p>
               <a id="frame-whatsapp" data-whatsapp-quote hidden target="_blank" rel="noopener noreferrer" class="min-h-11 flex items-center justify-center rounded-md border border-accent px-3 text-sm font-semibold text-accent hover:bg-accent/10 [&[hidden]]:hidden">Abrir WhatsApp com a prévia ↗</a>
             </>}
@@ -268,7 +301,20 @@ const { studioProducts } = Astro.props;
         </div>
 
         <!-- Ficha Técnica do Quadro -->
-        <div class="p-4 rounded-xl bg-canvas/60 border border-line text-xs text-ink-muted space-y-1.5">
+        <details class="rounded-xl bg-canvas/60 border border-line text-xs text-ink-muted lg:hidden">
+          <summary class="cursor-pointer min-h-11 flex items-center justify-between px-4 font-semibold text-ink-secondary">
+            <span>Especificações do quadro</span>
+            <span aria-hidden="true">+</span>
+          </summary>
+          <div class="px-4 pb-3 space-y-1.5">
+            <p><span class="text-ink-secondary font-semibold">• Tamanho único:</span> 30 × 40 cm, em retrato ou paisagem</p>
+            <p><span class="text-ink-secondary font-semibold">• Moldura:</span> Preta, branca ou marrom, com acabamento artesanal</p>
+            <p><span class="text-ink-secondary font-semibold">• Impressão:</span> Sublimação direta sobre madeira clara, com veios visíveis</p>
+            {!studioProducts && <p><span class="text-ink-secondary font-semibold">• Mockup:</span> O link da prévia será incluído na mensagem do WhatsApp.</p>}
+          </div>
+        </details>
+
+        <div class="hidden lg:block p-4 rounded-xl bg-canvas/60 border border-line text-xs text-ink-muted space-y-1.5">
           <p><span class="text-ink-secondary font-semibold">• Tamanho único:</span> 30 × 40 cm, em retrato ou paisagem</p>
           <p><span class="text-ink-secondary font-semibold">• Moldura:</span> Preta, branca ou marrom, com acabamento artesanal</p>
           <p><span class="text-ink-secondary font-semibold">• Impressão:</span> Sublimação direta sobre madeira clara, com veios visíveis</p>
@@ -277,6 +323,7 @@ const { studioProducts } = Astro.props;
       </div>
 
     </div>
+    {!studioProducts && <CustomizerMobileSteps mode="bar" />}
   </div>
 
   <!-- Modal de Zoom e Inspeção do Mockup -->
@@ -361,10 +408,11 @@ const { studioProducts } = Astro.props;
 </BaseLayout>
 
 <script>
-  import { FRAME_COLORS, FRAME_ORIENTATIONS, getFrameLayout } from '../../utils/frameLayout';
+  import { FRAME_COLORS, FRAME_MARGINS, FRAME_ORIENTATIONS, getFrameLayout } from '../../utils/frameLayout';
   import { loadArtwork, loadImageFromUrl, setupMockupQuote } from '../../utils/customizerClient';
   import { connectArtLibraryPicker, type SelectedLibraryArt } from '../../utils/artLibraryClient';
   import { loadStudioArtwork, setupStudioPublication } from '../../utils/imageStudioClient';
+  import { initCustomizerMobileSteps } from '../../scripts/customizerMobileSteps';
   import { createWoodSurface, sublimateArtwork, WOOD_PROFILES } from '../../utils/woodSublimation';
   import {
     calcZoomStep,
@@ -924,6 +972,90 @@ const { studioProducts } = Astro.props;
 
       return { sync };
     }
+
+    const cropGroup = document.querySelector<HTMLElement>('[data-frame-crop-group]');
+    const presetBtns = document.querySelectorAll<HTMLButtonElement>('[data-margin-preset]');
+    const summaryEnv = document.querySelector<HTMLElement>('[data-summary-env]');
+    const summaryOri = document.querySelector<HTMLElement>('[data-summary-orientation]');
+    const summaryColor = document.querySelector<HTMLElement>('[data-summary-color]');
+    const summaryMargins = document.querySelector<HTMLElement>('[data-summary-margins]');
+    const summaryArt = document.querySelector<HTMLElement>('[data-summary-frame-art]');
+    const barStatus = document.querySelector<HTMLElement>('[data-mobile-bar-status]');
+
+    const MARGIN_PRESETS: Record<string, { h: number; v: number }> = {
+      min: { h: FRAME_MARGINS.min, v: FRAME_MARGINS.min },
+      default: { h: FRAME_MARGINS.horizontal, v: FRAME_MARGINS.vertical },
+      wide: { h: 6, v: 6 },
+    };
+
+    function syncMarginPresetUi(): void {
+      const h = Number(marginHorizontal?.value ?? FRAME_MARGINS.horizontal);
+      const v = Number(marginVertical?.value ?? FRAME_MARGINS.vertical);
+      for (const btn of presetBtns) {
+        const p = MARGIN_PRESETS[btn.dataset.marginPreset ?? ''];
+        const active = Boolean(p && p.h === h && p.v === v);
+        btn.classList.toggle('border-accent', active);
+        btn.classList.toggle('bg-accent/10', active);
+        btn.classList.toggle('text-accent', active);
+        btn.classList.toggle('border-control', !active);
+        btn.classList.toggle('bg-canvas', !active);
+        btn.classList.toggle('text-ink-secondary', !active);
+      }
+    }
+
+    function syncFrameMobileUi(): void {
+      const hasCustomImage = Boolean(sliderScale && !sliderScale.disabled);
+      if (cropGroup) cropGroup.classList.toggle('hidden', !hasCustomImage);
+      syncMarginPresetUi();
+
+      const envName = document.getElementById('badge-environment-name')?.textContent?.trim() || 'Sala Contemporânea';
+      const oriVal = (document.querySelector<HTMLInputElement>('input[name="frame-orientation"]:checked')?.value || 'portrait') as keyof typeof FRAME_ORIENTATIONS;
+      const oriMeta = FRAME_ORIENTATIONS[oriVal] ?? FRAME_ORIENTATIONS.portrait;
+      const colorVal = (document.querySelector<HTMLInputElement>('input[name="frame-color"]:checked')?.value || 'black') as keyof typeof FRAME_COLORS;
+      const colorLabel = FRAME_COLORS[colorVal]?.label ?? 'Preta';
+      const marginsText = `${marginHorizontal?.value ?? FRAME_MARGINS.horizontal} × ${marginVertical?.value ?? FRAME_MARGINS.vertical} cm`;
+      const artText = artFilename?.textContent?.trim() || 'Arte padrão do estúdio';
+
+      if (summaryEnv) summaryEnv.textContent = envName;
+      if (summaryOri) summaryOri.textContent = `${oriMeta.label} (${oriMeta.widthCm} × ${oriMeta.heightCm} cm)`;
+      if (summaryColor) summaryColor.textContent = colorLabel;
+      if (summaryMargins) summaryMargins.textContent = marginsText;
+      if (summaryArt) summaryArt.textContent = artText;
+      if (barStatus) barStatus.textContent = `${oriMeta.widthCm}×${oriMeta.heightCm} cm · Moldura ${colorLabel}`;
+    }
+
+    for (const btn of presetBtns) {
+      btn.addEventListener('click', () => {
+        const p = MARGIN_PRESETS[btn.dataset.marginPreset ?? ''];
+        if (!p || !marginHorizontal || !marginVertical) return;
+        marginHorizontal.value = String(p.h);
+        marginVertical.value = String(p.v);
+        marginHorizontal.dispatchEvent(new Event('input', { bubbles: true }));
+        marginVertical.dispatchEvent(new Event('input', { bubbles: true }));
+        syncFrameMobileUi();
+      });
+    }
+
+    for (const el of [marginHorizontal, marginVertical, sliderScale, sliderX, sliderY]) {
+      el?.addEventListener('input', syncFrameMobileUi);
+    }
+    for (const el of document.querySelectorAll('input[name="frame-orientation"], input[name="frame-color"]')) {
+      el.addEventListener('change', syncFrameMobileUi);
+    }
+    for (const btn of document.querySelectorAll('.btn-env-select')) {
+      btn.addEventListener('click', () => window.setTimeout(syncFrameMobileUi, 0));
+    }
+    if (sliderScale) {
+      new MutationObserver(syncFrameMobileUi).observe(sliderScale, { attributes: true, attributeFilter: ['disabled'] });
+    }
+    if (artFilename) {
+      new MutationObserver(syncFrameMobileUi).observe(artFilename, { childList: true, characterData: true, subtree: true });
+    }
+
+    initCustomizerMobileSteps(document.querySelector<HTMLElement>('[data-customizer-mobile-root]'), {
+      onStepChange: syncFrameMobileUi,
+    });
+    syncFrameMobileUi();
 
   }
 

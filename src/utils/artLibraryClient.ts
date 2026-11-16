@@ -105,8 +105,8 @@ export function connectArtLibraryPicker(
 
   function categoryClass(active: boolean): string {
     return active
-      ? 'rounded-full border border-accent bg-accent/15 px-2.5 py-1 text-[11px] font-semibold text-accent'
-      : 'rounded-full border border-line bg-surface px-2.5 py-1 text-[11px] font-medium text-ink-secondary hover:border-accent';
+      ? 'min-h-10 shrink-0 rounded-full border border-accent bg-accent/15 px-3.5 py-2 text-xs font-semibold text-accent'
+      : 'min-h-10 shrink-0 rounded-full border border-line bg-surface px-3.5 py-2 text-xs font-medium text-ink-secondary hover:border-accent';
   }
 
   function renderGrid(): void {
@@ -150,6 +150,9 @@ export function connectArtLibraryPicker(
         selectedId = art.id;
         renderGrid();
         options.onSelect(art);
+        if (window.innerWidth < 1024) {
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
       });
       gridEl.appendChild(btn);
     }

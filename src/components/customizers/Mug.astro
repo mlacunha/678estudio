@@ -3,6 +3,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 import { MUG_PRINT_DIMENSIONS, MUG_PRINT_WIDTHS } from '../../utils/customizer';
 import type { Product } from '../../types/catalog';
 import ArtLibraryPicker from './ArtLibraryPicker.astro';
+import CustomizerMobileSteps from './CustomizerMobileSteps.astro';
 import StudioPublication from './StudioPublication.astro';
 
 interface Props { studioProducts?: Product[] }
@@ -14,20 +15,28 @@ const defaultMeasure = `${MUG_PRINT_DIMENSIONS.widthCm} × ${MUG_PRINT_DIMENSION
   title={studioProducts ? 'Mockup de Caneca | Estúdio de Imagens' : 'Personalizador 3D de Canecas | 678 Estudio'}
   description="Personalize sua caneca de cerâmica branca em 3D. Escolha a área de impressão, gire em 360° e solicite orçamento pelo WhatsApp."
 >
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+  <div
+    data-customizer-mobile-root={!studioProducts ? 'true' : undefined}
+    data-mobile-primary-target="#btn-export-quote"
+    data-mobile-primary-label="Gerar prévia"
+    class:list={[
+      'max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 md:py-12',
+      !studioProducts && 'pb-24 lg:pb-12',
+    ]}
+  >
 
     <!-- Breadcrumb e Título -->
-    <div class="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-line">
+    <div class="mb-4 pb-4 lg:mb-6 lg:pb-6 flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-line">
       <div>
-        <div class="flex items-center gap-2 text-xs uppercase tracking-wider text-accent font-semibold mb-1">
+        <div class="flex items-center gap-2 text-[11px] sm:text-xs uppercase tracking-wider text-accent font-semibold mb-0.5 sm:mb-1">
           <span>Simulador Interativo</span>
           <span>•</span>
-          <span>Cerâmica Premium 325ml</span>
+          <span>Cerâmica 325ml</span>
         </div>
-        <h1 class="text-2xl sm:text-3xl font-light text-ink">
+        <h1 class="text-xl sm:text-3xl font-light text-ink">
           {studioProducts ? 'Estúdio de Imagens · Mockup de Caneca' : <>Personalizador <span class="font-normal text-accent">3D de Caneca</span></>}
         </h1>
-        <p class="mt-1 text-xs sm:text-sm text-ink-muted">
+        <p class="hidden sm:block mt-1 text-xs sm:text-sm text-ink-muted">
           Arraste para girar em 360°. Escolha a área de impressão, carregue sua arte e ajuste o enquadramento.
         </p>
       </div>
@@ -35,7 +44,7 @@ const defaultMeasure = `${MUG_PRINT_DIMENSIONS.widthCm} × ${MUG_PRINT_DIMENSION
       <div class="flex items-center gap-3">
         <a
           href={studioProducts ? '/admin/estudio' : '/#canecas'}
-          class="inline-flex items-center gap-1.5 px-4 py-2 rounded-full border border-control hover:border-ink-muted bg-surface text-ink-secondary text-xs font-medium motion-safe:transition-colors"
+          class="inline-flex min-h-11 items-center gap-1.5 px-4 py-2 rounded-full border border-control hover:border-ink-muted bg-surface text-ink-secondary text-xs font-medium motion-safe:transition-colors"
         >
           <span>{studioProducts ? 'Voltar ao Estúdio' : 'Voltar ao Catálogo'}</span>
         </a>
@@ -46,15 +55,15 @@ const defaultMeasure = `${MUG_PRINT_DIMENSIONS.widthCm} × ${MUG_PRINT_DIMENSION
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-x-8 items-start">
 
       <!-- Coluna da Esquerda: Visualizador 3D Three.js -->
-      <div class="customizer-preview min-w-0 lg:col-span-7 lg:row-start-1">
-        <div class="relative w-full aspect-[16/11] bg-surface rounded-2xl border border-line overflow-hidden">
+      <div id="mug-3d-box" class="customizer-preview min-w-0 lg:col-span-7 lg:row-start-1 space-y-2">
+        <div class="relative w-full aspect-[16/10] min-h-[190px] max-h-[34vh] [@media(max-height:500px)]:max-h-[240px] lg:max-h-none lg:aspect-[16/11] bg-surface rounded-2xl border border-line overflow-hidden">
           <canvas id="mug-3d-canvas" tabindex="0" aria-label="Prévia da caneca. Use as setas do teclado para girar." class="w-full h-full touch-pan-y cursor-grab active:cursor-grabbing block focus-visible:outline-offset-[-3px]"></canvas>
           <p id="mug-webgl-status" hidden role="status" class="absolute inset-0 grid place-items-center bg-surface p-5 text-center text-sm text-ink-secondary [&[hidden]]:hidden">
             A visualização 3D está indisponível neste navegador. Confira a estampa no mapa plano abaixo.
           </p>
 
           <!-- Indicador de Interação 360 -->
-          <div class="absolute top-4 left-4 pointer-events-none flex items-center gap-2 px-3 py-1.5 rounded-full bg-media-badge/95 backdrop-blur-md text-[11px] font-medium text-on-media">
+          <div class="absolute top-3 left-3 sm:top-4 sm:left-4 pointer-events-none flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-media-badge/95 backdrop-blur-md text-[11px] font-medium text-on-media">
             <svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
             </svg>
@@ -62,19 +71,44 @@ const defaultMeasure = `${MUG_PRINT_DIMENSIONS.widthCm} × ${MUG_PRINT_DIMENSION
           </div>
 
           <!-- Badge Modelo Base -->
-          <div class="absolute top-4 right-4 pointer-events-none px-2.5 py-1 rounded text-[10px] uppercase tracking-wider font-semibold bg-media-badge/95 text-on-media">
+          <div class="absolute top-3 right-3 sm:top-4 sm:right-4 pointer-events-none px-2.5 py-1 rounded text-[10px] uppercase tracking-wider font-semibold bg-media-badge/95 text-on-media">
             Área <span data-mug-measure>{defaultMeasure}</span>
           </div>
+
+          <!-- Botão rápido de rotação 90° no mobile -->
+          <button
+            type="button"
+            id="btn-mug-rotate-90"
+            aria-label="Girar caneca 90 graus"
+            class="lg:hidden absolute bottom-3 right-3 min-h-10 px-3 rounded-full bg-media-badge/95 text-on-media text-[11px] font-semibold border border-line/30 backdrop-blur-md active:scale-95"
+          >
+            Girar 90°
+          </button>
         </div>
 
+        {!studioProducts && (
+          <div class="flex items-center justify-between gap-2 rounded-xl border border-line bg-surface p-1 lg:hidden">
+            <button type="button" data-mug-view-btn="3d" aria-pressed="true" class="flex-1 min-h-10 rounded-lg bg-accent/15 text-accent text-xs font-semibold">
+              Caneca 3D
+            </button>
+            <button type="button" data-mug-view-btn="flat" aria-pressed="false" class="flex-1 min-h-10 rounded-lg text-ink-secondary text-xs font-semibold">
+              Imagem
+            </button>
+          </div>
+        )}
       </div>
 
         <!-- Miniatura da área plana selecionada -->
-        <div class="min-w-0 order-last lg:order-none lg:col-span-7 lg:col-start-1 lg:row-start-2 p-4 rounded-xl bg-surface/60 border border-line">
-          <div class="flex flex-wrap items-center justify-between gap-1 mb-2">
+        <div id="mug-flat-box" class="hidden lg:block min-w-0 lg:col-span-7 lg:col-start-1 lg:row-start-2 p-3 sm:p-4 rounded-xl bg-surface/95 border border-line space-y-2">
+          <div class="flex flex-wrap items-center justify-between gap-2">
             <span class="text-xs font-semibold text-ink-secondary uppercase tracking-wider">
               Mapa Planificado da Estampa (<span data-mug-measure>{defaultMeasure}</span>)
             </span>
+            {!studioProducts && (
+              <button type="button" data-mug-view-btn="3d" class="lg:hidden min-h-10 rounded-lg border border-control bg-canvas px-3 text-xs font-semibold text-accent">
+                Voltar ao 3D
+              </button>
+            )}
           </div>
           <div class="w-full bg-canvas rounded-lg overflow-hidden border border-line">
             <canvas id="mug-texture-canvas" width={MUG_PRINT_DIMENSIONS.widthCm * 100} height={MUG_PRINT_DIMENSIONS.heightCm * 100} class="block w-full h-auto"></canvas>
@@ -82,112 +116,135 @@ const defaultMeasure = `${MUG_PRINT_DIMENSIONS.widthCm} × ${MUG_PRINT_DIMENSION
         </div>
 
       <!-- Coluna da Direita: Controles de Personalização -->
-      <div class="min-w-0 lg:col-span-5 lg:col-start-8 lg:row-start-1 lg:row-span-2 flex flex-col gap-4">
+      <div class="min-w-0 lg:col-span-5 lg:col-start-8 lg:row-start-1 lg:row-span-2 flex flex-col gap-3 lg:gap-4">
+        {!studioProducts && <CustomizerMobileSteps mode="tabs" />}
+
         <div class="p-4 sm:p-6 rounded-2xl bg-surface border border-line space-y-4 sm:space-y-5">
-          <h2 class="text-base font-semibold text-ink pb-3 border-b border-line">
+          <h2 class="hidden lg:block text-base font-semibold text-ink pb-3 border-b border-line">
             Ajustes de Personalização
           </h2>
 
-          <fieldset>
-            <legend class="mb-2 text-xs font-medium uppercase tracking-wider text-ink-muted">1. Área de impressão</legend>
-            <div class="grid grid-cols-3 gap-2">
-              {MUG_PRINT_WIDTHS.map(width => (
-                <label class="relative min-w-0 cursor-pointer">
-                  <input type="radio" name="mug-print-width" value={width} checked={width === MUG_PRINT_DIMENSIONS.widthCm} class="peer sr-only" />
-                  <span class="flex min-h-11 items-center justify-center whitespace-nowrap rounded-md border border-control px-1 text-xs font-semibold text-ink-secondary hover:border-accent peer-checked:border-accent peer-checked:bg-accent/10 peer-checked:text-accent peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-accent">
-                    {width} × {MUG_PRINT_DIMENSIONS.heightCm} cm
-                  </span>
-                </label>
-              ))}
-            </div>
-          </fieldset>
-
-          <!-- Upload de Imagem ou Biblioteca de Artes -->
-          <div>
-            <span class="block text-xs uppercase tracking-wider text-ink-muted font-medium mb-2">
-              2. Arte da Caneca
-            </span>
-            {studioProducts ? (
-              <div class="flex items-center gap-3">
-                <label class="cursor-pointer flex-1 min-h-11 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-surface-raised hover:bg-surface-hover border border-control text-ink-secondary text-xs font-semibold focus-within:outline focus-within:outline-2 focus-within:outline-accent">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-                  </svg>
-                  <span>Selecionar Arquivo (PNG ou JPG)</span>
-                  <input type="file" id="input-upload-art" accept="image/*" class="sr-only" />
-                </label>
+          <div data-mobile-step-panel={!studioProducts ? 'arte' : undefined} class="space-y-4 sm:space-y-5 lg:!block">
+            <fieldset>
+              <legend class="mb-2 text-xs font-medium uppercase tracking-wider text-ink-muted">1. Área de impressão</legend>
+              <div class="grid grid-cols-3 gap-2">
+                {MUG_PRINT_WIDTHS.map(width => (
+                  <label class="relative min-w-0 cursor-pointer">
+                    <input type="radio" name="mug-print-width" value={width} checked={width === MUG_PRINT_DIMENSIONS.widthCm} class="peer sr-only" />
+                    <span class="flex min-h-11 items-center justify-center whitespace-nowrap rounded-md border border-control px-1 text-xs font-semibold text-ink-secondary hover:border-accent peer-checked:border-accent peer-checked:bg-accent/10 peer-checked:text-accent peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-accent">
+                      {width} × {MUG_PRINT_DIMENSIONS.heightCm} cm
+                    </span>
+                  </label>
+                ))}
               </div>
-            ) : (
-              <ArtLibraryPicker product="caneca">
-                <div slot="upload" class="space-y-1.5">
-                  <div class="flex items-center gap-3">
-                    <label class="cursor-pointer flex-1 min-h-11 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-surface-raised hover:bg-surface-hover border border-control text-ink-secondary text-xs font-semibold focus-within:outline focus-within:outline-2 focus-within:outline-accent">
-                      <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-                      </svg>
-                      <span>Selecionar Arquivo (PNG ou JPG)</span>
-                      <input type="file" id="input-upload-art" accept="image/*" class="sr-only" />
-                    </label>
-                  </div>
-                  <p class="text-[11px] text-ink-muted">
-                    Para preencher a faixa, use uma imagem nítida na proporção da área selecionada.
-                  </p>
+            </fieldset>
+
+            <!-- Upload de Imagem ou Biblioteca de Artes -->
+            <div>
+              <span class="block text-xs uppercase tracking-wider text-ink-muted font-medium mb-2">
+                2. Arte da Caneca
+              </span>
+              {studioProducts ? (
+                <div class="flex items-center gap-3">
+                  <label class="cursor-pointer flex-1 min-h-11 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-surface-raised hover:bg-surface-hover border border-control text-ink-secondary text-xs font-semibold focus-within:outline focus-within:outline-2 focus-within:outline-accent">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                    </svg>
+                    <span>Selecionar Arquivo (PNG ou JPG)</span>
+                    <input type="file" id="input-upload-art" accept="image/*" class="sr-only" />
+                  </label>
                 </div>
-              </ArtLibraryPicker>
+              ) : (
+                <ArtLibraryPicker product="caneca">
+                  <div slot="upload" class="space-y-1.5">
+                    <div class="flex items-center gap-3">
+                      <label class="cursor-pointer flex-1 min-h-11 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-surface-raised hover:bg-surface-hover border border-control text-ink-secondary text-xs font-semibold focus-within:outline focus-within:outline-2 focus-within:outline-accent">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                        </svg>
+                        <span>Selecionar Arquivo (PNG ou JPG)</span>
+                        <input type="file" id="input-upload-art" accept="image/*" class="sr-only" />
+                      </label>
+                    </div>
+                    <p class="text-[11px] text-ink-muted">
+                      Para preencher a faixa, use uma imagem nítida na proporção da área selecionada.
+                    </p>
+                  </div>
+                </ArtLibraryPicker>
+              )}
+              <p id="canvas-status" data-art-status role="status" class="mt-2 text-xs text-accent break-all">Arte padrão do estúdio</p>
+            </div>
+          </div>
+
+          <div data-mobile-step-panel={!studioProducts ? 'ajustes' : undefined} class="space-y-4 sm:space-y-5 lg:!block">
+            <!-- Slider de Escala / Zoom -->
+            <div>
+              <div class="flex justify-between text-xs mb-1">
+                <label for="slider-scale" class="text-ink-secondary font-medium">3. Escala da estampa</label>
+                <span id="label-scale" class="text-accent font-semibold">100%</span>
+              </div>
+              <input
+                type="range"
+                id="slider-scale"
+                min="30"
+                max="250"
+                value="100"
+                class="w-full accent-accent h-11 lg:h-7 cursor-pointer"
+              />
+            </div>
+
+            <!-- Slider de Deslocamento Horizontal -->
+            <div>
+              <div class="flex justify-between text-xs mb-1">
+                <label for="slider-pos-x" class="text-ink-secondary font-medium">4. Posição horizontal</label>
+                <span id="label-pos-x" class="text-ink-secondary font-medium">Centro</span>
+              </div>
+              <input
+                type="range"
+                id="slider-pos-x"
+                min="-800"
+                max="800"
+                value="0"
+                class="w-full accent-accent h-11 lg:h-7 cursor-pointer"
+              />
+            </div>
+
+            <!-- Slider de Deslocamento Vertical -->
+            <div>
+              <div class="flex justify-between text-xs mb-1">
+                <label for="slider-pos-y" class="text-ink-secondary font-medium">5. Posição vertical</label>
+                <span id="label-pos-y" class="text-ink-secondary font-medium">Centro</span>
+              </div>
+              <input
+                type="range"
+                id="slider-pos-y"
+                min="-350"
+                max="350"
+                value="0"
+                class="w-full accent-accent h-11 lg:h-7 cursor-pointer"
+              />
+            </div>
+
+            <button
+              id="btn-reset-art"
+              type="button"
+              class="w-full min-h-11 rounded-md border border-line text-ink-secondary hover:border-accent text-xs font-medium"
+            >
+              Restaurar Estampa Padrão
+            </button>
+          </div>
+
+          <!-- Botões de Ação / Concluir -->
+          <div data-mobile-step-panel={!studioProducts ? 'concluir' : undefined} class="lg:pt-4 lg:border-t lg:border-line space-y-3 lg:!block">
+            {!studioProducts && (
+              <div class="rounded-xl border border-line bg-canvas/70 p-3 text-xs space-y-1.5 lg:hidden">
+                <p class="font-semibold text-ink">Resumo da caneca</p>
+                <p class="text-ink-secondary">Área: <span data-summary-measure class="font-medium text-ink">{defaultMeasure}</span></p>
+                <p class="text-ink-secondary">Arte: <span data-summary-art class="font-medium text-ink">Arte padrão do estúdio</span></p>
+                <p class="text-ink-secondary">Escala: <span data-summary-scale class="font-medium text-ink">100%</span></p>
+              </div>
             )}
-            <p id="canvas-status" data-art-status role="status" class="mt-2 text-xs text-accent break-all">Arte padrão do estúdio</p>
-          </div>
 
-          <!-- Slider de Escala / Zoom -->
-          <div>
-            <div class="flex justify-between text-xs mb-1.5">
-              <label for="slider-scale" class="text-ink-secondary font-medium">3. Escala da estampa</label>
-              <span id="label-scale" class="text-accent font-semibold">100%</span>
-            </div>
-            <input
-              type="range"
-              id="slider-scale"
-              min="30"
-              max="250"
-              value="100"
-              class="w-full accent-accent h-7 cursor-pointer"
-            />
-          </div>
-
-          <!-- Slider de Deslocamento Horizontal -->
-          <div>
-            <div class="flex justify-between text-xs mb-1.5">
-              <label for="slider-pos-x" class="text-ink-secondary font-medium">4. Posição horizontal</label>
-              <span id="label-pos-x" class="text-ink-secondary font-medium">Centro</span>
-            </div>
-            <input
-              type="range"
-              id="slider-pos-x"
-              min="-800"
-              max="800"
-              value="0"
-              class="w-full accent-accent h-7 cursor-pointer"
-            />
-          </div>
-
-          <!-- Slider de Deslocamento Vertical -->
-          <div>
-            <div class="flex justify-between text-xs mb-1.5">
-              <label for="slider-pos-y" class="text-ink-secondary font-medium">5. Posição vertical</label>
-              <span id="label-pos-y" class="text-ink-secondary font-medium">Centro</span>
-            </div>
-            <input
-              type="range"
-              id="slider-pos-y"
-              min="-350"
-              max="350"
-              value="0"
-              class="w-full accent-accent h-7 cursor-pointer"
-            />
-          </div>
-
-          <!-- Botões de Ação -->
-          <div class="pt-4 border-t border-line space-y-3">
             {!studioProducts && <button
               id="btn-export-quote"
               type="button"
@@ -199,14 +256,6 @@ const defaultMeasure = `${MUG_PRINT_DIMENSIONS.widthCm} × ${MUG_PRINT_DIMENSION
               </svg>
             </button>}
 
-            <button
-              id="btn-reset-art"
-              type="button"
-              class="w-full min-h-11 rounded-md border border-line text-ink-secondary hover:border-accent text-xs font-medium"
-            >
-              Restaurar Estampa Padrão
-            </button>
-
             {studioProducts ? <StudioPublication products={studioProducts} /> : <>
               <p id="export-status" role="status" class="text-center text-xs text-accent"></p>
               <a id="mug-whatsapp" data-whatsapp-quote hidden target="_blank" rel="noopener noreferrer" class="min-h-11 flex items-center justify-center rounded-md border border-accent px-3 text-sm font-semibold text-accent hover:bg-accent/10 [&[hidden]]:hidden">Abrir WhatsApp com a prévia ↗</a>
@@ -215,7 +264,20 @@ const defaultMeasure = `${MUG_PRINT_DIMENSIONS.widthCm} × ${MUG_PRINT_DIMENSION
         </div>
 
         <!-- Especificações Rápidas -->
-        <div class="p-4 rounded-xl bg-canvas/60 border border-line text-xs text-ink-muted space-y-1.5">
+        <details class="rounded-xl bg-canvas/60 border border-line text-xs text-ink-muted lg:hidden">
+          <summary class="cursor-pointer min-h-11 flex items-center justify-between px-4 font-semibold text-ink-secondary">
+            <span>Especificações da caneca</span>
+            <span aria-hidden="true">+</span>
+          </summary>
+          <div class="px-4 pb-3 space-y-1.5">
+            <p><span class="text-ink-secondary font-semibold">• Material:</span> Cerâmica branca pura de alta densidade</p>
+            <p><span class="text-ink-secondary font-semibold">• Capacidade:</span> 325 ml (11 oz)</p>
+            <p><span class="text-ink-secondary font-semibold">• Processo:</span> Sublimação térmica digital de alta resolução</p>
+            {!studioProducts && <p><span class="text-ink-secondary font-semibold">• Envio do Mockup:</span> O link da prévia 3D será anexado à sua mensagem no WhatsApp.</p>}
+          </div>
+        </details>
+
+        <div class="hidden lg:block p-4 rounded-xl bg-canvas/60 border border-line text-xs text-ink-muted space-y-1.5">
           <p><span class="text-ink-secondary font-semibold">• Material:</span> Cerâmica branca pura de alta densidade</p>
           <p><span class="text-ink-secondary font-semibold">• Capacidade:</span> 325 ml (11 oz)</p>
           <p><span class="text-ink-secondary font-semibold">• Processo:</span> Sublimação térmica digital de alta resolução</p>
@@ -224,6 +286,7 @@ const defaultMeasure = `${MUG_PRINT_DIMENSIONS.widthCm} × ${MUG_PRINT_DIMENSION
       </div>
 
     </div>
+    {!studioProducts && <CustomizerMobileSteps mode="bar" />}
   </div>
 </BaseLayout>
 
@@ -233,6 +296,7 @@ const defaultMeasure = `${MUG_PRINT_DIMENSIONS.widthCm} × ${MUG_PRINT_DIMENSION
   import { loadArtwork, loadImageFromUrl, setupMockupQuote } from '../../utils/customizerClient';
   import { connectArtLibraryPicker, type SelectedLibraryArt } from '../../utils/artLibraryClient';
   import { loadStudioArtwork, setupStudioPublication } from '../../utils/imageStudioClient';
+  import { initCustomizerMobileSteps } from '../../scripts/customizerMobileSteps';
 
   function initMugCustomizer() {
     const canvas3D = document.getElementById('mug-3d-canvas') as HTMLCanvasElement | null;
@@ -480,6 +544,7 @@ const defaultMeasure = `${MUG_PRINT_DIMENSIONS.widthCm} × ${MUG_PRINT_DIMENSION
         event.preventDefault();
         rotate(step[0], step[1]);
       });
+      document.getElementById('btn-mug-rotate-90')?.addEventListener('click', () => rotate(Math.PI / 2, 0));
     }
 
     const updateArtwork = () => {
@@ -592,7 +657,66 @@ const defaultMeasure = `${MUG_PRINT_DIMENSIONS.widthCm} × ${MUG_PRINT_DIMENSION
       resetControls();
       if (canvasStatus) canvasStatus.textContent = 'Arte padrão do estúdio';
       updateArtwork();
+      syncMobileSummary();
     });
+
+    const mug3dBox = document.getElementById('mug-3d-box');
+    const mugFlatBox = document.getElementById('mug-flat-box');
+    const viewBtns = document.querySelectorAll<HTMLButtonElement>('[data-mug-view-btn]');
+    const summaryMeasure = document.querySelector<HTMLElement>('[data-summary-measure]');
+    const summaryArt = document.querySelector<HTMLElement>('[data-summary-art]');
+    const summaryScale = document.querySelector<HTMLElement>('[data-summary-scale]');
+    const barStatus = document.querySelector<HTMLElement>('[data-mobile-bar-status]');
+
+    function syncMobileSummary(): void {
+      const m = measure();
+      const artText = canvasStatus?.textContent?.trim() || 'Arte padrão do estúdio';
+      const zoomText = `${sliderScale?.value ?? '100'}%`;
+      if (summaryMeasure) summaryMeasure.textContent = m;
+      if (summaryArt) summaryArt.textContent = artText;
+      if (summaryScale) summaryScale.textContent = zoomText;
+      if (barStatus) barStatus.textContent = `${m} · ${artText}`;
+    }
+
+    function setMugView(mode: '3d' | 'flat'): void {
+      const isFlat = mode === 'flat';
+      mug3dBox?.classList.toggle('hidden', isFlat);
+      mug3dBox?.classList.toggle('lg:block', isFlat);
+      mugFlatBox?.classList.toggle('hidden', !isFlat);
+      mugFlatBox?.classList.toggle('sticky', isFlat);
+      mugFlatBox?.classList.toggle('top-[4.5rem]', isFlat);
+      mugFlatBox?.classList.toggle('z-20', isFlat);
+      mugFlatBox?.classList.toggle('lg:static', isFlat);
+      for (const btn of viewBtns) {
+        const active = btn.dataset.mugViewBtn === mode;
+        btn.setAttribute('aria-pressed', String(active));
+        btn.classList.toggle('bg-accent/15', active);
+        btn.classList.toggle('text-accent', active);
+        btn.classList.toggle('text-ink-secondary', !active);
+      }
+    }
+
+    for (const btn of viewBtns) {
+      btn.addEventListener('click', () => {
+        const mode = btn.dataset.mugViewBtn === 'flat' ? 'flat' : '3d';
+        setMugView(mode);
+      });
+    }
+
+    for (const slider of [sliderScale, sliderPosX, sliderPosY]) {
+      slider?.addEventListener('input', syncMobileSummary);
+    }
+    for (const option of widthOptions) {
+      option.addEventListener('change', syncMobileSummary);
+    }
+    if (canvasStatus) {
+      new MutationObserver(syncMobileSummary).observe(canvasStatus, { childList: true, characterData: true, subtree: true });
+    }
+
+    initCustomizerMobileSteps(document.querySelector<HTMLElement>('[data-customizer-mobile-root]'), {
+      onStepChange: syncMobileSummary,
+    });
+    syncMobileSummary();
 
   }
 
