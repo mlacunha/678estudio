@@ -427,9 +427,16 @@ function initAdminArtes(): void {
     const files = inputFiles?.files;
     if (!files?.length || !btnSubmitUpload) return;
 
+    const selectedProducts = Array.from(document.querySelectorAll<HTMLInputElement>('input[name="upload-products"]:checked'));
+    if (!selectedProducts.length) {
+      if (uploadStatusEl) uploadStatusEl.textContent = 'Selecione ao menos um produto compatível (Caneca ou Quadro) antes de enviar.';
+      document.querySelector<HTMLInputElement>('input[name="upload-products"]')?.focus();
+      return;
+    }
+
     const formData = new FormData();
     for (const file of Array.from(files)) formData.append('files', file);
-    for (const prod of document.querySelectorAll<HTMLInputElement>('input[name="upload-products"]:checked')) {
+    for (const prod of selectedProducts) {
       formData.append('products', prod.value);
     }
     for (const cat of document.querySelectorAll<HTMLInputElement>('input[name="upload-categories"]:checked')) {
@@ -458,7 +465,7 @@ function initAdminArtes(): void {
         formUpload.reset();
         if (inputTitle) inputTitle.disabled = false;
         if (inputCode) inputCode.disabled = false;
-        for (const box of document.querySelectorAll<HTMLInputElement>('input[name="upload-products"]')) box.checked = true;
+        for (const box of document.querySelectorAll<HTMLInputElement>('input[name="upload-products"]')) box.checked = false;
         if (inputUploadPublished) inputUploadPublished.checked = true;
         if (filesHintEl) filesHintEl.textContent = 'Nenhum arquivo selecionado.';
         await refreshArtes();

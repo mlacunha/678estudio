@@ -132,7 +132,7 @@ const [categories, artes] = await Promise.all([
               <div class="flex flex-wrap gap-3">
                 {ART_PRODUCT_TYPES.map(type => (
                   <label class="inline-flex items-center gap-2 rounded-md border border-line bg-canvas px-3 py-1.5 text-xs font-medium text-ink cursor-pointer">
-                    <input type="checkbox" name="upload-products" value={type} checked class="accent-accent" />
+                    <input type="checkbox" name="upload-products" value={type} class="accent-accent" />
                     <span>{ART_PRODUCT_LABELS[type]}</span>
                   </label>
                 ))}
