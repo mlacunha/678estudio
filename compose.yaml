@@ -8,12 +8,19 @@ services:
       - ALL
     security_opt:
       - no-new-privileges:true
+
     environment:
       HOST: "0.0.0.0"
       PORT: "4321"
       PUBLIC_ORIGIN: "${PUBLIC_ORIGIN:-}"
       ADMIN_USERNAME: "${ADMIN_USERNAME:?Informe o usuário administrativo}"
       ADMIN_PASSWORD: "${ADMIN_PASSWORD:?Informe a senha administrativa}"
+
+      # Gerador de Mockups Comerciais
+      MOCKUP_INSTALLER_URL: "https://github.com/mlacunha/678estudio/releases/download/mockups-v1.0.0/678Estudio-Mockups-Setup-1.0.0-x64.exe"
+      MOCKUP_INSTALLER_VERSION: "1.0.0"
+      MOCKUP_INSTALLER_NOTES_URL: "https://github.com/mlacunha/678estudio/releases/tag/mockups-v1.0.0"
+
     volumes:
       - type: bind
         source: "${DATA_DIR:?Informe o diretório absoluto de dados}"
@@ -25,13 +32,15 @@ services:
         target: /app/public/uploads
         bind:
           create_host_path: false
+
     ports:
       - target: 4321
         published: "${HOST_PORT:-4321}"
         host_ip: "${HOST_BIND:-127.0.0.1}"
         protocol: tcp
+
     healthcheck:
-      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:' + process.env.PORT + '/api/categories').then(r => { if (!r.ok) process.exitCode = 1 }).catch(() => { process.exitCode = 1 })"]
+      test: [ "CMD", "node", "-e", "fetch('http://127.0.0.1:' + process.env.PORT + '/api/categories').then(r => { if (!r.ok) process.exitCode = 1 }).catch(() => { process.exitCode = 1 })" ]
       interval: 30s
       timeout: 5s
       retries: 3
