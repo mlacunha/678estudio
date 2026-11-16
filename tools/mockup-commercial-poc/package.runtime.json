@@ -1,0 +1,10 @@
+{
+  "name": "678estudio-mockups",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "puppeteer-core": "^25.16.0",
+    "sharp": "0.33.5"
+  }
+}

@@ -1,21 +1,19 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
-import { createRequire } from 'node:module';
-
-const require = createRequire('D:/Projetos/site678Estudio/package.json');
-const { createClient } = require('@libsql/client');
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /** Adaptador somente-leitura usando @libsql/client para consultar a Biblioteca de Artes (SQLite + data/artes). */
 export function createArtLibraryAdapter(options = {}) {
-  const rootDir = options.rootDir ?? 'D:/Projetos/site678Estudio';
+  const rootDir = options.rootDir ?? process.cwd();
   const dbPath = resolve(rootDir, options.dbPath ?? process.env.STUDIO678_DB_PATH ?? 'data/studio678.db');
   const artesDir = resolve(rootDir, options.artesDir ?? process.env.STUDIO678_ARTES_DIR ?? join(dirname(dbPath), 'artes'));
 
   async function openDb() {
     if (!existsSync(dbPath)) return null;
-    const client = createClient({ url: `file:${dbPath.replace(/\\/g, '/')}` });
+    const libsql = await import('@libsql/client').catch(() => null);
+    if (!libsql?.createClient) return null;
+    const client = libsql.createClient({ url: `file:${dbPath.replace(/\\/g, '/')}` });
     const hasTable = await client.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='artes'");
     if (!hasTable.rows.length) {
       client.close();
