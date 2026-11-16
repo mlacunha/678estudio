@@ -1,0 +1,536 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>678 Estudio — Protótipo de Mockups Comerciais + Biblioteca</title>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 0; background: #f8f5f0; color: #1c1917; }
+    header { background: #fff; border-bottom: 1px solid #e7e5e4; padding: 14px 24px; display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; }
+    main { max-width: 1360px; margin: 0 auto; padding: 20px; display: grid; grid-template-columns: 1.35fr 1fr; gap: 20px; }
+    @media (max-width: 960px) { main { grid-template-columns: 1fr; } }
+    .card { background: #fff; border: 1px solid #e7e5e4; border-radius: 14px; padding: 16px; }
+    .slots { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; margin-top: 14px; }
+    .slot-card { border: 1px solid #e7e5e4; border-radius: 12px; padding: 12px; background: #fafaf9; display: flex; flex-direction: column; gap: 8px; }
+    .crop-box { width: 100%; aspect-ratio: 1 / 1; background: #e7e5e4; border-radius: 8px; overflow: hidden; cursor: grab; touch-action: none; border: 1px solid #d6d3d1; }
+    .crop-box:active { cursor: grabbing; }
+    canvas { width: 100%; height: 100%; display: block; }
+    label { font-size: 12px; font-weight: 600; color: #44403c; display: flex; justify-content: space-between; }
+    input[type="range"] { width: 100%; }
+    button, select, input[type="search"] { font: inherit; font-size: 12px; padding: 7px 10px; border-radius: 8px; border: 1px solid #d6d3d1; background: #fff; cursor: pointer; }
+    input[type="search"] { cursor: text; }
+    button.primary { background: #78350f; color: #fff; border-color: #78350f; font-weight: 600; padding: 10px 16px; font-size: 13px; }
+    button.primary:disabled { opacity: 0.5; cursor: wait; }
+    button.chip { border-radius: 999px; padding: 5px 12px; }
+    button.chip.active { background: #fef3c7; border-color: #b45309; color: #78350f; font-weight: 600; }
+    .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+    .preview-img { width: 100%; border-radius: 10px; border: 1px solid #e7e5e4; background: #fff; }
+    .muted { font-size: 12px; color: #78716c; }
+    dialog { width: min(860px, 94vw); max-height: 86vh; border: 1px solid #d6d3d1; border-radius: 14px; padding: 0; overflow: hidden; }
+    dialog::backdrop { background: rgba(0, 0, 0, 0.55); }
+    .dlg-head { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; border-bottom: 1px solid #e7e5e4; background: #fff; }
+    .dlg-body { padding: 16px; display: flex; flex-direction: column; gap: 12px; max-height: 74vh; overflow-y: auto; background: #fafaf9; }
+    .lib-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+    .lib-item { border: 1px solid #e7e5e4; border-radius: 10px; background: #fff; overflow: hidden; text-align: left; padding: 0; display: flex; flex-direction: column; }
+    .lib-item:hover { border-color: #b45309; }
+    .lib-thumb { aspect-ratio: 1 / 1; background: #f5f5f4; display: flex; align-items: center; justify-content: center; padding: 6px; }
+    .lib-thumb img { max-width: 100%; max-height: 100%; object-fit: contain; }
+    .lib-meta { padding: 8px; border-top: 1px solid #e7e5e4; font-size: 11px; }
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <strong>678 Estudio — Mockups Comerciais + Biblioteca de Artes (008-C1)</strong>
+      <div class="muted">Use artes da Biblioteca (originais na renderização) ou uploads avulsos, com ajuste manual por slot.</div>
+    </div>
+    <div class="row">
+      <label>Template:
+        <select id="tpl-select"></select>
+      </label>
+      <button id="btn-render" class="primary" type="button">Gerar Mockup no Photopea</button>
+    </div>
+  </header>
+
+  <main>
+    <section class="card">
+      <div class="row" style="justify-content: space-between; border-bottom: 1px solid #e7e5e4; padding-bottom: 12px;">
+        <div class="row">
+          <button id="btn-global-library" type="button" style="border-color:#b45309;color:#78350f;font-weight:600;">Biblioteca (todos os slots)</button>
+          <select id="global-sample"></select>
+          <input id="global-upload" type="file" accept="image/png,image/jpeg,image/webp" />
+        </div>
+        <button id="btn-auto-distribute" type="button">Distribuir automaticamente (Esq / Centro / Dir)</button>
+      </div>
+      <div id="slots-container" class="slots"></div>
+    </section>
+
+    <section class="card">
+      <h3 style="margin-top:0;font-size:15px;">Resultado Renderizado (Photopea)</h3>
+      <p id="render-status" class="muted">Selecione ou ajuste os slots e clique em "Gerar Mockup no Photopea".</p>
+      <img id="result-img" class="preview-img" alt="Prévia comercial" hidden />
+      <div id="result-links" class="row" style="margin-top:10px;"></div>
+    </section>
+  </main>
+
+  <dialog id="library-modal">
+    <div class="dlg-head">
+      <div>
+        <strong id="lib-target-title">Selecionar arte da Biblioteca</strong>
+        <div class="muted">Miniaturas apenas para navegação; a renderização usa o arquivo original.</div>
+      </div>
+      <button id="btn-close-library" type="button">Fechar</button>
+    </div>
+    <div class="dlg-body">
+      <div class="row" style="justify-content:space-between;background:#fff;padding:10px;border:1px solid #e7e5e4;border-radius:10px;">
+        <div class="row">
+          <span style="font-size:12px;font-weight:600;">Origem:</span>
+          <button type="button" class="chip active" data-lib-source="local">Local (homologação)</button>
+          <button type="button" class="chip" data-lib-source="remote">Remota (678 Estudio hospedado)</button>
+        </div>
+        <div id="remote-conn-badge" class="muted" hidden></div>
+      </div>
+
+      <form id="remote-auth-box" hidden class="row" style="background:#fff;padding:10px;border:1px solid #e7e5e4;border-radius:10px;">
+        <input id="remote-url" type="url" placeholder="https://seu-dominio.com.br" style="flex:1.4;min-width:190px;padding:7px 10px;border:1px solid #d6d3d1;border-radius:8px;font-size:12px;" />
+        <input id="remote-user" type="text" placeholder="Usuário admin" autocomplete="username" style="flex:1;min-width:110px;padding:7px 10px;border:1px solid #d6d3d1;border-radius:8px;font-size:12px;" />
+        <input id="remote-pass" type="password" placeholder="Senha" autocomplete="current-password" style="flex:1;min-width:110px;padding:7px 10px;border:1px solid #d6d3d1;border-radius:8px;font-size:12px;" />
+        <button id="btn-remote-connect" type="submit" class="primary" style="padding:7px 12px;font-size:12px;">Conectar</button>
+      </form>
+
+      <div class="row">
+        <input id="lib-search" type="search" placeholder="Buscar por código, título, descrição ou grupo..." style="flex:1;min-width:220px;" />
+        <select id="lib-product">
+          <option value="">Todos os produtos</option>
+          <option value="caneca">Caneca</option>
+          <option value="quadro">Quadro</option>
+        </select>
+      </div>
+      <div id="lib-categories" class="row"></div>
+      <div id="lib-grid" class="lib-grid"></div>
+      <p id="lib-status" class="muted"></p>
+      <button id="lib-load-more" type="button" hidden>Carregar mais artes</button>
+    </div>
+  </dialog>
+
+  <script>
+    const tplSelect = document.getElementById('tpl-select');
+    const globalSample = document.getElementById('global-sample');
+    const globalUpload = document.getElementById('global-upload');
+    const btnGlobalLib = document.getElementById('btn-global-library');
+    const btnAuto = document.getElementById('btn-auto-distribute');
+    const btnRender = document.getElementById('btn-render');
+    const slotsContainer = document.getElementById('slots-container');
+    const renderStatus = document.getElementById('render-status');
+    const resultImg = document.getElementById('result-img');
+    const resultLinks = document.getElementById('result-links');
+
+    const libModal = document.getElementById('library-modal');
+    const libTargetTitle = document.getElementById('lib-target-title');
+    const libSearch = document.getElementById('lib-search');
+    const libProduct = document.getElementById('lib-product');
+    const libCats = document.getElementById('lib-categories');
+    const libGrid = document.getElementById('lib-grid');
+    const libStatus = document.getElementById('lib-status');
+    const libLoadMore = document.getElementById('lib-load-more');
+
+    let templates = [];
+    let sampleArts = [];
+    let currentTemplate = null;
+    const slotStates = {};
+    const imageCache = new Map();
+
+    let libTargetSlotId = null; // null = todos os slots
+    let libSource = 'local';
+    let libCategory = '';
+    let libPage = 1;
+    let libItems = [];
+    let libSearchTimer = null;
+
+    const remoteAuthBox = document.getElementById('remote-auth-box');
+    const remoteBadge = document.getElementById('remote-conn-badge');
+    const remoteUrlIn = document.getElementById('remote-url');
+    const remoteUserIn = document.getElementById('remote-user');
+    const remotePassIn = document.getElementById('remote-pass');
+    const sourceBtns = document.querySelectorAll('[data-lib-source]');
+
+    function loadImg(src) {
+      if (imageCache.has(src)) return imageCache.get(src);
+      const p = new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => resolve(img);
+        img.onerror = reject;
+        img.src = src;
+      });
+      imageCache.set(src, p);
+      return p;
+    }
+
+    function computePlacement(srcW, srcH, targetW, targetH, st) {
+      const baseScale = st.fit === 'contain'
+        ? Math.min(targetW / srcW, targetH / srcH)
+        : Math.max(targetW / srcW, targetH / srcH);
+      const eff = baseScale * st.scale;
+      const scaledW = srcW * eff;
+      const scaledH = srcH * eff;
+      const dx = (targetW - scaledW) * st.anchorX;
+      const dy = (targetH - scaledH) * st.anchorY;
+      return { scaledW, scaledH, dx, dy };
+    }
+
+    async function drawSlotCanvas(slot, canvas) {
+      const st = slotStates[slot.id];
+      const ctx = canvas.getContext('2d');
+      const w = canvas.width;
+      const h = canvas.height;
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, w, h);
+      if (!st?.src) return;
+      const img = await loadImg(st.src);
+      const { scaledW, scaledH, dx, dy } = computePlacement(img.naturalWidth, img.naturalHeight, w, h, st);
+      ctx.drawImage(img, dx, dy, scaledW, scaledH);
+    }
+
+    function resetSlotState(slot, keepImage = false) {
+      const def = slot.defaultPlacement || { fit: slot.defaultFit || 'contain', anchorX: 0.5, anchorY: 0.5, scale: 1.0 };
+      const prev = slotStates[slot.id];
+      slotStates[slot.id] = {
+        fit: def.fit,
+        anchorX: def.anchorX,
+        anchorY: def.anchorY,
+        scale: def.scale,
+        src: keepImage && prev ? prev.src : (globalSample.value ? '/samples/' + encodeURIComponent(globalSample.value) : ''),
+        sampleFile: keepImage && prev ? prev.sampleFile : globalSample.value,
+        imageDataUrl: keepImage && prev ? prev.imageDataUrl : null,
+        artId: keepImage && prev ? prev.artId : null,
+        artVersion: keepImage && prev ? prev.artVersion : null,
+        artSource: keepImage && prev ? prev.artSource : null,
+        sourceLabel: keepImage && prev ? prev.sourceLabel : (globalSample.value ? 'Amostra: ' + globalSample.value : 'Nenhuma arte'),
+      };
+    }
+
+    function renderSlotCards() {
+      slotsContainer.innerHTML = '';
+      for (const slot of currentTemplate.slots) {
+        if (!slotStates[slot.id]) resetSlotState(slot, false);
+        const st = slotStates[slot.id];
+
+        const card = document.createElement('div');
+        card.className = 'slot-card';
+        card.dataset.slotId = slot.id;
+        card.innerHTML = `
+          <div class="row" style="justify-content:space-between;">
+            <strong>${slot.label}</strong>
+            <span class="muted">${slot.role || slot.type} · ${slot.expectedSize.width}×${slot.expectedSize.height}</span>
+          </div>
+          <div class="muted" data-source-label>${st.sourceLabel || ''}</div>
+          <div class="crop-box"><canvas width="360" height="${Math.round(360 * slot.expectedSize.height / slot.expectedSize.width)}"></canvas></div>
+          <div class="row">
+            <select data-fit>
+              <option value="cover" ${st.fit === 'cover' ? 'selected' : ''}>Preencher (cover)</option>
+              <option value="contain" ${st.fit === 'contain' ? 'selected' : ''}>Inteiro (contain)</option>
+            </select>
+            <button type="button" data-center>Centralizar</button>
+            <button type="button" data-reset>Restaurar</button>
+          </div>
+          <label>Posição H <span data-ax-val>${Math.round(st.anchorX * 100)}%</span></label>
+          <input type="range" min="-0.5" max="1.5" step="0.01" value="${st.anchorX}" data-ax />
+          <label>Posição V <span data-ay-val>${Math.round(st.anchorY * 100)}%</span></label>
+          <input type="range" min="-0.5" max="1.5" step="0.01" value="${st.anchorY}" data-ay />
+          <label>Escala <span data-sc-val>${Math.round(st.scale * 100)}%</span></label>
+          <input type="range" min="0.4" max="2.5" step="0.02" value="${st.scale}" data-sc />
+          <div class="row">
+            <button type="button" data-open-library style="border-color:#b45309;color:#78350f;">Biblioteca</button>
+            <input type="file" accept="image/png,image/jpeg,image/webp" data-file style="flex:1;min-width:0;" />
+          </div>
+        `;
+
+        const canvas = card.querySelector('canvas');
+        const axIn = card.querySelector('[data-ax]');
+        const ayIn = card.querySelector('[data-ay]');
+        const scIn = card.querySelector('[data-sc]');
+        const fitSel = card.querySelector('[data-fit]');
+        const syncLabels = () => {
+          card.querySelector('[data-ax-val]').textContent = `${Math.round(st.anchorX * 100)}%`;
+          card.querySelector('[data-ay-val]').textContent = `${Math.round(st.anchorY * 100)}%`;
+          card.querySelector('[data-sc-val]').textContent = `${Math.round(st.scale * 100)}%`;
+          card.querySelector('[data-source-label]').textContent = st.sourceLabel || '';
+          axIn.value = st.anchorX;
+          ayIn.value = st.anchorY;
+          scIn.value = st.scale;
+          fitSel.value = st.fit;
+          drawSlotCanvas(slot, canvas);
+        };
+
+        fitSel.addEventListener('change', () => { st.fit = fitSel.value; syncLabels(); });
+        axIn.addEventListener('input', () => { st.anchorX = Number(axIn.value); syncLabels(); });
+        ayIn.addEventListener('input', () => { st.anchorY = Number(ayIn.value); syncLabels(); });
+        scIn.addEventListener('input', () => { st.scale = Number(scIn.value); syncLabels(); });
+        card.querySelector('[data-center]').addEventListener('click', () => { st.anchorX = 0.5; st.anchorY = 0.5; syncLabels(); });
+        card.querySelector('[data-reset]').addEventListener('click', () => { resetSlotState(slot, true); Object.assign(st, slotStates[slot.id]); syncLabels(); });
+        card.querySelector('[data-open-library]').addEventListener('click', () => openLibraryModal(slot.id, slot.label));
+        card.querySelector('[data-file]').addEventListener('change', (e) => {
+          const file = e.target.files?.[0];
+          if (!file) return;
+          const reader = new FileReader();
+          reader.onload = () => {
+            st.src = reader.result;
+            st.imageDataUrl = reader.result;
+            st.sampleFile = null;
+            st.artId = null;
+            st.artVersion = null;
+            st.sourceLabel = `Upload: ${file.name}`;
+            syncLabels();
+          };
+          reader.readAsDataURL(file);
+        });
+
+        let drag = null;
+        canvas.addEventListener('pointerdown', (e) => { drag = { x: e.clientX, y: e.clientY, ax: st.anchorX, ay: st.anchorY }; canvas.setPointerCapture(e.pointerId); });
+        canvas.addEventListener('pointermove', async (e) => {
+          if (!drag || !st.src) return;
+          const img = await loadImg(st.src);
+          const p = computePlacement(img.naturalWidth, img.naturalHeight, canvas.width, canvas.height, st);
+          const spanX = canvas.width - p.scaledW;
+          const spanY = canvas.height - p.scaledH;
+          if (Math.abs(spanX) > 4) st.anchorX = Math.max(-0.5, Math.min(1.5, drag.ax + (e.clientX - drag.x) / spanX));
+          if (Math.abs(spanY) > 4) st.anchorY = Math.max(-0.5, Math.min(1.5, drag.ay + (e.clientY - drag.y) / spanY));
+          syncLabels();
+        });
+        canvas.addEventListener('lostpointercapture', () => { drag = null; });
+
+        slotsContainer.appendChild(card);
+        drawSlotCanvas(slot, canvas);
+      }
+    }
+
+    async function syncRemoteStatus() {
+      const st = await fetch('/api/library/remote/status').then(r => r.json());
+      if (st.defaultUrl && !remoteUrlIn.value) remoteUrlIn.value = st.defaultUrl;
+      const isRemote = libSource === 'remote';
+      remoteAuthBox.hidden = !isRemote || st.connected;
+      if (isRemote && st.connected) {
+        remoteBadge.hidden = false;
+        remoteBadge.innerHTML = `Conectado: <strong>${st.baseUrl}</strong> <button type="button" id="btn-remote-disconnect" style="margin-left:6px;padding:3px 8px;">Desconectar</button>`;
+        document.getElementById('btn-remote-disconnect').addEventListener('click', async () => {
+          await fetch('/api/library/remote/disconnect', { method: 'POST' });
+          libItems = [];
+          libGrid.innerHTML = '';
+          await syncRemoteStatus();
+          libStatus.textContent = 'Sessão remota encerrada.';
+        });
+      } else {
+        remoteBadge.hidden = true;
+      }
+      return st;
+    }
+
+    async function fetchLibrary(page, append) {
+      if (libSource === 'remote') {
+        const st = await syncRemoteStatus();
+        if (!st.connected) {
+          libGrid.innerHTML = '';
+          libCats.innerHTML = '';
+          libLoadMore.hidden = true;
+          libStatus.textContent = 'Informe a URL HTTPS e as credenciais administrativas para conectar.';
+          return;
+        }
+      } else {
+        remoteAuthBox.hidden = true;
+        remoteBadge.hidden = true;
+      }
+
+      libStatus.textContent = 'Consultando Biblioteca de Artes…';
+      const params = new URLSearchParams({ source: libSource, pagina: String(page), limite: '12' });
+      if (libSearch.value.trim()) params.set('q', libSearch.value.trim());
+      if (libCategory) params.set('categoria', libCategory);
+      if (libProduct.value) params.set('produto', libProduct.value);
+
+      const res = await fetch('/api/library/artes?' + params.toString());
+      const data = await res.json();
+      if (!res.ok) {
+        libGrid.innerHTML = '';
+        libStatus.textContent = data.error || 'Falha ao consultar a Biblioteca.';
+        if (libSource === 'remote') await syncRemoteStatus();
+        return;
+      }
+      libPage = data.page;
+      libItems = append ? [...libItems, ...data.items] : data.items;
+      libLoadMore.hidden = !data.hasMore;
+
+      libCats.innerHTML = '';
+      const mkChip = (id, label) => {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'chip' + (libCategory === id ? ' active' : '');
+        b.textContent = label;
+        b.addEventListener('click', () => { libCategory = id; fetchLibrary(1, false); });
+        libCats.appendChild(b);
+      };
+      mkChip('', 'Todas');
+      for (const c of data.categories || []) mkChip(c.id, c.name);
+
+      libGrid.innerHTML = '';
+      for (const art of libItems) {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'lib-item';
+        btn.dataset.artCode = art.code;
+        btn.innerHTML = `
+          <div class="lib-thumb"><img src="${art.thumbUrl}" alt="${art.title}" /></div>
+          <div class="lib-meta">
+            <div style="color:#b45309;font-weight:700;">${art.code} · v${art.version}</div>
+            <div style="font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${art.title}</div>
+            <div class="muted">${art.width}×${art.height} px</div>
+          </div>
+        `;
+        btn.addEventListener('click', () => applyLibraryArt(art));
+        libGrid.appendChild(btn);
+      }
+      libStatus.textContent = libItems.length ? '' : 'Nenhuma arte encontrada na Biblioteca local.';
+    }
+
+    function applyLibraryArt(art) {
+      const targets = libTargetSlotId
+        ? currentTemplate.slots.filter(s => s.id === libTargetSlotId)
+        : currentTemplate.slots;
+      for (const s of targets) {
+        const st = slotStates[s.id];
+        st.src = art.previewUrl;
+        st.artId = art.id;
+        st.artVersion = art.version;
+        st.artSource = art.source || libSource;
+        st.sampleFile = null;
+        st.imageDataUrl = null;
+        const originTag = st.artSource === 'remote' ? 'Remota' : 'Local';
+        st.sourceLabel = `Biblioteca (${originTag}): ${art.code} · ${art.title} (v${art.version})`;
+      }
+      libModal.close();
+      renderSlotCards();
+    }
+
+    function openLibraryModal(slotId, label) {
+      libTargetSlotId = slotId;
+      libSearch.value = '';
+      libTargetTitle.textContent = slotId ? `Selecionar arte para: ${label}` : 'Selecionar arte para todos os slots';
+      libModal.showModal();
+      fetchLibrary(1, false);
+    }
+
+    for (const btn of sourceBtns) {
+      btn.addEventListener('click', () => {
+        libSource = btn.dataset.libSource;
+        libCategory = '';
+        for (const b of sourceBtns) b.classList.toggle('active', b === btn);
+        fetchLibrary(1, false);
+      });
+    }
+
+    remoteAuthBox.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      libStatus.textContent = 'Autenticando na Biblioteca remota…';
+      const res = await fetch('/api/library/remote/connect', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ baseUrl: remoteUrlIn.value.trim(), username: remoteUserIn.value.trim(), password: remotePassIn.value }),
+      });
+      const json = await res.json();
+      remotePassIn.value = '';
+      if (!res.ok) {
+        libStatus.textContent = json.error || 'Falha de autenticação.';
+        return;
+      }
+      await fetchLibrary(1, false);
+    });
+
+    btnGlobalLib.addEventListener('click', () => openLibraryModal(null, 'Todos os slots'));
+    document.getElementById('btn-close-library').addEventListener('click', () => libModal.close());
+    libSearch.addEventListener('input', () => { clearTimeout(libSearchTimer); libSearchTimer = setTimeout(() => fetchLibrary(1, false), 220); });
+    libProduct.addEventListener('change', () => fetchLibrary(1, false));
+    libLoadMore.addEventListener('click', () => fetchLibrary(libPage + 1, true));
+
+    tplSelect.addEventListener('change', () => {
+      currentTemplate = templates.find(t => t.id === tplSelect.value);
+      for (const s of currentTemplate.slots) resetSlotState(s, false);
+      renderSlotCards();
+    });
+
+    globalSample.addEventListener('change', () => {
+      const src = '/samples/' + encodeURIComponent(globalSample.value);
+      for (const s of currentTemplate.slots) {
+        const st = slotStates[s.id];
+        st.src = src;
+        st.sampleFile = globalSample.value;
+        st.imageDataUrl = null;
+        st.artId = null;
+        st.artVersion = null;
+        st.sourceLabel = `Amostra: ${globalSample.value}`;
+      }
+      renderSlotCards();
+    });
+
+    globalUpload.addEventListener('change', (e) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        for (const s of currentTemplate.slots) {
+          const st = slotStates[s.id];
+          st.src = reader.result;
+          st.imageDataUrl = reader.result;
+          st.sampleFile = null;
+          st.artId = null;
+          st.artVersion = null;
+          st.sourceLabel = `Upload: ${file.name}`;
+        }
+        renderSlotCards();
+      };
+      reader.readAsDataURL(file);
+    });
+
+    btnAuto.addEventListener('click', () => {
+      for (const s of currentTemplate.slots) resetSlotState(s, true);
+      renderSlotCards();
+    });
+
+    btnRender.addEventListener('click', async () => {
+      btnRender.disabled = true;
+      renderStatus.textContent = 'Renderizando no Photopea (usando originais quando da Biblioteca)...';
+      try {
+        const payload = { templateId: currentTemplate.id, slots: {} };
+        for (const s of currentTemplate.slots) {
+          const st = slotStates[s.id];
+          payload.slots[s.id] = {
+            fit: st.fit, anchorX: st.anchorX, anchorY: st.anchorY, scale: st.scale,
+            artId: st.artId, artVersion: st.artVersion, artSource: st.artSource, sampleFile: st.sampleFile, imageDataUrl: st.imageDataUrl,
+          };
+        }
+        const res = await fetch('/api/render', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+        const json = await res.json();
+        if (!res.ok) throw new Error(json.error || 'Falha na renderização');
+        resultImg.src = json.pngUrl + '?t=' + Date.now();
+        resultImg.hidden = false;
+        renderStatus.textContent = `Concluído em ${(json.timingsMs.total / 1000).toFixed(2)}s (WebP: ${(json.outputs.webp.bytes / 1024).toFixed(1)} KB)`;
+        resultLinks.innerHTML = `<a href="${json.pngUrl}" download>Baixar PNG</a> · <a href="${json.webpUrl}" download>Baixar WebP</a>`;
+      } catch (err) {
+        renderStatus.textContent = 'Erro: ' + err.message;
+      } finally {
+        btnRender.disabled = false;
+      }
+    });
+
+    (async () => {
+      const [tplRes, artRes] = await Promise.all([fetch('/api/templates').then(r => r.json()), fetch('/api/sample-arts').then(r => r.json())]);
+      templates = tplRes.templates;
+      sampleArts = artRes.files;
+      for (const t of templates) tplSelect.add(new Option(`${t.id} — ${t.name}`, t.id));
+      for (const f of sampleArts) globalSample.add(new Option(f, f));
+      const defPano = sampleArts.find(f => f.includes('calibracao')) || sampleArts[0];
+      if (defPano) globalSample.value = defPano;
+      tplSelect.value = 'template-11';
+      currentTemplate = templates.find(t => t.id === 'template-11') || templates[0];
+      renderSlotCards();
+    })();
+  </script>
+</body>
+</html>

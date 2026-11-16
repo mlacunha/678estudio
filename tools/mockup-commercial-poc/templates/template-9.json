@@ -1,0 +1,54 @@
+{
+  "id": "template-9",
+  "name": "Três Canecas em Mesa de Madeira + Arte Superior",
+  "sourcePath": "data/mockups-comerciais/originais/9.psd",
+  "document": { "width": 1000, "height": 1000, "resolution": 200 },
+  "slots": [
+    {
+      "id": "caneca-esquerda",
+      "label": "Caneca da Esquerda",
+      "role": "left",
+      "type": "mug",
+      "layerPath": ["GRUPO 1 (CANECA DA ESQUERDA)", "ARTE CANECA ESQUERDA"],
+      "expectedSize": { "width": 2301, "height": 2310 },
+      "defaultFit": "contain",
+      "defaultPlacement": { "fit": "contain", "anchorX": 0.15, "anchorY": 0.5, "scale": 1.0 }
+    },
+    {
+      "id": "caneca-meio",
+      "label": "Caneca do Meio",
+      "role": "center",
+      "type": "mug",
+      "layerPath": ["GRUPO 3 (CANECA DO MEIO)", "CANECA DO MEIO"],
+      "expectedSize": { "width": 2301, "height": 2310 },
+      "defaultFit": "contain",
+      "defaultPlacement": { "fit": "contain", "anchorX": 0.5, "anchorY": 0.5, "scale": 1.0 }
+    },
+    {
+      "id": "caneca-direita",
+      "label": "Caneca da Direita",
+      "role": "right",
+      "type": "mug",
+      "layerPath": ["GRUPO 2 (CANECA DA DIREITA)", "CANECA DIREITA"],
+      "expectedSize": { "width": 2301, "height": 2310 },
+      "defaultFit": "contain",
+      "defaultPlacement": { "fit": "contain", "anchorX": 0.85, "anchorY": 0.5, "scale": 1.0 }
+    },
+    {
+      "id": "arte-superior",
+      "label": "Faixa Superior da Arte",
+      "role": "label",
+      "type": "label",
+      "layerPath": ["ARTE EM CIMA DA CANECA"],
+      "expectedSize": { "width": 680, "height": 283 },
+      "defaultFit": "cover",
+      "defaultPlacement": { "fit": "cover", "anchorX": 0.5, "anchorY": 0.5, "scale": 1.0 }
+    }
+  ],
+  "background": {
+    "layerPath": ["541"],
+    "type": "smartObject",
+    "supportsColor": false,
+    "supportsVisibility": true
+  }
+}
