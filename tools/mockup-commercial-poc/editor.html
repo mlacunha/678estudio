@@ -41,7 +41,7 @@
 <body>
   <header>
     <div>
-      <strong>678 Estudio — Mockups Comerciais + Biblioteca de Artes (008-C1)</strong>
+      <strong>678 Estudio — Mockups Comerciais</strong>
       <div class="muted">Use artes da Biblioteca (originais na renderização) ou uploads avulsos, com ajuste manual por slot.</div>
     </div>
     <div class="row">
@@ -54,6 +54,16 @@
 
   <main>
     <section class="card">
+      <div id="psd-import-banner" class="row" hidden style="background:#fef3c7;border:1px solid #f59e0b;border-radius:8px;padding:10px 12px;margin-bottom:12px;justify-content:space-between;">
+        <div>
+          <strong style="color:#92400e;">PSD do template não importado:</strong>
+          <span id="psd-import-label" class="muted"></span>
+        </div>
+        <label style="display:inline-flex;align-items:center;gap:8px;font-weight:600;color:#78350f;">
+          Importar .psd:
+          <input id="psd-import-input" type="file" accept=".psd" />
+        </label>
+      </div>
       <div class="row" style="justify-content: space-between; border-bottom: 1px solid #e7e5e4; padding-bottom: 12px;">
         <div class="row">
           <button id="btn-global-library" type="button" style="border-color:#b45309;color:#78350f;font-weight:600;">Biblioteca (todos os slots)</button>
@@ -449,9 +459,41 @@
     libProduct.addEventListener('change', () => fetchLibrary(1, false));
     libLoadMore.addEventListener('click', () => fetchLibrary(libPage + 1, true));
 
+    const psdBanner = document.getElementById('psd-import-banner');
+    const psdLabel = document.getElementById('psd-import-label');
+    const psdInput = document.getElementById('psd-import-input');
+
+    function syncPsdBanner() {
+      if (!currentTemplate) return;
+      psdBanner.hidden = Boolean(currentTemplate.psdReady);
+      psdLabel.textContent = `selecione o arquivo "${currentTemplate.psdFileName}" para habilitar a renderização deste template.`;
+    }
+
+    psdInput.addEventListener('change', async (e) => {
+      const file = e.target.files?.[0];
+      if (!file || !currentTemplate) return;
+      renderStatus.textContent = `Importando ${currentTemplate.psdFileName}...`;
+      const buf = await file.arrayBuffer();
+      const res = await fetch(`/api/templates/${encodeURIComponent(currentTemplate.id)}/psd`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/octet-stream' },
+        body: buf,
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        renderStatus.textContent = 'Erro: ' + (json.error || 'Falha ao importar PSD.');
+        return;
+      }
+      currentTemplate.psdReady = true;
+      syncPsdBanner();
+      renderStatus.textContent = `PSD ${json.psdFileName} importado com sucesso.`;
+      psdInput.value = '';
+    });
+
     tplSelect.addEventListener('change', () => {
       currentTemplate = templates.find(t => t.id === tplSelect.value);
       for (const s of currentTemplate.slots) resetSlotState(s, false);
+      syncPsdBanner();
       renderSlotCards();
     });
 
@@ -525,10 +567,12 @@
       sampleArts = artRes.files;
       for (const t of templates) tplSelect.add(new Option(`${t.id} — ${t.name}`, t.id));
       for (const f of sampleArts) globalSample.add(new Option(f, f));
+      globalSample.hidden = sampleArts.length === 0;
       const defPano = sampleArts.find(f => f.includes('calibracao')) || sampleArts[0];
       if (defPano) globalSample.value = defPano;
       tplSelect.value = 'template-11';
       currentTemplate = templates.find(t => t.id === 'template-11') || templates[0];
+      syncPsdBanner();
       renderSlotCards();
     })();
   </script>

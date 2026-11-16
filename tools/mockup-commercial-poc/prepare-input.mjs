@@ -1,8 +1,5 @@
 import { readFileSync } from 'node:fs';
-import { createRequire } from 'node:module';
-
-const require = createRequire('D:/Projetos/site678Estudio/package.json');
-const sharp = require('sharp');
+import sharp from 'sharp';
 
 /** Calcula posição e dimensões finais da imagem de entrada dentro do slot sem deformar proporções. */
 export function computeSlotPlacement(srcW, srcH, targetW, targetH, options = {}) {

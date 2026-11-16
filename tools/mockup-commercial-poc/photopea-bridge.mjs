@@ -1,15 +1,14 @@
 import http from 'node:http';
 import { existsSync } from 'node:fs';
-import { createRequire } from 'node:module';
-
-const require = createRequire('D:/Projetos/site678Estudio/package.json');
-const puppeteer = require('puppeteer-core');
+import { join } from 'node:path';
+import puppeteer from 'puppeteer-core';
 
 const CHROME_PATHS = [
   'C:/Program Files/Google/Chrome/Application/chrome.exe',
+  process.env.LOCALAPPDATA ? join(process.env.LOCALAPPDATA, 'Google/Chrome/Application/chrome.exe') : '',
   'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe',
   'C:/Program Files/Microsoft/Edge/Application/msedge.exe',
-];
+].filter(Boolean);
 
 function buildHostHtml() {
   return `<!doctype html><html><body>

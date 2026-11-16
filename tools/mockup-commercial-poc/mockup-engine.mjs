@@ -1,11 +1,8 @@
 import { copyFileSync, existsSync, mkdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
-import { join, resolve } from 'node:path';
-import { createRequire } from 'node:module';
+import { basename, join, resolve } from 'node:path';
+import sharp from 'sharp';
 import { createPhotopeaBridge } from './photopea-bridge.mjs';
 import { prepareSlotImage } from './prepare-input.mjs';
-
-const require = createRequire('D:/Projetos/site678Estudio/package.json');
-const sharp = require('sharp');
 
 function openSlotJsx(layerPath) {
   return `
@@ -73,17 +70,31 @@ function applyBackgroundJsx(bgConfig, bgOptions) {
 }
 
 /** Carrega a configuração JSON de um template pelo identificador. */
-export function loadTemplateById(rootDir, templateId) {
+export function loadTemplateById(templatesDirOrRoot, templateId) {
   const safeId = String(templateId || '').replace(/[^a-zA-Z0-9_-]/g, '');
-  const cfgPath = join(rootDir, 'tools/mockup-commercial-poc/templates', `${safeId}.json`);
+  const directPath = join(templatesDirOrRoot, `${safeId}.json`);
+  const legacyPath = join(templatesDirOrRoot, 'tools/mockup-commercial-poc/templates', `${safeId}.json`);
+  const cfgPath = existsSync(directPath) ? directPath : legacyPath;
   if (!existsSync(cfgPath)) throw new Error(`Template não encontrado: ${templateId}`);
   return JSON.parse(readFileSync(cfgPath, 'utf8'));
+}
+
+/** Resolve o caminho do arquivo PSD de um template priorizando originaisDir externo. */
+export function resolveTemplatePsdPath({ template, rootDir, originaisDir }) {
+  const fileName = basename(template.sourcePath);
+  if (originaisDir) {
+    const extPath = join(originaisDir, fileName);
+    if (existsSync(extPath) || !rootDir) return extPath;
+  }
+  return resolve(rootDir, template.sourcePath);
 }
 
 /** Renderiza um template PSD configurável com artes distintas ou repetidas por slot, exportando PNG e WebP. */
 export async function renderCommercialMockup(options) {
   const {
     rootDir,
+    originaisDir,
+    tempDir: customTempDir,
     template,
     slotInputs,
     outputBaseName,
@@ -93,15 +104,17 @@ export async function renderCommercialMockup(options) {
   } = options;
 
   const t0 = Date.now();
-  const srcPsd = resolve(rootDir, template.sourcePath);
-  if (!existsSync(srcPsd)) throw new Error(`Template PSD não encontrado: ${srcPsd}`);
+  const srcPsd = resolveTemplatePsdPath({ template, rootDir, originaisDir });
+  if (!existsSync(srcPsd)) {
+    throw new Error(`Arquivo PSD "${basename(template.sourcePath)}" não encontrado. Importe o PSD no editor antes de renderizar.`);
+  }
 
   const validIds = new Set(template.slots.map(s => s.id));
   for (const key of Object.keys(slotInputs || {})) {
     if (!validIds.has(key)) throw new Error(`Slot inválido "${key}" para o template ${template.id}.`);
   }
 
-  const tempDir = join(rootDir, 'data/mockups-comerciais/temporarios');
+  const tempDir = customTempDir ?? join(rootDir, 'data/mockups-comerciais/temporarios');
   mkdirSync(tempDir, { recursive: true });
   mkdirSync(outputDir, { recursive: true });
 
