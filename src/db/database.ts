@@ -140,6 +140,7 @@ async function createSchemaAndSeed(client: Client): Promise<void> {
   ], 'write');
   await migrateStationery(client);
   await migrateArtLibrary(client);
+  await migrateCatalogShowcase(client);
 
 }
 
@@ -310,6 +311,33 @@ export async function migrateArtLibrary(client: Client): Promise<void> {
       }
       await tx.execute("INSERT INTO schema_migrations VALUES ('art-library-group-description-v1')");
     }
+    await tx.commit();
+  } catch (error) {
+    await tx.rollback();
+    throw error;
+  } finally {
+    tx.close();
+  }
+}
+
+/** Migração incremental para destacar produtos na Home e vincular arte opcional da Biblioteca. */
+export async function migrateCatalogShowcase(client: Client): Promise<void> {
+  await client.execute('CREATE TABLE IF NOT EXISTS schema_migrations (id TEXT PRIMARY KEY)');
+  const applied = await client.execute("SELECT id FROM schema_migrations WHERE id = 'catalog-showcase-v1'");
+  if (applied.rows.length > 0) return;
+
+  const colsRes = await client.execute("PRAGMA table_info('products')");
+  const colNames = new Set(colsRes.rows.map(r => String(r.name)));
+
+  const tx = await client.transaction('write');
+  try {
+    if (!colNames.has('is_featured')) {
+      await tx.execute('ALTER TABLE products ADD COLUMN is_featured INTEGER NOT NULL DEFAULT 0');
+    }
+    if (!colNames.has('linked_arte_id')) {
+      await tx.execute('ALTER TABLE products ADD COLUMN linked_arte_id TEXT');
+    }
+    await tx.execute("INSERT OR IGNORE INTO schema_migrations (id) VALUES ('catalog-showcase-v1')");
     await tx.commit();
   } catch (error) {
     await tx.rollback();

@@ -2,6 +2,7 @@
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import BrandMark from '../../components/BrandMark.astro';
 import { getAllCategories, getAllProducts } from '../../db/catalogRepository';
+import { listAdminArtes } from '../../db/artLibraryRepository';
 import { getStudioSettings, saveStudioSettings, STUDIO_FIELDS, validateStudioSettings, type StudioSettings } from '../../db/studioSettings';
 
 export const prerender = false;
@@ -30,7 +31,13 @@ if (Astro.request.method === 'POST') {
   Astro.response.status = 422;
 }
 
-const [categories, products] = await Promise.all([getAllCategories(), getAllProducts()]);
+const [categories, products, adminArtes] = await Promise.all([
+  getAllCategories(),
+  getAllProducts(),
+  listAdminArtes({ status: 'published' }),
+]);
+const availableArtes = adminArtes;
+const arteById = new Map(adminArtes.map((art) => [art.id, art]));
 const fields = {
   whatsapp: { label: 'WhatsApp principal', type: 'tel', placeholder: '+55 (DDD) número' },
   instagram: { label: 'Instagram', type: 'url', placeholder: 'https://www.instagram.com/…' },
@@ -186,8 +193,20 @@ const fields = {
                   />
                 </td>
                 <td class="px-6 py-3.5 max-w-xs">
-                  <p class="font-semibold text-ink text-sm">{prod.name}</p>
+                  <div class="flex flex-wrap items-center gap-1.5">
+                    <p class="font-semibold text-ink text-sm">{prod.name}</p>
+                    {prod.isFeatured && (
+                      <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider bg-accent/15 text-accent border border-accent/30">
+                        Destaque Home
+                      </span>
+                    )}
+                  </div>
                   <p class="text-[11px] text-ink-muted truncate mt-0.5">{prod.tagline}</p>
+                  {prod.linkedArteId && arteById.get(prod.linkedArteId) && (
+                    <p class="text-[10px] text-accent mt-0.5 truncate">
+                      Arte: [{arteById.get(prod.linkedArteId)!.code}] {arteById.get(prod.linkedArteId)!.title}
+                    </p>
+                  )}
                 </td>
                 <td class="px-6 py-3.5">
                   <span class="px-2.5 py-1 rounded-full text-[10px] font-medium uppercase tracking-wider bg-surface-raised text-accent border border-accent/20">
@@ -319,6 +338,34 @@ const fields = {
             />
           </div>
 
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 items-center">
+            <label class="flex items-center gap-2.5 rounded-lg border border-control bg-canvas px-3.5 py-2.5 cursor-pointer">
+              <input
+                type="checkbox"
+                id="form-featured"
+                name="isFeatured"
+                class="h-4 w-4 rounded border-control text-accent focus:ring-accent"
+              />
+              <span class="text-ink font-medium">Destacar na Home</span>
+            </label>
+
+            <div>
+              <label for="form-linked-arte" class="block text-ink-muted mb-1 font-medium">Arte vinculada (Biblioteca)</label>
+              <select
+                id="form-linked-arte"
+                name="linkedArteId"
+                class="w-full px-3.5 py-2.5 rounded-lg bg-canvas border border-control text-ink focus:border-accent"
+              >
+                <option value="">Nenhuma (personalização livre)</option>
+                {availableArtes.map((art) => (
+                  <option value={art.id} data-products={art.products.join(',')}>
+                    [{art.code}] {art.title} ({art.products.join('/')})
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
           <div>
             <label class="block text-ink-muted mb-1 font-medium">Imagem do Produto *</label>
             <div class="flex items-center gap-3">
@@ -444,6 +491,8 @@ const fields = {
         (document.getElementById('form-tagline') as HTMLInputElement).value = prod.tagline || '';
         (document.getElementById('form-description') as HTMLTextAreaElement).value = prod.description || '';
         (document.getElementById('form-badge') as HTMLInputElement).value = prod.featuredBadge || '';
+        (document.getElementById('form-featured') as HTMLInputElement).checked = Boolean(prod.isFeatured);
+        (document.getElementById('form-linked-arte') as HTMLSelectElement).value = prod.linkedArteId || '';
         (document.getElementById('form-image-url') as HTMLInputElement).value = prod.imageUrl;
 
         openModal(true);
@@ -487,6 +536,8 @@ const fields = {
         tagline: (document.getElementById('form-tagline') as HTMLInputElement).value,
         description: (document.getElementById('form-description') as HTMLTextAreaElement).value,
         featuredBadge: (document.getElementById('form-badge') as HTMLInputElement).value,
+        isFeatured: (document.getElementById('form-featured') as HTMLInputElement).checked,
+        linkedArteId: (document.getElementById('form-linked-arte') as HTMLSelectElement).value || undefined,
         imageUrl: (document.getElementById('form-image-url') as HTMLInputElement).value,
       };
 

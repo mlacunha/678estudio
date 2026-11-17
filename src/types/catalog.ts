@@ -11,6 +11,8 @@ export interface Product {
   order: number;
   isActive: boolean;
   isProvisional: boolean;
+  isFeatured?: boolean;
+  linkedArteId?: string;
 }
 
 export interface ProductCategory {

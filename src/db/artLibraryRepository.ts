@@ -54,6 +54,7 @@ export interface ArtDetail extends ArtItem {
 }
 
 export interface AdminArteFilters {
+  id?: string;
   q?: string;
   categoryId?: string;
   productType?: string;
@@ -283,6 +284,10 @@ export async function listAdminArtes(
   else if (status === 'draft') clauses.push('a.is_active = 1 AND a.is_published = 0');
   else if (status === 'inactive') clauses.push('a.is_active = 0');
 
+  if (filters.id?.trim()) {
+    clauses.push('a.id = ?');
+    args.push(filters.id.trim());
+  }
   if (filters.q?.trim()) {
     const pattern = `%${filters.q.trim()}%`;
     clauses.push('(a.code LIKE ? OR a.title LIKE ? OR a.description LIKE ? OR a.group_description LIKE ?)');
@@ -641,7 +646,7 @@ export interface PublicArtListResult {
 
 /** Lista artes públicas (ativas, publicadas e compatíveis com o produto) com filtro e paginação. */
 export async function listPublicArtes(
-  filters: { productType: string; category?: string; q?: string; page?: number; limit?: number },
+  filters: { productType: string; category?: string; q?: string; id?: string; page?: number; limit?: number },
   client: Client = getDbClient(),
 ): Promise<PublicArtListResult> {
   await initDatabase(client);
@@ -666,6 +671,10 @@ export async function listPublicArtes(
       )`,
     );
     args.push(cat, cat);
+  }
+  if (filters.id?.trim()) {
+    clauses.push('a.id = ?');
+    args.push(filters.id.trim());
   }
   if (filters.q?.trim()) {
     const pattern = `%${filters.q.trim()}%`;

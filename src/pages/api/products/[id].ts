@@ -1,5 +1,5 @@
 import type { APIRoute } from 'astro';
-import { getProductById, updateProduct, toggleProductActive, deleteProduct } from '../../../db/catalogRepository';
+import { getProductById, updateProduct, toggleProductActive, deleteProduct, resolveValidLinkedArteId } from '../../../db/catalogRepository';
 import type { Product } from '../../../types/catalog';
 
 export const prerender = false;
@@ -37,9 +37,24 @@ export const PUT: APIRoute = async ({ params, request }) => {
       return new Response(JSON.stringify({ success: true }), { status: 200 });
     }
 
+    const targetCategory = body.categorySlug || existing.categorySlug;
+    let nextLinkedArteId = existing.linkedArteId;
+    if (body.linkedArteId !== undefined) {
+      const rawLinked = body.linkedArteId ? String(body.linkedArteId).trim() : '';
+      if (!rawLinked) {
+        nextLinkedArteId = undefined;
+      } else {
+        const valid = await resolveValidLinkedArteId(rawLinked, targetCategory);
+        if (!valid) {
+          return new Response(JSON.stringify({ success: false, error: 'A arte vinculada não existe, está inativa ou não é compatível com esta categoria.' }), { status: 400 });
+        }
+        nextLinkedArteId = valid;
+      }
+    }
+
     const updated: Product = {
       ...existing,
-      categorySlug: body.categorySlug || existing.categorySlug,
+      categorySlug: targetCategory,
       name: body.name ? String(body.name).trim() : existing.name,
       tagline: body.tagline !== undefined ? String(body.tagline).trim() : existing.tagline,
       description: body.description !== undefined ? String(body.description).trim() : existing.description,
@@ -47,6 +62,8 @@ export const PUT: APIRoute = async ({ params, request }) => {
       imageUrl: body.imageUrl ? String(body.imageUrl).trim() : existing.imageUrl,
       order: body.order !== undefined ? Number(body.order) : existing.order,
       isActive: body.isActive !== undefined ? Boolean(body.isActive) : existing.isActive,
+      isFeatured: body.isFeatured !== undefined ? Boolean(body.isFeatured) : existing.isFeatured,
+      linkedArteId: nextLinkedArteId,
     };
 
     await updateProduct(updated);

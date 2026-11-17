@@ -27,6 +27,8 @@ function mapRowToProduct(row: Record<string, unknown>): Product {
     order: Number(row.display_order),
     isActive: Boolean(row.is_active),
     isProvisional: Boolean(row.is_provisional),
+    isFeatured: Boolean(row.is_featured),
+    linkedArteId: row.linked_arte_id ? String(row.linked_arte_id) : undefined,
   };
 }
 
@@ -76,11 +78,53 @@ export async function getProductById(id: string, client: Client = getDbClient())
   return mapRowToProduct(result.rows[0]);
 }
 
+export async function getHomeFeaturedProducts(
+  categorySlug: string,
+  limit = 4,
+  client: Client = getDbClient(),
+): Promise<Product[]> {
+  await initDatabase(client);
+  const featuredRes = await client.execute({
+    sql: 'SELECT * FROM products WHERE category_slug = ? AND is_active = 1 AND is_featured = 1 ORDER BY display_order ASC LIMIT ?',
+    args: [categorySlug, limit],
+  });
+  if (featuredRes.rows.length > 0) {
+    return featuredRes.rows.map(mapRowToProduct);
+  }
+  const fallbackRes = await client.execute({
+    sql: 'SELECT * FROM products WHERE category_slug = ? AND is_active = 1 ORDER BY display_order ASC LIMIT ?',
+    args: [categorySlug, limit],
+  });
+  return fallbackRes.rows.map(mapRowToProduct);
+}
+
+/** Valida se a arte existe, está ativa/publicada e é compatível com a categoria do produto. */
+export async function resolveValidLinkedArteId(
+  arteId: string | undefined,
+  categorySlug: string,
+  client: Client = getDbClient(),
+): Promise<string | undefined> {
+  const clean = (arteId ?? '').trim();
+  if (!clean) return undefined;
+  const productType = categorySlug === 'canecas' ? 'caneca' : categorySlug === 'quadros' ? 'quadro' : null;
+  if (!productType) return undefined;
+
+  await initDatabase(client);
+  const res = await client.execute({
+    sql: `SELECT a.id FROM artes a
+          INNER JOIN arte_produtos p ON p.arte_id = a.id
+          WHERE a.id = ? AND a.is_active = 1 AND a.is_published = 1 AND p.product_type = ?
+          LIMIT 1`,
+    args: [clean, productType],
+  });
+  return res.rows.length > 0 ? String(res.rows[0].id) : undefined;
+}
+
 export async function createProduct(product: Product, client: Client = getDbClient()): Promise<void> {
   await initDatabase(client);
   await client.execute({
-    sql: `INSERT INTO products (id, category_slug, name, tagline, description, featured_badge, image_url, display_order, is_active, is_provisional)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    sql: `INSERT INTO products (id, category_slug, name, tagline, description, featured_badge, image_url, display_order, is_active, is_provisional, is_featured, linked_arte_id)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     args: [
       product.id,
       product.categorySlug,
@@ -92,6 +136,8 @@ export async function createProduct(product: Product, client: Client = getDbClie
       product.order,
       product.isActive ? 1 : 0,
       product.isProvisional ? 1 : 0,
+      product.isFeatured ? 1 : 0,
+      product.linkedArteId ?? null,
     ],
   });
 }
@@ -100,7 +146,7 @@ export async function updateProduct(product: Product, client: Client = getDbClie
   await initDatabase(client);
   await client.execute({
     sql: `UPDATE products 
-          SET category_slug = ?, name = ?, tagline = ?, description = ?, featured_badge = ?, image_url = ?, display_order = ?, is_active = ?
+          SET category_slug = ?, name = ?, tagline = ?, description = ?, featured_badge = ?, image_url = ?, display_order = ?, is_active = ?, is_featured = ?, linked_arte_id = ?
           WHERE id = ?`,
     args: [
       product.categorySlug,
@@ -111,6 +157,8 @@ export async function updateProduct(product: Product, client: Client = getDbClie
       product.imageUrl,
       product.order,
       product.isActive ? 1 : 0,
+      product.isFeatured ? 1 : 0,
+      product.linkedArteId ?? null,
       product.id,
     ],
   });

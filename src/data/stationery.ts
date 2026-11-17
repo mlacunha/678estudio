@@ -7,6 +7,11 @@ export const stationeryFamilies = {
     available: true,
     models: ['caderno-receitas', 'diario-pessoal', 'livro-memorias'],
   },
+  'family-calendarios': {
+    route: '/personalizar/calendario',
+    available: true,
+    models: ['calendario-anual', 'calendario-mensal-parede', 'calendario-mesa-wireo'],
+  },
 } as const;
 
 export function stationeryCustomizer(id: string) {
