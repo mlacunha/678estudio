@@ -34,7 +34,8 @@ class BackupTest(unittest.TestCase):
         with closing(sqlite3.connect(self.db)) as db:
             db.execute("PRAGMA journal_mode=WAL")
             for table, columns in engine.SCHEMA.items():
-                db.execute(f"CREATE TABLE {table} ({', '.join(columns.split())})")
+                extra = ["category_id"] if table in ("products", "gallery_works") else []
+                db.execute(f"CREATE TABLE {table} ({', '.join(columns.split() + extra)})")
             db.execute("INSERT INTO products (id, image_url) VALUES ('item', '/uploads/catalog.webp')")
             db.execute("INSERT INTO gallery_photos (id) VALUES (?)", (PHOTO.rsplit("/", 1)[1],))
             db.execute("INSERT INTO agenda_quotes (id, status) VALUES ('agenda', 'requested')")
