@@ -1,0 +1,418 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import ArtLibraryPicker from './ArtLibraryPicker.astro';
+import { MONTHLY_TEMPLATES } from '../../scripts/calendar/monthlyTemplates';
+import { CALENDAR_TEMPLATES } from '../../scripts/calendar/templates';
+
+const years = [2027, 2028, 2029, 2030, 2031, 2032];
+const fieldClass = 'w-full min-h-11 rounded-lg border border-control bg-canvas px-3 text-sm text-ink focus:border-accent focus:outline-none';
+const steps = [
+  { id: 'choose', label: '1. Escolher' },
+  { id: 'personalize', label: '2. Personalizar' },
+  { id: 'review', label: '3. Revisar e solicitar' },
+] as const;
+---
+
+<BaseLayout
+  title="Personalize seu Calendário | 678 Estudio"
+  description="Monte seu calendário anual ou mensal Wire-O personalizado com fotografia ou arte da biblioteca, visualize todas as páginas e solicite orçamento."
+>
+  <div
+    data-calendar-root
+    class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 md:py-10 pb-10"
+  >
+    <header class="mb-5 pb-4 flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-line">
+      <div>
+        <div class="flex items-center gap-2 text-[11px] sm:text-xs uppercase tracking-[.18em] text-accent font-semibold mb-1">
+          <span>Papelaria personalizada</span>
+          <span>•</span>
+          <span>Calendários</span>
+        </div>
+        <h1 class="text-2xl sm:text-4xl font-light text-ink">
+          Gerador de <span class="font-normal text-accent">Calendários 2027+</span>
+        </h1>
+        <p class="hidden sm:block mt-1 text-xs sm:text-sm text-ink-muted max-w-2xl">
+          Escolha o modelo, personalize com suas fotos ou identidade institucional, revise todas as páginas e solicite orçamento.
+        </p>
+      </div>
+
+      <a
+        href="/"
+        class="inline-flex min-h-11 items-center gap-1.5 px-4 py-2 rounded-full border border-control hover:border-ink-muted bg-surface text-ink-secondary text-xs font-medium self-start md:self-auto"
+      >
+        Voltar ao Início
+      </a>
+    </header>
+
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 lg:gap-8 items-start">
+      <!-- Prévia visual (sticky no desktop, compacta e sempre acessível no mobile) -->
+      <div class="min-w-0 lg:col-span-7 lg:sticky lg:top-6 space-y-2.5">
+        <div id="cal-monthly-nav" hidden class="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-line bg-surface px-3 py-2 [&[hidden]]:hidden">
+          <button id="btn-cal-prev-page" type="button" class="min-h-10 rounded-lg border border-control px-3 text-xs font-semibold text-ink hover:border-accent">← Anterior</button>
+          <select id="cal-monthly-page" aria-label="Página do calendário" class="min-h-10 rounded-lg border border-control bg-canvas px-3 text-xs font-semibold text-ink"></select>
+          <button id="btn-cal-next-page" type="button" class="min-h-10 rounded-lg border border-control px-3 text-xs font-semibold text-ink hover:border-accent">Próximo →</button>
+        </div>
+
+        <div id="cal-desk-view-bar" hidden class="grid grid-cols-2 gap-1.5 rounded-xl border border-line bg-surface p-1 [&[hidden]]:hidden">
+          <button type="button" data-desk-view="assembled" class="min-h-9 rounded-lg bg-action px-3 text-xs font-semibold text-on-action transition-colors">
+            Calendário montado (Mesa + Base)
+          </button>
+          <button type="button" data-desk-view="sheet" class="min-h-9 rounded-lg px-3 text-xs font-semibold text-ink-secondary hover:text-ink transition-colors">
+            Folha aberta (200 × 120 mm)
+          </button>
+        </div>
+
+        <div class="relative rounded-2xl border border-line bg-canvas p-3 sm:p-5 flex items-center justify-center">
+          <div
+            id="calendar-preview-stage"
+            class="w-full max-w-[540px] max-h-[46vh] lg:max-h-[76vh] shadow-md rounded-sm overflow-hidden bg-white"
+          ></div>
+          <div class="absolute top-3 left-3 sm:top-4 sm:left-4 pointer-events-none px-2.5 py-1 rounded-full bg-media-badge/95 text-[11px] font-medium text-on-media">
+            <span id="calendar-badge-paper">A4 Retrato · 2027</span>
+          </div>
+          <div class="absolute bottom-3 right-3 sm:bottom-4 sm:right-4 pointer-events-none px-2.5 py-1 rounded-full bg-media-badge/80 text-[10px] font-medium text-on-media">
+            Prévia comercial · 678 Estudio
+          </div>
+        </div>
+        <p class="text-[11px] text-ink-muted text-center">
+          Prévia comercial em escala física proporcional ao material impresso (A4/A3).
+        </p>
+      </div>
+
+      <!-- Painel por etapas: 1. Escolher | 2. Personalizar | 3. Revisar e solicitar -->
+      <div class="min-w-0 lg:col-span-5 space-y-4">
+        <div role="tablist" aria-label="Etapas do personalizador de calendários" class="grid grid-cols-3 gap-1.5 rounded-xl border border-line bg-surface p-1.5">
+          {steps.map((step, idx) => (
+            <button
+              type="button"
+              role="tab"
+              aria-selected={idx === 0 ? 'true' : 'false'}
+              data-cal-step-tab={step.id}
+              class:list={[
+                'min-h-11 rounded-lg px-2 text-xs font-semibold transition-colors',
+                idx === 0 ? 'bg-action text-on-action shadow-sm' : 'text-ink-secondary hover:text-ink',
+              ]}
+            >
+              {step.label}
+            </button>
+          ))}
+        </div>
+
+        <!-- ETAPA 1: ESCOLHER CALENDÁRIO -->
+        <section data-cal-step-panel="choose" class="rounded-2xl border border-line bg-surface p-4 sm:p-5 space-y-4">
+          <div class="space-y-1.5">
+            <span class="block text-xs font-semibold text-ink">Modalidade</span>
+            <div role="tablist" aria-label="Modalidade do calendário" class="grid grid-cols-3 gap-1.5 rounded-xl border border-line bg-canvas p-1">
+              <button
+                type="button"
+                role="tab"
+                aria-selected="true"
+                data-cal-modality="annual"
+                class="min-h-11 rounded-lg bg-action px-2 text-xs font-semibold text-on-action transition-colors"
+              >
+                Anual
+              </button>
+              <button
+                type="button"
+                role="tab"
+                aria-selected="false"
+                data-cal-modality="monthly"
+                class="min-h-11 rounded-lg px-2 text-xs font-semibold text-ink-secondary hover:text-ink transition-colors"
+              >
+                Mensal Parede
+              </button>
+              <button
+                type="button"
+                role="tab"
+                aria-selected="false"
+                data-cal-modality="desk"
+                class="min-h-11 rounded-lg px-2 text-xs font-semibold text-ink-secondary hover:text-ink transition-colors"
+              >
+                Mesa Wire-O
+              </button>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <label class="space-y-1 text-xs font-medium text-ink-secondary">
+              <span>Ano</span>
+              <select id="cal-year" class={fieldClass}>
+                {years.map(y => <option value={y} selected={y === 2027}>{y}{y % 4 === 0 ? ' (bissexto)' : ''}</option>)}
+              </select>
+            </label>
+            <label id="cal-annual-tpl-wrap" class="space-y-1 text-xs font-medium text-ink-secondary">
+              <span>Modelo visual</span>
+              <select id="cal-template" class={fieldClass}>
+                {Object.values(CALENDAR_TEMPLATES).map(t => <option value={t.id}>{t.name}</option>)}
+              </select>
+            </label>
+            <label id="cal-monthly-tpl-wrap" hidden class="space-y-1 text-xs font-medium text-ink-secondary [&[hidden]]:hidden">
+              <span>Modelo visual</span>
+              <select id="cal-monthly-template" class={fieldClass}>
+                {Object.values(MONTHLY_TEMPLATES).map(t => <option value={t.id}>{t.name}</option>)}
+              </select>
+            </label>
+          </div>
+
+          <div id="cal-annual-paper-row" class="grid grid-cols-2 gap-3 [&[hidden]]:hidden">
+            <label class="space-y-1 text-xs font-medium text-ink-secondary">
+              <span>Formato</span>
+              <select id="cal-format" class={fieldClass}>
+                <option value="A4">A4 (210 × 297 mm)</option>
+                <option value="A3">A3 (297 × 420 mm)</option>
+              </select>
+            </label>
+            <label class="space-y-1 text-xs font-medium text-ink-secondary">
+              <span>Orientação</span>
+              <select id="cal-orientation" class={fieldClass}>
+                <option value="portrait">Retrato</option>
+                <option value="landscape">Paisagem</option>
+              </select>
+            </label>
+          </div>
+
+          <div id="cal-monthly-options" hidden class="space-y-3 rounded-xl border border-line bg-canvas/70 p-3 text-xs [&[hidden]]:hidden">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 items-center">
+              <label class="flex items-center gap-2 min-h-10 cursor-pointer font-medium text-ink">
+                <input id="cal-include-cover" type="checkbox" checked class="size-4 accent-accent" />
+                <span>Incluir capa (13 páginas)</span>
+              </label>
+              <label class="space-y-1 text-ink-secondary">
+                <span>Reserva Wire-O (mm)</span>
+                <input id="cal-wireo-margin" type="number" min="12" max="26" value="18" class={fieldClass} />
+              </label>
+            </div>
+            <p id="cal-monthly-format-note" class="text-[11px] text-ink-muted">Formato A4 Retrato (210 × 297 mm) com reserva superior configurável para perfuração Wire-O.</p>
+          </div>
+
+          <label class="block space-y-1 text-xs font-medium text-ink-secondary">
+            <span>Início da semana</span>
+            <select id="cal-week-start" class={fieldClass}>
+              <option value="sunday">Domingo</option>
+              <option value="monday">Segunda-feira</option>
+            </select>
+          </label>
+
+          <div class="space-y-2 rounded-xl border border-line bg-canvas/70 p-3 text-xs text-ink-secondary">
+            <label class="flex items-center gap-2.5 min-h-10 cursor-pointer">
+              <input id="cal-federal-holidays" type="checkbox" checked class="size-4 accent-accent" />
+              <span>Feriados nacionais federais (leis federais)</span>
+            </label>
+            <label class="flex items-center gap-2.5 min-h-10 cursor-pointer">
+              <input id="cal-good-friday" type="checkbox" class="size-4 accent-accent" />
+              <span>Incluir Sexta-feira Santa (data religiosa opcional)</span>
+            </label>
+            <label class="flex items-center gap-2.5 min-h-10 cursor-pointer">
+              <input id="cal-bleed" type="checkbox" class="size-4 accent-accent" />
+              <span>Acabamento gráfico: incluir sangria de 3 mm</span>
+            </label>
+          </div>
+
+          <button type="button" data-cal-go-step="personalize" class="w-full min-h-11 rounded-xl bg-action px-4 text-xs font-semibold text-on-action hover:bg-action-hover">
+            Próxima etapa: Personalizar →
+          </button>
+        </section>
+
+        <!-- ETAPA 2: PERSONALIZAR -->
+        <section data-cal-step-panel="personalize" hidden class="rounded-2xl border border-line bg-surface p-4 sm:p-5 space-y-4 [&[hidden]]:hidden">
+          <div id="cal-annual-titles-row" class="grid grid-cols-1 sm:grid-cols-2 gap-3 [&[hidden]]:hidden">
+            <label class="space-y-1 text-xs font-medium text-ink-secondary">
+              <span>Título</span>
+              <input id="cal-title" type="text" maxlength="42" value="Calendário Anual" class={fieldClass} />
+            </label>
+            <label class="space-y-1 text-xs font-medium text-ink-secondary">
+              <span>Subtítulo</span>
+              <input id="cal-subtitle" type="text" maxlength="56" value="678 Estudio · Papelaria Personalizada" class={fieldClass} />
+            </label>
+          </div>
+
+          <div class="space-y-3 border-t border-line pt-3">
+            <div class="flex items-center justify-between gap-2">
+              <h2 class="text-xs font-semibold uppercase tracking-wider text-ink">Fotografia ou Arte</h2>
+              <button id="btn-clear-calendar-art" type="button" class="text-xs font-medium text-ink-muted hover:text-ink">
+                Remover imagem
+              </button>
+            </div>
+
+            <div id="cal-monthly-image-scope" hidden class="rounded-xl border border-line bg-canvas/70 p-2.5 text-xs space-y-1.5 [&[hidden]]:hidden">
+              <span class="block font-semibold text-ink">Aplicação da fotografia</span>
+              <div class="grid grid-cols-2 gap-2">
+                <label class="flex items-center gap-1.5 min-h-9 cursor-pointer">
+                  <input type="radio" name="cal-img-scope" value="all" checked class="accent-accent" />
+                  <span>Todos os meses</span>
+                </label>
+                <label class="flex items-center gap-1.5 min-h-9 cursor-pointer">
+                  <input type="radio" name="cal-img-scope" value="page" class="accent-accent" />
+                  <span>Somente página atual</span>
+                </label>
+              </div>
+            </div>
+
+            <ArtLibraryPicker product="quadro">
+              <div slot="upload" class="space-y-2">
+                <label class="flex min-h-11 w-full cursor-pointer items-center justify-center rounded-xl border border-dashed border-control bg-canvas px-4 py-3 text-xs font-semibold text-ink hover:border-accent">
+                  <span>Selecionar foto ou arte (PNG, JPG, WebP)</span>
+                  <input id="input-calendar-art" type="file" accept="image/png,image/jpeg,image/webp" class="sr-only" />
+                </label>
+                <p id="calendar-art-filename" class="text-xs text-ink-muted truncate">Nenhuma imagem selecionada</p>
+              </div>
+            </ArtLibraryPicker>
+
+            <div class="space-y-2 pt-1">
+              <p class="text-xs font-semibold text-ink">Enquadramento da imagem</p>
+              <label class="block text-xs text-ink-secondary">
+                Zoom
+                <input id="cal-img-scale" type="range" min="100" max="250" value="100" class="w-full accent-accent" />
+              </label>
+              <div class="grid grid-cols-2 gap-3">
+                <label class="block text-xs text-ink-secondary">
+                  Posição H
+                  <input id="cal-img-x" type="range" min="0" max="100" value="50" class="w-full accent-accent" />
+                </label>
+                <label class="block text-xs text-ink-secondary">
+                  Posição V
+                  <input id="cal-img-y" type="range" min="0" max="100" value="50" class="w-full accent-accent" />
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <div id="cal-advertiser-panel" hidden class="space-y-3 border-t border-line pt-3 [&[hidden]]:hidden">
+            <h2 class="text-xs font-semibold uppercase tracking-wider text-ink">Identidade Empresarial (aplicada em todas as páginas)</h2>
+
+            <div class="space-y-1.5">
+              <label class="flex min-h-11 w-full cursor-pointer items-center justify-between rounded-xl border border-dashed border-control bg-canvas px-3 py-2 text-xs font-medium text-ink hover:border-accent">
+                <span>Logomarca (PNG com transparência ou JPG)</span>
+                <input id="cal-adv-logo" type="file" accept="image/png,image/jpeg" class="sr-only" />
+              </label>
+              <div class="flex items-center justify-between text-[11px] text-ink-muted">
+                <span id="cal-adv-logo-name" class="truncate">Nenhuma logomarca</span>
+                <button id="btn-clear-adv-logo" type="button" class="hover:text-ink">Limpar logo</button>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              <input id="cal-adv-name" type="text" placeholder="Nome da empresa / entidade" maxlength="48" class={fieldClass} />
+              <input id="cal-adv-slogan" type="text" placeholder="Slogan institucional" maxlength="60" class={fieldClass} />
+              <input id="cal-adv-phone" type="text" placeholder="Telefone" maxlength="32" class={fieldClass} />
+              <input id="cal-adv-whatsapp" type="text" placeholder="WhatsApp" maxlength="32" class={fieldClass} />
+              <input id="cal-adv-website" type="text" placeholder="Site (https://...)" maxlength="64" class={fieldClass} />
+              <input id="cal-adv-address" type="text" placeholder="Endereço" maxlength="72" class={fieldClass} />
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-[1fr_auto_auto] gap-2.5 items-center">
+              <input id="cal-adv-qr" type="text" placeholder="URL ou texto do QR Code" maxlength="140" class={fieldClass} />
+              <label class="flex items-center gap-1.5 text-xs text-ink-secondary">
+                <span>Cor 1</span>
+                <input id="cal-adv-color1" type="color" value="#1c1917" class="h-10 w-10 rounded border border-control bg-canvas p-0.5" />
+              </label>
+              <label class="flex items-center gap-1.5 text-xs text-ink-secondary">
+                <span>Cor 2</span>
+                <input id="cal-adv-color2" type="color" value="#b45309" class="h-10 w-10 rounded border border-control bg-canvas p-0.5" />
+              </label>
+            </div>
+
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 rounded-xl border border-line bg-canvas/70 p-2.5 text-[11px] text-ink-secondary">
+              <label class="flex items-center gap-1.5 min-h-8 cursor-pointer"><input id="vis-logo" type="checkbox" checked class="accent-accent" />Logo</label>
+              <label class="flex items-center gap-1.5 min-h-8 cursor-pointer"><input id="vis-name" type="checkbox" checked class="accent-accent" />Nome</label>
+              <label class="flex items-center gap-1.5 min-h-8 cursor-pointer"><input id="vis-slogan" type="checkbox" checked class="accent-accent" />Slogan</label>
+              <label class="flex items-center gap-1.5 min-h-8 cursor-pointer"><input id="vis-phone" type="checkbox" checked class="accent-accent" />Telefone</label>
+              <label class="flex items-center gap-1.5 min-h-8 cursor-pointer"><input id="vis-whatsapp" type="checkbox" checked class="accent-accent" />WhatsApp</label>
+              <label class="flex items-center gap-1.5 min-h-8 cursor-pointer"><input id="vis-website" type="checkbox" checked class="accent-accent" />Site</label>
+              <label class="flex items-center gap-1.5 min-h-8 cursor-pointer"><input id="vis-address" type="checkbox" checked class="accent-accent" />Endereço</label>
+              <label class="flex items-center gap-1.5 min-h-8 cursor-pointer"><input id="vis-qr" type="checkbox" checked class="accent-accent" />QR Code</label>
+            </div>
+          </div>
+
+          <div id="cal-desk-base-panel" hidden class="space-y-3 border-t border-line pt-3 [&[hidden]]:hidden">
+            <h2 class="text-xs font-semibold uppercase tracking-wider text-ink">Base Triangular (Calendário de Mesa)</h2>
+            <label class="flex items-center gap-2.5 min-h-10 cursor-pointer rounded-xl border border-line bg-canvas/70 px-3 text-xs font-medium text-ink">
+              <input id="cal-base-sync" type="checkbox" checked class="size-4 accent-accent" />
+              <span>Usar a mesma identidade empresarial na base triangular</span>
+            </label>
+
+            <div id="cal-base-custom-fields" hidden class="space-y-2.5 [&[hidden]]:hidden">
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                <input id="cal-base-name" type="text" placeholder="Nome exibido na base" maxlength="48" class={fieldClass} />
+                <input id="cal-base-slogan" type="text" placeholder="Slogan na base" maxlength="60" class={fieldClass} />
+                <input id="cal-base-phone" type="text" placeholder="Telefone na base" maxlength="32" class={fieldClass} />
+                <input id="cal-base-whatsapp" type="text" placeholder="WhatsApp na base" maxlength="32" class={fieldClass} />
+                <input id="cal-base-website" type="text" placeholder="Site na base" maxlength="64" class={fieldClass} />
+                <input id="cal-base-qr" type="text" placeholder="URL/texto QR da base" maxlength="140" class={fieldClass} />
+              </div>
+              <div class="flex flex-wrap items-center gap-4 text-xs text-ink-secondary">
+                <label class="flex items-center gap-1.5"><span>Cor principal</span><input id="cal-base-color1" type="color" value="#1c1917" class="h-9 w-10 rounded border border-control bg-canvas p-0.5" /></label>
+                <label class="flex items-center gap-1.5"><span>Cor secundária</span><input id="cal-base-color2" type="color" value="#b45309" class="h-9 w-10 rounded border border-control bg-canvas p-0.5" /></label>
+              </div>
+              <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 rounded-xl border border-line bg-canvas/70 p-2.5 text-[11px] text-ink-secondary">
+                <label class="flex items-center gap-1.5 min-h-8 cursor-pointer"><input id="base-vis-logo" type="checkbox" checked class="accent-accent" />Logo</label>
+                <label class="flex items-center gap-1.5 min-h-8 cursor-pointer"><input id="base-vis-name" type="checkbox" checked class="accent-accent" />Nome</label>
+                <label class="flex items-center gap-1.5 min-h-8 cursor-pointer"><input id="base-vis-slogan" type="checkbox" checked class="accent-accent" />Slogan</label>
+                <label class="flex items-center gap-1.5 min-h-8 cursor-pointer"><input id="base-vis-phone" type="checkbox" checked class="accent-accent" />Telefone</label>
+                <label class="flex items-center gap-1.5 min-h-8 cursor-pointer"><input id="base-vis-whatsapp" type="checkbox" checked class="accent-accent" />WhatsApp</label>
+                <label class="flex items-center gap-1.5 min-h-8 cursor-pointer"><input id="base-vis-website" type="checkbox" checked class="accent-accent" />Site</label>
+                <label class="flex items-center gap-1.5 min-h-8 cursor-pointer"><input id="base-vis-qr" type="checkbox" checked class="accent-accent" />QR Code</label>
+              </div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-2.5 pt-1">
+            <button type="button" data-cal-go-step="choose" class="min-h-11 rounded-xl border border-control px-4 text-xs font-semibold text-ink hover:border-accent">
+              ← Escolher
+            </button>
+            <button type="button" data-cal-go-step="review" class="min-h-11 rounded-xl bg-action px-4 text-xs font-semibold text-on-action hover:bg-action-hover">
+              Revisar e solicitar →
+            </button>
+          </div>
+        </section>
+
+        <!-- ETAPA 3: REVISAR E SOLICITAR -->
+        <section data-cal-step-panel="review" hidden class="rounded-2xl border border-line bg-surface p-4 sm:p-5 space-y-4 [&[hidden]]:hidden">
+          <h2 class="text-sm font-semibold text-ink">Resumo da personalização</h2>
+          <dl id="cal-review-summary" class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs"></dl>
+
+          <p class="text-xs text-ink-secondary">
+            Registre sua personalização para gerar o código de referência e enviar o pedido pelo WhatsApp. A preparação gráfica final é feita pela equipe do 678 Estudio.
+          </p>
+
+          <button
+            id="btn-calendar-quote"
+            type="button"
+            class="w-full min-h-12 rounded-xl bg-action px-5 text-sm font-semibold text-on-action hover:bg-action-hover disabled:opacity-50"
+          >
+            Solicitar Orçamento
+          </button>
+
+          <div id="calendar-quote-result" hidden class="rounded-xl border border-line bg-canvas p-3 space-y-2 text-xs [&[hidden]]:hidden">
+            <p class="font-semibold text-ink">Personalização registrada!</p>
+            <a id="calendar-quote-ref" class="block text-accent underline break-all" target="_blank" rel="noopener noreferrer"></a>
+            <a
+              id="btn-calendar-whatsapp"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="flex w-full min-h-11 items-center justify-center rounded-xl border border-accent px-5 text-xs font-semibold text-accent hover:bg-accent/10"
+            >
+              Enviar pedido pelo WhatsApp
+            </a>
+          </div>
+
+          <p id="calendar-status" role="status" class="text-xs text-ink-secondary"></p>
+
+          <div class="grid grid-cols-2 gap-2.5 pt-1 border-t border-line">
+            <button type="button" data-cal-go-step="choose" class="min-h-11 rounded-xl border border-control px-3 text-xs font-semibold text-ink hover:border-accent">
+              ← Escolher
+            </button>
+            <button type="button" data-cal-go-step="personalize" class="min-h-11 rounded-xl border border-control px-3 text-xs font-semibold text-ink hover:border-accent">
+              ← Personalizar
+            </button>
+          </div>
+        </section>
+      </div>
+    </div>
+  </div>
+</BaseLayout>
+
+<script>
+  import { initCalendarCustomizer } from '../../scripts/calendarCustomizer';
+  initCalendarCustomizer();
+</script>

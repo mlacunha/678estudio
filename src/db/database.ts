@@ -125,6 +125,18 @@ async function createSchemaAndSeed(client: Client): Promise<void> {
       mime TEXT NOT NULL, content BLOB NOT NULL, PRIMARY KEY (quote_id, name)
     )`,
     'CREATE INDEX IF NOT EXISTS notebook_quotes_created ON notebook_quotes (created_at DESC, id DESC)',
+    `CREATE TABLE IF NOT EXISTS calendar_quotes (
+      id TEXT PRIMARY KEY, product TEXT NOT NULL,
+      created_at TEXT NOT NULL, status TEXT NOT NULL CHECK (status = 'requested'),
+      config_version INTEGER NOT NULL, config_json TEXT NOT NULL
+    )`,
+    `CREATE TABLE IF NOT EXISTS calendar_quote_assets (
+      quote_id TEXT NOT NULL REFERENCES calendar_quotes(id) ON DELETE CASCADE,
+      name TEXT NOT NULL,
+      mime TEXT NOT NULL, content BLOB NOT NULL, PRIMARY KEY (quote_id, name)
+    )`,
+    'CREATE INDEX IF NOT EXISTS calendar_quotes_created ON calendar_quotes (created_at DESC, id DESC)',
+    'CREATE INDEX IF NOT EXISTS notebook_quotes_created ON notebook_quotes (created_at DESC, id DESC)',
   ], 'write');
   await migrateStationery(client);
   await migrateArtLibrary(client);

@@ -1,0 +1,206 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import BrandMark from '../../../components/BrandMark.astro';
+import { getCalendarQuote, isCalendarReference } from '../../../db/calendarQuotes';
+import { CALENDAR_MONTH_NAMES } from '../../../scripts/calendar/dateEngine';
+
+export const prerender = false;
+const id = Astro.params.id ?? '';
+const quote = isCalendarReference(id) ? await getCalendarQuote(id) : undefined;
+if (!quote) Astro.response.status = 404;
+const cfg = quote?.config;
+
+function describeAsset(name: string): string {
+  if (name === 'logo') return 'Logomarca da empresa';
+  if (name === 'image-all') return 'Imagem compartilhada (todos os meses)';
+  if (name === 'image-cover') return 'Imagem da capa';
+  const match = name.match(/^image-(\d+)$/);
+  if (match) {
+    const m = Number(match[1]);
+    return `Mês ${m} — ${CALENDAR_MONTH_NAMES[m - 1] ?? m}`;
+  }
+  return name;
+}
+
+const modalityLabel = cfg?.modality === 'desk'
+  ? 'Calendário de Mesa Wire-O'
+  : cfg?.modality === 'monthly'
+    ? 'Calendário Mensal de Parede Wire-O'
+    : 'Calendário Anual';
+
+const formatSummary = cfg
+  ? cfg.modality === 'desk'
+    ? `${cfg.sheetWidthMm ?? 200} × ${cfg.sheetHeightMm ?? 120} mm Paisagem`
+    : `${cfg.format} ${cfg.orientation === 'landscape' ? 'Paisagem' : 'Retrato'}`
+  : '';
+---
+
+<BaseLayout title="Detalhes do Calendário | Administração 678 Estudio" description="Configuração e arquivos da solicitação de calendário para produção gráfica">
+  <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-6">
+    <header class="flex flex-wrap items-center justify-between gap-4 pb-6 border-b border-line">
+      <div class="flex items-center gap-3">
+        <BrandMark class="size-9" />
+        <div>
+          <h1 class="text-2xl font-light text-ink">Projeto de <span class="font-normal text-accent">Calendário</span></h1>
+          <p class="text-xs text-ink-muted">Referência: <code>{id}</code></p>
+        </div>
+      </div>
+      <div class="flex flex-wrap gap-2">
+        {quote && (
+          <a
+            href={`/admin/calendarios/${id}/arquivo/configuracao`}
+            class="inline-flex min-h-10 items-center rounded-full border border-accent px-4 text-xs font-semibold text-accent hover:bg-accent/10"
+          >
+            Baixar JSON
+          </a>
+        )}
+        <a href="/admin/calendarios" class="inline-flex min-h-10 items-center rounded-full border border-control px-4 text-xs font-medium text-ink-secondary">
+          Voltar à Lista
+        </a>
+      </div>
+    </header>
+
+    {!quote || !cfg ? (
+      <div class="rounded-2xl border border-line bg-surface p-6 text-sm text-ink-muted">Solicitação não encontrada.</div>
+    ) : (
+      <div class="space-y-6">
+        <!-- Dados do Produto e Acabamento -->
+        <section class="rounded-2xl border border-line bg-surface p-6 space-y-4">
+          <h2 class="text-base font-semibold text-ink">Especificações do Calendário</h2>
+          <dl class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 text-xs">
+            <div class="rounded-xl border border-line bg-canvas p-3">
+              <dt class="text-ink-muted">Modalidade</dt>
+              <dd class="font-semibold text-ink mt-0.5">{modalityLabel}</dd>
+            </div>
+            <div class="rounded-xl border border-line bg-canvas p-3">
+              <dt class="text-ink-muted">Ano e Modelo Visual</dt>
+              <dd class="font-semibold text-ink mt-0.5">{cfg.year} · {cfg.templateId}</dd>
+            </div>
+            <div class="rounded-xl border border-line bg-canvas p-3">
+              <dt class="text-ink-muted">Formato e Acabamento</dt>
+              <dd class="font-semibold text-ink mt-0.5">{formatSummary}{cfg.includeBleed ? ' · Sangria 3 mm' : ' · Sem sangria'}</dd>
+            </div>
+            <div class="rounded-xl border border-line bg-canvas p-3">
+              <dt class="text-ink-muted">Semana e Feriados</dt>
+              <dd class="font-semibold text-ink mt-0.5">
+                {cfg.weekStart === 'monday' ? 'Segunda-feira' : 'Domingo'} · Federais: {cfg.includeFederalHolidays ? 'Sim' : 'Não'}
+                {cfg.includeGoodFriday ? ' + Sexta-feira Santa' : ''}
+              </dd>
+            </div>
+            {cfg.modality !== 'annual' && (
+              <div class="rounded-xl border border-line bg-canvas p-3">
+                <dt class="text-ink-muted">Páginas e Wire-O</dt>
+                <dd class="font-semibold text-ink mt-0.5">
+                  {cfg.includeCover ? '13 páginas (com capa)' : '12 páginas (sem capa)'} · Reserva {cfg.wireOMarginMm ?? 18} mm
+                </dd>
+              </div>
+            )}
+            <div class="rounded-xl border border-line bg-canvas p-3">
+              <dt class="text-ink-muted">Enquadramento</dt>
+              <dd class="font-semibold text-ink mt-0.5">
+                Zoom {Math.round((cfg.imagePlacement?.scale ?? 1) * 100)}% · H {Math.round((cfg.imagePlacement?.anchorX ?? 0.5) * 100)}% · V {Math.round((cfg.imagePlacement?.anchorY ?? 0.5) * 100)}%
+              </dd>
+            </div>
+          </dl>
+        </section>
+
+        <!-- Identidade Empresarial (Mensal / Mesa) -->
+        {cfg.advertiser && (
+          <section class="rounded-2xl border border-line bg-surface p-6 space-y-4">
+            <h2 class="text-base font-semibold text-ink">Identidade Empresarial</h2>
+            <dl class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 text-xs">
+              <div class="rounded-xl border border-line bg-canvas p-3">
+                <dt class="text-ink-muted">Empresa / Entidade</dt>
+                <dd class="font-semibold text-ink mt-0.5">{cfg.advertiser.name || '—'}</dd>
+              </div>
+              <div class="rounded-xl border border-line bg-canvas p-3">
+                <dt class="text-ink-muted">Slogan</dt>
+                <dd class="font-semibold text-ink mt-0.5">{cfg.advertiser.slogan || '—'}</dd>
+              </div>
+              <div class="rounded-xl border border-line bg-canvas p-3">
+                <dt class="text-ink-muted">Telefone / WhatsApp</dt>
+                <dd class="font-semibold text-ink mt-0.5">{cfg.advertiser.phone || '—'} · {cfg.advertiser.whatsapp || '—'}</dd>
+              </div>
+              <div class="rounded-xl border border-line bg-canvas p-3">
+                <dt class="text-ink-muted">Site e Endereço</dt>
+                <dd class="font-semibold text-ink mt-0.5 break-all">{cfg.advertiser.website || '—'} · {cfg.advertiser.address || '—'}</dd>
+              </div>
+              <div class="rounded-xl border border-line bg-canvas p-3">
+                <dt class="text-ink-muted">QR Code</dt>
+                <dd class="font-semibold text-ink mt-0.5 break-all">{cfg.advertiser.qrText || '—'}</dd>
+              </div>
+              <div class="rounded-xl border border-line bg-canvas p-3 flex items-center gap-3">
+                <span class="inline-block size-5 rounded border border-line" style={`background:${cfg.advertiser.primaryColor}`} title="Cor primária"></span>
+                <span class="inline-block size-5 rounded border border-line" style={`background:${cfg.advertiser.accentColor}`} title="Cor secundária"></span>
+                <span class="font-mono text-[11px] text-ink-secondary">{cfg.advertiser.primaryColor} / {cfg.advertiser.accentColor}</span>
+              </div>
+            </dl>
+          </section>
+        )}
+
+        <!-- Base Triangular (Mesa Wire-O) -->
+        {cfg.modality === 'desk' && cfg.base && (
+          <section class="rounded-2xl border border-line bg-surface p-6 space-y-3">
+            <h2 class="text-base font-semibold text-ink">Base Triangular</h2>
+            <p class="text-xs text-ink-secondary">
+              {cfg.base.syncWithAdvertiser
+                ? 'Configurada para herdar automaticamente a identidade empresarial acima.'
+                : `Personalização independente: ${cfg.base.name || '—'} · ${cfg.base.slogan || '—'} · Cores ${cfg.base.primaryColor} / ${cfg.base.accentColor} · QR: ${cfg.base.qrText || '—'}`}
+            </p>
+          </section>
+        )}
+
+        <!-- Galeria de Arquivos Vinculados -->
+        <section class="rounded-2xl border border-line bg-surface p-6 space-y-4">
+          <div class="flex items-center justify-between gap-2">
+            <h2 class="text-base font-semibold text-ink">Arquivos e Imagens Enviadas</h2>
+            <span class="text-xs text-ink-muted">{cfg.assetNames.length} arquivo(s)</span>
+          </div>
+
+          {cfg.assetNames.length === 0 ? (
+            <p class="text-xs text-ink-muted">Nenhuma imagem foi anexada a este pedido.</p>
+          ) : (
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {cfg.assetNames.map(name => (
+                <figure class="rounded-xl border border-line bg-canvas p-3 space-y-2.5">
+                  <div class="aspect-video w-full rounded-lg border border-line bg-surface overflow-hidden flex items-center justify-center">
+                    <img
+                      src={`/admin/calendarios/${id}/arquivo/${name}`}
+                      alt={describeAsset(name)}
+                      class="max-h-full max-w-full object-contain"
+                      loading="lazy"
+                    />
+                  </div>
+                  <figcaption class="space-y-2">
+                    <p class="text-xs font-semibold text-ink">{describeAsset(name)}</p>
+                    <div class="flex gap-2">
+                      <a
+                        href={`/admin/calendarios/${id}/arquivo/${name}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="flex-1 inline-flex min-h-9 items-center justify-center rounded-lg border border-control px-2.5 text-[11px] font-semibold text-ink hover:border-accent"
+                      >
+                        Visualizar
+                      </a>
+                      <a
+                        href={`/admin/calendarios/${id}/arquivo/${name}?download=1`}
+                        class="flex-1 inline-flex min-h-9 items-center justify-center rounded-lg bg-action px-2.5 text-[11px] font-semibold text-on-action hover:bg-action-hover"
+                      >
+                        Baixar original
+                      </a>
+                    </div>
+                  </figcaption>
+                </figure>
+              ))}
+            </div>
+          )}
+        </section>
+
+        <details class="rounded-2xl border border-line bg-surface p-4 text-xs">
+          <summary class="cursor-pointer font-semibold text-ink-secondary">Dados técnicos completos (JSON para produção)</summary>
+          <pre class="mt-3 rounded-xl border border-line bg-canvas p-4 text-[11px] text-ink overflow-x-auto">{JSON.stringify(cfg, null, 2)}</pre>
+        </details>
+      </div>
+    )}
+  </div>
+</BaseLayout>

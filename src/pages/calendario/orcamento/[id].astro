@@ -1,0 +1,78 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import { getCalendarQuote, isCalendarReference } from '../../../db/calendarQuotes';
+
+export const prerender = false;
+const id = Astro.params.id ?? '';
+const quote = isCalendarReference(id) ? await getCalendarQuote(id) : undefined;
+if (!quote) {
+  Astro.response.status = 404;
+}
+const cfg = quote?.config;
+---
+
+<BaseLayout
+  title={quote ? `Solicitação ${quote.product} | 678 Estudio` : 'Solicitação não encontrada | 678 Estudio'}
+  description="Resumo comercial da personalização de calendário solicitada no 678 Estudio."
+>
+  <div class="max-w-3xl mx-auto px-4 sm:px-6 py-10 space-y-6">
+    {!quote || !cfg ? (
+      <section class="rounded-2xl border border-line bg-surface p-6 text-center space-y-3">
+        <h1 class="text-xl font-semibold text-ink">Solicitação não encontrada</h1>
+        <p class="text-sm text-ink-secondary">Verifique o código de referência ou monte uma nova personalização.</p>
+        <a href="/personalizar/calendario" class="inline-flex min-h-11 items-center rounded-xl bg-action px-5 text-xs font-semibold text-on-action">
+          Ir para o Personalizador de Calendários
+        </a>
+      </section>
+    ) : (
+      <section class="rounded-2xl border border-line bg-surface p-6 space-y-5">
+        <header class="border-b border-line pb-4">
+          <p class="text-xs font-semibold uppercase tracking-wider text-accent">Referência Comercial</p>
+          <h1 class="text-2xl font-light text-ink mt-1">{quote.product} · {cfg.year}</h1>
+          <p class="text-xs text-ink-muted mt-1">Código: <code>{quote.id}</code></p>
+        </header>
+
+        <dl class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+          <div class="rounded-xl border border-line bg-canvas p-3">
+            <dt class="text-ink-muted">Modalidade</dt>
+            <dd class="font-semibold text-ink mt-0.5">
+              {cfg.modality === 'monthly' ? 'Mensal Wire-O (Parede)' : cfg.modality === 'desk' ? 'Mesa Wire-O (Base triangular)' : 'Anual'}
+            </dd>
+          </div>
+          <div class="rounded-xl border border-line bg-canvas p-3">
+            <dt class="text-ink-muted">Formato e Orientação</dt>
+            <dd class="font-semibold text-ink mt-0.5">
+              {cfg.modality === 'desk' ? `${cfg.sheetWidthMm ?? 200}×${cfg.sheetHeightMm ?? 120} mm Paisagem` : `${cfg.format} ${cfg.orientation === 'landscape' ? 'Paisagem' : 'Retrato'}`}
+              {cfg.includeBleed ? ' · Sangria 3 mm' : ''}
+            </dd>
+          </div>
+          <div class="rounded-xl border border-line bg-canvas p-3">
+            <dt class="text-ink-muted">Modelo Visual</dt>
+            <dd class="font-semibold text-ink mt-0.5">{cfg.templateId}</dd>
+          </div>
+          <div class="rounded-xl border border-line bg-canvas p-3">
+            <dt class="text-ink-muted">Datas e Feriados</dt>
+            <dd class="font-semibold text-ink mt-0.5">
+              Semana: {cfg.weekStart === 'monday' ? 'Segunda' : 'Domingo'} · Feriados federais: {cfg.includeFederalHolidays ? 'Sim' : 'Não'}
+              {cfg.includeGoodFriday ? ' + Sexta-feira Santa' : ''}
+            </dd>
+          </div>
+          {(cfg.modality === 'monthly' || cfg.modality === 'desk') && (
+            <div class="rounded-xl border border-line bg-canvas p-3 sm:col-span-2">
+              <dt class="text-ink-muted">Acabamento e Anunciante</dt>
+              <dd class="font-semibold text-ink mt-0.5">
+                {cfg.includeCover ? '13 páginas (com capa)' : '12 páginas (sem capa)'} · Reserva Wire-O: {cfg.wireOMarginMm ?? 18} mm
+                {cfg.advertiser?.name ? ` · ${cfg.advertiser.name}` : ''}
+                {cfg.modality === 'desk' && cfg.base ? ` · Base: ${cfg.base.syncWithAdvertiser ? 'Mesma identidade' : (cfg.base.name || 'Personalizada')}` : ''}
+              </dd>
+            </div>
+          )}
+        </dl>
+
+        <p class="text-xs text-ink-secondary">
+          Esta página registra a configuração escolhida para atendimento e preparação gráfica pela equipe do 678 Estudio.
+        </p>
+      </section>
+    )}
+  </div>
+</BaseLayout>
