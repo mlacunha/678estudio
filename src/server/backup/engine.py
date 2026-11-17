@@ -31,9 +31,9 @@ DIRECTORIES = {
 }
 SCHEMA = {
     "categories": "id slug title subtitle description badge display_order is_active",
-    "products": "id category_slug name tagline description featured_badge image_url display_order is_active is_provisional",
+    "products": "id name tagline description featured_badge image_url display_order is_active is_provisional",
     "site_settings": "id whatsapp instagram facebook email",
-    "gallery_works": "id title description category_slug work_date instagram published featured display_order created_at updated_at version",
+    "gallery_works": "id title description work_date instagram published featured display_order created_at updated_at version",
     "gallery_photos": "id work_id position width height thumb_width thumb_height",
     "agenda_quotes": "id draft_token product created_at status config_version config_json",
     "agenda_quote_assets": "quote_id name mime content",
@@ -43,11 +43,14 @@ OPTIONAL_SCHEMA = {
     "planner_quote_assets": "quote_id name mime content",
     "notebook_quotes": "id draft_token product created_at status config_version config_json",
     "notebook_quote_assets": "quote_id name mime content",
+    "calendar_quotes": "id product created_at status config_version config_json",
+    "calendar_quote_assets": "quote_id name mime content",
     "arte_categorias": "id slug name display_order is_active created_at updated_at",
     "artes": "id code title description group_description current_version is_published is_active created_at updated_at",
     "arte_versoes": "arte_id version original_filename original_mime original_ext width height thumb_width thumb_height preview_width preview_height file_size created_at",
     "arte_categoria_rel": "arte_id categoria_id",
     "arte_produtos": "arte_id product_type",
+    "category_slug_aliases": "slug category_id created_at",
 }
 
 
@@ -200,6 +203,11 @@ def verify_database(path, names=None):
             if table in tables:
                 existing = {row[1] for row in db.execute(f'PRAGMA table_info("{table}")')}
                 check(set(columns.split()) <= existing, "Esquema do SQLite incompleto.")
+                if table in ("products", "gallery_works"):
+                    check(
+                        "category_id" in existing or "category_slug" in existing,
+                        "Esquema do SQLite incompleto (referência de categoria ausente).",
+                    )
         check(db.execute("PRAGMA foreign_key_check").fetchone() is None, "O SQLite contém referências inválidas.")
         if names is None:
             return
@@ -208,6 +216,10 @@ def verify_database(path, names=None):
                 check(f"data/gallery-photos/{photo_id}-{size}.webp" in names, "Há uma foto da galeria ausente.")
         for (image,) in db.execute("SELECT image_url FROM products WHERE image_url LIKE '/uploads/%'"):
             check(image[1:] in names, "Há uma imagem de catálogo ausente.")
+        cat_cols = {row[1] for row in db.execute('PRAGMA table_info("categories")')}
+        if "cover_image_url" in cat_cols:
+            for (cover,) in db.execute("SELECT cover_image_url FROM categories WHERE cover_image_url LIKE '/uploads/%'"):
+                check(cover[1:] in names, "Há uma imagem de capa de categoria ausente.")
         if db.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='arte_versoes'").fetchone():
             for (arte_id, version, orig_ext) in db.execute(
                 "SELECT arte_id, version, original_ext FROM arte_versoes"

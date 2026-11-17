@@ -19,19 +19,28 @@ function mapPhoto(row: Record<string, unknown>): GalleryPhoto {
 
 function mapWork(row: Record<string, unknown>) {
   return {
-    id: String(row.id), title: String(row.title), description: String(row.description),
-    category: String(row.category_slug), categoryTitle: String(row.category_title),
-    date: String(row.work_date ?? ''), instagram: String(row.instagram), published: Boolean(row.published),
-    featured: Boolean(row.featured), order: Number(row.display_order), version: Number(row.version),
-    createdAt: String(row.created_at), updatedAt: String(row.updated_at),
+    id: String(row.id),
+    title: String(row.title),
+    description: String(row.description),
+    categoryId: String(row.category_id),
+    category: String(row.category_slug),
+    categoryTitle: String(row.category_title),
+    date: String(row.work_date ?? ''),
+    instagram: String(row.instagram),
+    published: Boolean(row.published),
+    featured: Boolean(row.featured),
+    order: Number(row.display_order),
+    version: Number(row.version),
+    createdAt: String(row.created_at),
+    updatedAt: String(row.updated_at),
   };
 }
 
 export type GalleryWork = ReturnType<typeof mapWork>;
 export type GalleryCard = GalleryWork & { cover: GalleryPhoto };
 
-const categoryJoin = 'JOIN categories c ON c.slug = w.category_slug';
-const cards = `SELECT w.*, c.title AS category_title, p.id AS photo_id, p.width, p.height, p.thumb_width, p.thumb_height
+const categoryJoin = 'JOIN categories c ON c.id = w.category_id';
+const cards = `SELECT w.*, c.slug AS category_slug, c.title AS category_title, p.id AS photo_id, p.width, p.height, p.thumb_width, p.thumb_height
   FROM gallery_works w ${categoryJoin} JOIN gallery_photos p ON p.work_id = w.id AND p.position = 0`;
 const recent = `COALESCE(w.work_date, SUBSTR(COALESCE(w.published_at, w.created_at), 1, 10)) DESC,
   COALESCE(w.published_at, w.created_at) DESC, w.id`;
@@ -39,9 +48,9 @@ const recent = `COALESCE(w.work_date, SUBSTR(COALESCE(w.published_at, w.created_
 export async function listPublishedWorks(category: string, page: number, curated = false, client: Client = getDbClient()) {
   await initDatabase(client);
   const result = await client.execute({
-    sql: `${cards} WHERE w.published = 1 AND (? = '' OR w.category_slug = ?)
+    sql: `${cards} WHERE w.published = 1 AND (? = '' OR c.slug = ? OR w.category_id = ?)
       ORDER BY ${curated ? 'w.display_order, ' : ''}${recent} LIMIT ? OFFSET ?`,
-    args: [category, category, GALLERY_PAGE_SIZE + 1, (page - 1) * GALLERY_PAGE_SIZE],
+    args: [category, category, category, GALLERY_PAGE_SIZE + 1, (page - 1) * GALLERY_PAGE_SIZE],
   });
   return {
     works: result.rows.slice(0, GALLERY_PAGE_SIZE).map(row => ({ ...mapWork(row), cover: mapPhoto(row) })),
@@ -59,7 +68,7 @@ export async function listHomeWorks(client: Client = getDbClient()): Promise<Gal
 
 export async function listAdminWorks(client: Client = getDbClient()): Promise<GalleryWork[]> {
   await initDatabase(client);
-  const result = await client.execute(`SELECT w.*, c.title AS category_title FROM gallery_works w
+  const result = await client.execute(`SELECT w.*, c.slug AS category_slug, c.title AS category_title FROM gallery_works w
     ${categoryJoin} ORDER BY w.display_order, ${recent}`);
   return result.rows.map(mapWork);
 }
@@ -67,7 +76,7 @@ export async function listAdminWorks(client: Client = getDbClient()): Promise<Ga
 export async function getGalleryWork(id: string, admin = false, client: Client = getDbClient()) {
   await initDatabase(client);
   const result = await client.execute({
-    sql: `SELECT w.*, c.title AS category_title, p.id AS photo_id, p.width, p.height, p.thumb_width, p.thumb_height
+    sql: `SELECT w.*, c.slug AS category_slug, c.title AS category_title, p.id AS photo_id, p.width, p.height, p.thumb_width, p.thumb_height
       FROM gallery_works w ${categoryJoin} LEFT JOIN gallery_photos p ON p.work_id = w.id
       WHERE w.id = ? AND (w.published = 1 OR ?) ORDER BY p.position`,
     args: [id, Number(admin)],
@@ -96,8 +105,13 @@ export async function saveGalleryWork(
   try {
     const current = (await tx.execute({ sql: 'SELECT version FROM gallery_works WHERE id = ?', args: [id] })).rows[0];
     if ((current ? Number(current.version) : 0) !== version) throw new GalleryConflict();
-    const category = await tx.execute({ sql: 'SELECT 1 FROM categories WHERE slug = ?', args: [fields.category] });
+    const category = await tx.execute({
+      sql: 'SELECT id FROM categories WHERE id = ? OR slug = ? LIMIT 1',
+      args: [fields.category, fields.category],
+    });
     if (!category.rows.length) throw new GalleryInputError('Selecione uma categoria válida.');
+    const categoryId = String(category.rows[0].id);
+
     const existing = (await tx.execute({
       sql: 'SELECT id AS photo_id, width, height, thumb_width, thumb_height FROM gallery_photos WHERE work_id = ?',
       args: [id],
@@ -116,15 +130,15 @@ export async function saveGalleryWork(
     photos.sort((a, b) => Number(b.id === cover) - Number(a.id === cover));
 
     const now = new Date().toISOString();
-    const values = [fields.title, fields.description, fields.category, fields.date || null,
+    const values = [fields.title, fields.description, categoryId, fields.date || null,
       fields.instagram, Number(fields.published), Number(fields.featured), fields.order, now];
     await tx.execute(current ? {
-      sql: `UPDATE gallery_works SET title=?, description=?, category_slug=?, work_date=?, instagram=?,
+      sql: `UPDATE gallery_works SET title=?, description=?, category_id=?, work_date=?, instagram=?,
         published=?, featured=?, display_order=?, updated_at=?, published_at=COALESCE(published_at, ?),
         version=version+1 WHERE id=?`,
       args: [...values, fields.published ? now : null, id],
     } : {
-      sql: `INSERT INTO gallery_works (title, description, category_slug, work_date, instagram, published, featured,
+      sql: `INSERT INTO gallery_works (title, description, category_id, work_date, instagram, published, featured,
         display_order, updated_at, created_at, published_at, id) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`,
       args: [...values, now, fields.published ? now : null, id],
     });

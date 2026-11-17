@@ -1,10 +1,19 @@
 ---
 import BrandMark from './BrandMark.astro';
+import { getActiveCategories } from '../db/catalogRepository';
+import { resolveCategoryDestination } from '../data/internalDestinations';
 import { getRequestStudioSettings } from '../db/studioSettings';
 import { buildWhatsAppQuotePath } from '../utils/whatsapp';
 
 const currentYear = new Date().getFullYear();
-const { whatsapp, instagram, facebook, email } = await getRequestStudioSettings(Astro.locals);
+const [{ whatsapp, instagram, facebook, email }, activeCategories] = await Promise.all([
+  getRequestStudioSettings(Astro.locals),
+  getActiveCategories(),
+]);
+const footerCategories = activeCategories.slice(0, 6).map((category) => ({
+  title: category.title,
+  href: resolveCategoryDestination(category).collectionHref,
+}));
 const channels = [
   {
     label: 'WhatsApp',
@@ -45,10 +54,9 @@ const channels = [
       <nav aria-label="Categorias no rodapé">
         <p class="mb-2 text-xs font-semibold uppercase tracking-wider text-ink">Coleções</p>
         <ul class="grid grid-cols-2 gap-x-4 text-ink-secondary lg:gap-x-8">
-          <li><a href="/#quadros" class="inline-flex min-h-10 items-center hover:text-accent">Quadros</a></li>
-          <li><a href="/#canecas" class="inline-flex min-h-10 items-center hover:text-accent">Canecas</a></li>
-          <li><a href="/#papelaria" class="inline-flex min-h-10 items-center hover:text-accent">Agendas &amp; Planners</a></li>
-          <li><a href="/#artesanato" class="inline-flex min-h-10 items-center hover:text-accent">Madeira &amp; Especiais</a></li>
+          {footerCategories.map((item) => (
+            <li><a href={item.href} class="inline-flex min-h-10 items-center hover:text-accent">{item.title}</a></li>
+          ))}
         </ul>
       </nav>
 

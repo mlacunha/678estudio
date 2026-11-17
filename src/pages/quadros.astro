@@ -1,53 +1,28 @@
 ---
-import BaseLayout from '../layouts/BaseLayout.astro';
-import ProductCard from '../components/ProductCard.astro';
-import WhatsAppCTA from '../components/WhatsAppCTA.astro';
-import { getActiveCategories, getActiveProductsByCategory } from '../db/catalogRepository';
+import CollectionPage from '../components/CollectionPage.astro';
+import { getCategoryBySlug } from '../db/catalogRepository';
+import type { ProductCategory } from '../types/catalog';
 
 export const prerender = false;
 
-const [categories, products] = await Promise.all([
-  getActiveCategories(),
-  getActiveProductsByCategory('quadros'),
-]);
-const category = categories.find(c => c.slug === 'quadros');
-const title = category?.title ?? 'Quadros Personalizados';
+const dbCategory = await getCategoryBySlug('quadros');
+if (dbCategory && dbCategory.isActive === false) {
+  Astro.response.status = 404;
+}
+
+const category: ProductCategory = dbCategory ?? {
+  id: 'cat-quadros',
+  slug: 'quadros',
+  title: 'Quadros Personalizados',
+  subtitle: 'Galeria exclusiva',
+  description: 'Escolha um modelo ou obra e personalize moldura, orientação e margens no simulador.',
+  badge: '',
+  defaultProductAction: 'customizer',
+  defaultProductHref: '/personalizar/quadro',
+};
 ---
 
-<BaseLayout
-  title={`${title} | 678 Estudio`}
-  description="Explore a galeria de quadros decorativos do 678 Estudio ou crie seu quadro personalizado simulando moldura e ambiente."
->
-  <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 md:py-14 space-y-8">
-    <header class="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-6 border-b border-line">
-      <div>
-        <p class="editorial-kicker">{category?.subtitle ?? 'Galeria exclusiva'}</p>
-        <h1 class="editorial-heading mt-2 text-4xl sm:text-5xl">{title}</h1>
-        <p class="mt-2 text-sm text-ink-secondary max-w-2xl leading-relaxed">
-          {category?.description ?? 'Escolha um modelo ou obra e personalize moldura, orientação e margens no simulador.'}
-        </p>
-      </div>
-      <div class="flex flex-wrap gap-3">
-        <a href="/personalizar/quadro" class="inline-flex min-h-11 items-center gap-2 rounded-md bg-action px-5 text-sm font-semibold text-on-action hover:bg-action-hover">
-          Criar quadro com arte própria →
-        </a>
-        <a href="/" class="inline-flex min-h-11 items-center rounded-md border border-control px-4 text-xs font-medium text-ink-secondary hover:border-ink-muted">
-          Voltar ao Início
-        </a>
-      </div>
-    </header>
-
-    {products.length > 0 ? (
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {products.map(product => (
-          <ProductCard product={product} categoryTitle={title} />
-        ))}
-      </div>
-    ) : (
-      <p class="rounded-xl border border-line bg-surface p-6 text-sm text-ink-secondary">
-        Nenhum quadro cadastrado no catálogo no momento. Você pode criar o seu do zero no personalizador.
-      </p>
-    )}
-  </section>
-  <WhatsAppCTA />
-</BaseLayout>
+<CollectionPage
+  category={category}
+  metaDescription="Explore a galeria de quadros decorativos do 678 Estudio ou crie seu quadro personalizado simulando moldura e ambiente."
+/>

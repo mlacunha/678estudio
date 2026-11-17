@@ -1,0 +1,38 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import CollectionPage from '../../components/CollectionPage.astro';
+import { resolveCategoryBySlugOrAlias } from '../../db/catalogRepository';
+
+export const prerender = false;
+
+const rawSlug = Astro.params.slug ?? '';
+const resolved = rawSlug ? await resolveCategoryBySlugOrAlias(rawSlug) : null;
+
+if (resolved && resolved.isAlias && resolved.category.isActive) {
+  return Astro.redirect(`/colecoes/${resolved.canonicalSlug}`, 301);
+}
+
+const isNotFound = !resolved || !resolved.category.isActive;
+if (isNotFound) {
+  Astro.response.status = 404;
+}
+---
+
+{isNotFound ? (
+  <BaseLayout title="Coleção não encontrada | 678 Estudio" description="A coleção solicitada não está disponível.">
+    <section class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-16 text-center space-y-4">
+      <p class="editorial-kicker">404</p>
+      <h1 class="editorial-heading text-4xl">Coleção não encontrada</h1>
+      <p class="text-sm text-ink-secondary">
+        Esta coleção não existe ou não está publicada no momento.
+      </p>
+      <div class="pt-2">
+        <a href="/" class="inline-flex min-h-11 items-center rounded-md bg-action px-5 text-sm font-semibold text-on-action hover:bg-action-hover">
+          Voltar ao Início
+        </a>
+      </div>
+    </section>
+  </BaseLayout>
+) : (
+  <CollectionPage category={resolved.category} />
+)}
