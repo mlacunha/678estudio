@@ -219,6 +219,23 @@ export function connectArtLibraryPicker(
     if (!loading && hasMore) void fetchPage(currentPage + 1, true);
   });
 
+  const preselectedId = new URLSearchParams(window.location.search).get('arte')?.trim() ?? '';
+  if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(preselectedId) && product) {
+    void (async () => {
+      try {
+        const res = await fetch(`/api/artes?produto=${encodeURIComponent(product)}&id=${encodeURIComponent(preselectedId)}`);
+        const json = await res.json();
+        const found = json?.success && Array.isArray(json.data?.items) ? json.data.items[0] as SelectedLibraryArt | undefined : undefined;
+        if (!found) return;
+        selectedId = found.id;
+        setMode('library');
+        options.onSelect(found);
+      } catch {
+        // Falha silenciosa: mantém o personalizador pronto para envio de imagem ou nova seleção.
+      }
+    })();
+  }
+
   return {
     clearSelection: () => {
       if (!selectedId) return;

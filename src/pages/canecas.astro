@@ -1,0 +1,53 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import ProductCard from '../components/ProductCard.astro';
+import WhatsAppCTA from '../components/WhatsAppCTA.astro';
+import { getActiveCategories, getActiveProductsByCategory } from '../db/catalogRepository';
+
+export const prerender = false;
+
+const [categories, products] = await Promise.all([
+  getActiveCategories(),
+  getActiveProductsByCategory('canecas'),
+]);
+const category = categories.find(c => c.slug === 'canecas');
+const title = category?.title ?? 'Canecas Personalizadas';
+---
+
+<BaseLayout
+  title={`${title} | 678 Estudio`}
+  description="Explore todos os modelos de canecas personalizadas do 678 Estudio ou crie sua caneca com arte própria em 3D."
+>
+  <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 md:py-14 space-y-8">
+    <header class="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-6 border-b border-line">
+      <div>
+        <p class="editorial-kicker">{category?.subtitle ?? 'Coleção exclusiva'}</p>
+        <h1 class="editorial-heading mt-2 text-4xl sm:text-5xl">{title}</h1>
+        <p class="mt-2 text-sm text-ink-secondary max-w-2xl leading-relaxed">
+          {category?.description ?? 'Escolha um modelo pronto ou abra o personalizador 3D para enviar sua própria arte.'}
+        </p>
+      </div>
+      <div class="flex flex-wrap gap-3">
+        <a href="/personalizar/caneca" class="inline-flex min-h-11 items-center gap-2 rounded-md bg-action px-5 text-sm font-semibold text-on-action hover:bg-action-hover">
+          Criar caneca com arte própria →
+        </a>
+        <a href="/" class="inline-flex min-h-11 items-center rounded-md border border-control px-4 text-xs font-medium text-ink-secondary hover:border-ink-muted">
+          Voltar ao Início
+        </a>
+      </div>
+    </header>
+
+    {products.length > 0 ? (
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        {products.map(product => (
+          <ProductCard product={product} categoryTitle={title} />
+        ))}
+      </div>
+    ) : (
+      <p class="rounded-xl border border-line bg-surface p-6 text-sm text-ink-secondary">
+        Nenhum modelo cadastrado no catálogo no momento. Você pode criar sua caneca do zero no personalizador 3D.
+      </p>
+    )}
+  </section>
+  <WhatsAppCTA />
+</BaseLayout>

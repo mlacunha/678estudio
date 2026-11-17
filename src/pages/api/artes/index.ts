@@ -1,6 +1,6 @@
 import type { APIRoute } from 'astro';
 import { listPublicArtes } from '../../../db/artLibraryRepository';
-import { ART_PRODUCT_TYPES } from '../../../utils/artLibrary';
+import { ART_PRODUCT_TYPES, ART_UUID_PATTERN } from '../../../utils/artLibrary';
 
 export const prerender = false;
 
@@ -19,10 +19,16 @@ export const GET: APIRoute = async ({ url }) => {
   const limit = Number.isInteger(limitParam) && limitParam >= 1 ? Math.min(48, limitParam) : 12;
 
   try {
+    const rawId = (url.searchParams.get('id') ?? '').trim();
+    const id = rawId && ART_UUID_PATTERN.test(rawId) ? rawId : undefined;
+    if (rawId && !id) {
+      return Response.json({ success: true, data: { items: [], categories: [], page: 1, hasMore: false } }, { status: 200 });
+    }
     const data = await listPublicArtes({
       productType: product,
       category: url.searchParams.get('categoria') ?? undefined,
       q: url.searchParams.get('q') ?? undefined,
+      id,
       page,
       limit,
     });

@@ -1,5 +1,5 @@
 import type { APIRoute } from 'astro';
-import { getActiveProductsByCategory, getAllProducts, createProduct } from '../../../db/catalogRepository';
+import { getActiveProductsByCategory, getAllProducts, createProduct, resolveValidLinkedArteId } from '../../../db/catalogRepository';
 import type { Product } from '../../../types/catalog';
 
 export const prerender = false;
@@ -43,6 +43,18 @@ export const POST: APIRoute = async ({ request }) => {
       });
     }
 
+    const rawLinkedArteId = body.linkedArteId ? String(body.linkedArteId).trim() : '';
+    let linkedArteId: string | undefined;
+    if (rawLinkedArteId) {
+      linkedArteId = await resolveValidLinkedArteId(rawLinkedArteId, String(body.categorySlug));
+      if (!linkedArteId) {
+        return new Response(JSON.stringify({ success: false, error: 'A arte vinculada não existe, está inativa ou não é compatível com esta categoria.' }), {
+          status: 400,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
+    }
+
     const product: Product = {
       id: body.id || `prod-${Date.now()}`,
       categorySlug: body.categorySlug,
@@ -54,6 +66,8 @@ export const POST: APIRoute = async ({ request }) => {
       order: Number(body.order || 99),
       isActive: body.isActive !== false,
       isProvisional: Boolean(body.isProvisional),
+      isFeatured: Boolean(body.isFeatured),
+      linkedArteId,
     };
 
     await createProduct(product);

@@ -1,6 +1,7 @@
 ---
 import { stationeryCustomizer } from '../data/stationery';
 import type { Product } from '../types/catalog';
+import { resolveValidLinkedArteId } from '../db/catalogRepository';
 import { getRequestStudioSettings } from '../db/studioSettings';
 import { buildWhatsAppQuotePath } from '../utils/whatsapp';
 import { getCatalogLargeImage } from '../utils/catalogImages';
@@ -13,6 +14,11 @@ interface Props {
 const { product, categoryTitle } = Astro.props;
 const isStationery = product.categorySlug === 'papelaria';
 const customizerHref = stationeryCustomizer(product.id);
+const validLinkedArteId = (product.categorySlug === 'canecas' || product.categorySlug === 'quadros')
+  ? await resolveValidLinkedArteId(product.linkedArteId, product.categorySlug)
+  : undefined;
+const mugHref = validLinkedArteId ? `/personalizar/caneca?arte=${validLinkedArteId}` : '/personalizar/caneca';
+const frameHref = validLinkedArteId ? `/personalizar/quadro?arte=${validLinkedArteId}` : '/personalizar/quadro';
 
 const demoImage = new Map([
   ['quadro-geometria', 'quadro-geometria'],
@@ -74,17 +80,17 @@ const orderLink = whatsapp && buildWhatsAppQuotePath({
     <div class="mt-4 pt-3 border-t border-line flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
       {isStationery ? (customizerHref ? <a href={customizerHref} class="min-h-11 inline-flex items-center text-sm font-semibold text-accent hover:underline">Personalizar</a> : <span class="text-sm font-medium text-ink-muted">Em preparação</span>) : product.categorySlug === 'canecas' ? (
         <a
-          href="/personalizar/caneca"
+          href={mugHref}
           class="min-h-11 inline-flex items-center gap-1 text-xs font-semibold text-accent hover:underline"
         >
-          Simular caneca branca
+          {validLinkedArteId ? 'Personalizar modelo' : 'Simular caneca branca'}
         </a>
       ) : product.categorySlug === 'quadros' ? (
         <a
-          href="/personalizar/quadro"
+          href={frameHref}
           class="min-h-11 inline-flex items-center gap-1 text-xs font-semibold text-accent hover:underline"
         >
-          Simular no ambiente
+          {validLinkedArteId ? 'Personalizar modelo' : 'Simular no ambiente'}
         </a>
       ) : (
         <span class="text-xs text-ink-muted font-medium">Personalizável</span>
