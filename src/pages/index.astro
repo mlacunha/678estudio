@@ -4,12 +4,12 @@ import Hero from '../components/Hero.astro';
 import CategorySection from '../components/CategorySection.astro';
 import WhatsAppCTA from '../components/WhatsAppCTA.astro';
 import GalleryGrid from '../components/GalleryGrid.astro';
-import { getActiveCategories } from '../db/catalogRepository';
+import { getHomeCategories } from '../db/catalogRepository';
 import { listHomeWorks } from '../db/galleryRepository';
 
 export const prerender = false;
 
-const [categories, works] = await Promise.all([getActiveCategories(), listHomeWorks()]);
+const [categories, works] = await Promise.all([getHomeCategories(), listHomeWorks()]);
 ---
 
 <BaseLayout>

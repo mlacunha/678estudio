@@ -16,14 +16,14 @@ export const onRequest = defineMiddleware(async ({ request, url }, next) => {
   if (/^\/_image\/?$/.test(pathname)) return new Response(null, { status: 404 });
 
   const protectedRoute =
-    /^\/(admin|api\/admin|api\/products|api\/upload)(\/|$)/.test(pathname) ||
-    (/^\/api\/categories\/?$/.test(pathname) && url.searchParams.get('all') === 'true');
+    /^\/(admin|api\/admin|api\/products|api\/categories|api\/upload)(\/|$)/.test(pathname);
 
   const serve = () => serveDuringMaintenance(request, pathname, next);
   if (!protectedRoute) return serve();
 
   const headers = { 'Cache-Control': 'no-store' };
-  const { ADMIN_USERNAME: username, ADMIN_PASSWORD: password } = process.env;
+  const username = process.env.ADMIN_USERNAME || import.meta.env?.ADMIN_USERNAME;
+  const password = process.env.ADMIN_PASSWORD || import.meta.env?.ADMIN_PASSWORD;
   if (!username || username.includes(':') || !password) {
     return new Response('Administração indisponível.', { status: 503, headers });
   }

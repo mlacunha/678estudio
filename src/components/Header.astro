@@ -1,10 +1,21 @@
 ---
+import { getActiveCategories } from '../db/catalogRepository';
+import { resolveCategoryDestination } from '../data/internalDestinations';
 import { getRequestStudioSettings } from '../db/studioSettings';
 import { buildWhatsAppQuotePath } from '../utils/whatsapp';
 import BrandMark from './BrandMark.astro';
 import CustomizerNav from './CustomizerNav.astro';
 
-const { whatsapp } = await getRequestStudioSettings(Astro.locals);
+const [{ whatsapp }, activeCategories] = await Promise.all([
+  getRequestStudioSettings(Astro.locals),
+  getActiveCategories(),
+]);
+
+const navCategories = activeCategories.slice(0, 4).map((category) => ({
+  title: category.title,
+  href: resolveCategoryDestination(category).collectionHref,
+}));
+
 const directContactLink = whatsapp && buildWhatsAppQuotePath({
   customMessage: 'Olá! Vim pelo site do 678 Estudio e gostaria de conversar sobre um projeto personalizado.'
 });
@@ -26,10 +37,10 @@ const directContactLink = whatsapp && buildWhatsAppQuotePath({
 
     <!-- Navegação Desktop -->
     <nav aria-label="Menu principal" class="hidden xl:flex items-center gap-5 whitespace-nowrap text-sm font-medium text-ink-secondary">
-      <a href="/#quadros" class="hover:text-accent motion-safe:transition-colors">Quadros</a>
-      <a href="/#canecas" class="hover:text-accent motion-safe:transition-colors">Canecas</a>
-      <a href="/#papelaria" class="hover:text-accent motion-safe:transition-colors">Papelaria Personalizada</a>
-      <a href="/#artesanato" class="hover:text-accent motion-safe:transition-colors">Madeira & Especiais</a>
+      {navCategories.map((item) => (
+        <a href={item.href} class="hover:text-accent motion-safe:transition-colors">{item.title}</a>
+      ))}
+      <a href="/trabalhos" class="hover:text-accent motion-safe:transition-colors">Trabalhos</a>
       <CustomizerNav />
     </nav>
 
@@ -74,17 +85,13 @@ const directContactLink = whatsapp && buildWhatsAppQuotePath({
 
   <!-- Menu Mobile Desdobrável -->
   <nav id="mobile-menu" aria-label="Menu principal" class="hidden xl:hidden max-h-[calc(100dvh-4.25rem)] overflow-y-auto border-t border-line bg-canvas px-4 pt-3 pb-6 space-y-2">
-    <a href="/#quadros" class="min-h-11 flex items-center py-2 text-sm font-medium text-ink-secondary hover:text-accent border-b border-line/60">
-      Quadros Decorativos
-    </a>
-    <a href="/#canecas" class="min-h-11 flex items-center py-2 text-sm font-medium text-ink-secondary hover:text-accent border-b border-line/60">
-      Canecas Personalizadas
-    </a>
-    <a href="/#papelaria" class="min-h-11 flex items-center py-2 text-sm font-medium text-ink-secondary hover:text-accent border-b border-line/60">
-      Papelaria Personalizada
-    </a>
-    <a href="/#artesanato" class="min-h-11 flex items-center py-2 text-sm font-medium text-ink-secondary hover:text-accent border-b border-line/60">
-      Artesanato em Madeira
+    {navCategories.map((item) => (
+      <a href={item.href} class="min-h-11 flex items-center py-2 text-sm font-medium text-ink-secondary hover:text-accent border-b border-line/60">
+        {item.title}
+      </a>
+    ))}
+    <a href="/trabalhos" class="min-h-11 flex items-center py-2 text-sm font-medium text-ink-secondary hover:text-accent border-b border-line/60">
+      Nossos Trabalhos
     </a>
     <CustomizerNav mobile />
     {directContactLink && <a

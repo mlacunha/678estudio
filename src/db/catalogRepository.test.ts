@@ -1,21 +1,38 @@
-import { initDatabase, migrateStationery, migrateCatalogShowcase } from './database';
+import { initDatabase, migrateStationery, migrateCatalogShowcase, migrateDynamicCatalog, getDatabasePath } from './database';
 import { describe, it, expect, beforeEach } from 'vitest';
 import { randomUUID } from 'node:crypto';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+import { execFileSync } from 'node:child_process';
 import { createClient, type Client } from '@libsql/client';
 import {
   getActiveCategories,
   getAllCategories,
+  getCategoryById,
+  getCategoryBySlug,
+  resolveCategoryBySlugOrAlias,
+  listAdminCategoriesWithCounts,
+  createCategory,
+  updateCategory,
+  toggleCategoryActive,
+  toggleCategoryShowOnHome,
+  deleteCategory,
   getActiveProductsByCategory,
   getHomeFeaturedProducts,
+  listAdminProductsPaginated,
   resolveValidLinkedArteId,
   getAllProducts,
   getProductById,
   createProduct,
   updateProduct,
   toggleProductActive,
+  toggleProductFeatured,
   deleteProduct,
   replaceProductImage,
 } from './catalogRepository';
+import { validateProductActionOverride } from '../pages/api/products/index';
+import { validateCategoryPayload } from '../pages/api/categories/index';
 import { createArtCategory, createArteWithVersion } from './artLibraryRepository';
 import type { Product } from '../types/catalog';
 
@@ -138,10 +155,8 @@ describe('Catalog Repository with SQLite', () => {
       expect(deleted).toBeNull();
     });
   });
-});
 
-
- it('migrates stationery once, retaining archived images and quote assets', async () => {
+  it('migrates stationery once, retaining archived images and quote assets', async () => {
    const client = createClient({ url: ':memory:' });
    try {
      await initDatabase(client);
@@ -265,3 +280,261 @@ describe('Catalog Repository with SQLite', () => {
       client.close();
     }
   });
+
+  it('it should migrate products and gallery_works to category_id and preserve relations when slug changes', async () => {
+    const client = createClient({ url: ':memory:' });
+    try {
+      await initDatabase(client);
+
+      const prodCols = (await client.execute("PRAGMA table_info('products')")).rows.map(r => String(r.name));
+      expect(prodCols).toContain('category_id');
+      expect(prodCols).not.toContain('category_slug');
+
+      const workCols = (await client.execute("PRAGMA table_info('gallery_works')")).rows.map(r => String(r.name));
+      expect(workCols).toContain('category_id');
+      expect(workCols).not.toContain('category_slug');
+
+      const quadrosCat = await getCategoryBySlug('quadros', client);
+      expect(quadrosCat).toMatchObject({
+        id: 'cat-quadros',
+        layoutType: 'carousel',
+        destinationType: 'internal_page',
+        destinationHref: '/quadros',
+        defaultProductAction: 'customizer',
+        defaultProductHref: '/personalizar/quadro',
+      });
+
+      await updateCategory({ ...quadrosCat!, slug: 'quadros-autorais', title: 'Quadros Autorais' }, client);
+      const renamedFrames = await getActiveProductsByCategory('quadros-autorais', client);
+      expect(renamedFrames).toHaveLength(3);
+      expect(renamedFrames[0].categoryId).toBe('cat-quadros');
+      expect(renamedFrames[0].categorySlug).toBe('quadros-autorais');
+      expect(renamedFrames[0].categoryTitle).toBe('Quadros Autorais');
+
+      await expect(deleteCategory('cat-quadros', client)).rejects.toThrow('Não é possível excluir a categoria');
+
+      await createCategory(
+        {
+          id: 'cat-brindes',
+          slug: 'brindes',
+          title: 'Brindes Corporativos',
+          subtitle: 'Linha empresarial',
+          description: 'Presentes personalizados',
+          badge: 'Novo',
+          displayOrder: 10,
+        },
+        client,
+      );
+      expect((await getCategoryById('cat-brindes', client))?.slug).toBe('brindes');
+      await deleteCategory('cat-brindes', client);
+      expect(await getCategoryById('cat-brindes', client)).toBeNull();
+    } finally {
+      client.close();
+    }
+  });
+
+  it('it should abort migration and rollback if orphan category_slug exists', async () => {
+    const client = createClient({ url: ':memory:' });
+    try {
+      await client.execute(`
+        CREATE TABLE categories (
+          id TEXT PRIMARY KEY, slug TEXT UNIQUE NOT NULL, title TEXT NOT NULL,
+          subtitle TEXT NOT NULL, description TEXT NOT NULL, badge TEXT NOT NULL,
+          display_order INTEGER NOT NULL, is_active INTEGER NOT NULL DEFAULT 1
+        )
+      `);
+      await client.execute(`
+        CREATE TABLE products (
+          id TEXT PRIMARY KEY, category_slug TEXT NOT NULL, name TEXT NOT NULL,
+          tagline TEXT NOT NULL, description TEXT NOT NULL, featured_badge TEXT,
+          image_url TEXT NOT NULL, display_order INTEGER NOT NULL,
+          is_active INTEGER NOT NULL DEFAULT 1, is_provisional INTEGER NOT NULL DEFAULT 1,
+          is_featured INTEGER NOT NULL DEFAULT 0, linked_arte_id TEXT
+        )
+      `);
+      await client.execute(`
+        CREATE TABLE gallery_works (
+          id TEXT PRIMARY KEY, title TEXT NOT NULL, description TEXT NOT NULL,
+          category_slug TEXT NOT NULL, work_date TEXT, instagram TEXT NOT NULL,
+          published INTEGER NOT NULL, featured INTEGER NOT NULL, display_order INTEGER NOT NULL,
+          created_at TEXT NOT NULL, updated_at TEXT NOT NULL, published_at TEXT, version INTEGER NOT NULL DEFAULT 1
+        )
+      `);
+      await client.execute(
+        "INSERT INTO categories VALUES ('cat-canecas', 'canecas', 'Canecas', 'Sub', 'Desc', 'Badge', 1, 1)",
+      );
+      await client.execute(
+        "INSERT INTO products VALUES ('p-orphan', 'categoria-inexistente', 'Produto Órfão', '', '', NULL, '/img.png', 1, 1, 0, 0, NULL)",
+      );
+
+      await expect(migrateDynamicCatalog(client)).rejects.toThrow('Migração interrompida');
+
+      const prodColsAfter = (await client.execute("PRAGMA table_info('products')")).rows.map(r => String(r.name));
+      expect(prodColsAfter).toContain('category_slug');
+      const orphanRow = await client.execute("SELECT id FROM products WHERE id = 'p-orphan'");
+      expect(orphanRow.rows).toHaveLength(1);
+    } finally {
+      client.close();
+    }
+  });
+
+  it('it should paginate and filter products in SQL via listAdminProductsPaginated', async () => {
+    const client = createClient({ url: ':memory:' });
+    try {
+      await initDatabase(client);
+      const page1 = await listAdminProductsPaginated({ page: 1, pageSize: 5 }, client);
+      expect(page1.items).toHaveLength(5);
+      expect(page1.total).toBe(12);
+      expect(page1.totalPages).toBe(3);
+
+      const searchRes = await listAdminProductsPaginated({ q: 'Geometria', pageSize: 10 }, client);
+      expect(searchRes.total).toBe(1);
+      expect(searchRes.items[0].name).toContain('Geometria');
+
+      const catRes = await listAdminProductsPaginated({ categoryId: 'cat-canecas', status: 'active' }, client);
+      expect(catRes.total).toBe(2);
+      expect(catRes.items.every(p => p.categoryId === 'cat-canecas')).toBe(true);
+    } finally {
+      client.close();
+    }
+  });
+
+  it('it should migrate a representative copy of studio678.db and pass backup engine verification', async () => {
+    const liveDbPath = getDatabasePath();
+    if (!fs.existsSync(liveDbPath)) return;
+
+    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), '678-011a-'));
+    const preCopy = path.join(tmpDir, 'pre.db');
+    const postCopy = path.join(tmpDir, 'post.db');
+    try {
+      fs.copyFileSync(liveDbPath, preCopy);
+      fs.copyFileSync(liveDbPath, postCopy);
+
+      const preClient = createClient({ url: `file:${preCopy.replace(/\\/g, '/')}` });
+      const preProdCount = Number((await preClient.execute('SELECT COUNT(*) AS c FROM products')).rows[0].c);
+      const preCatCount = Number((await preClient.execute('SELECT COUNT(*) AS c FROM categories')).rows[0].c);
+      preClient.close();
+
+      const postClient = createClient({ url: `file:${postCopy.replace(/\\/g, '/')}` });
+      await initDatabase(postClient);
+      const postProdCount = Number((await postClient.execute('SELECT COUNT(*) AS c FROM products')).rows[0].c);
+      const postCatCount = Number((await postClient.execute('SELECT COUNT(*) AS c FROM categories')).rows[0].c);
+      const fkCheck = await postClient.execute('PRAGMA foreign_key_check');
+      postClient.close();
+
+      expect(postCatCount).toBe(preCatCount);
+      expect(postProdCount).toBe(preProdCount);
+      expect(fkCheck.rows).toHaveLength(0);
+
+      const pyScript = [
+        'import sys',
+        `sys.path.insert(0, ${JSON.stringify(path.resolve(process.cwd(), 'src/server/backup').replace(/\\/g, '/'))})`,
+        'from pathlib import Path',
+        'import engine',
+        `engine.verify_database(Path(${JSON.stringify(preCopy.replace(/\\/g, '/'))}))`,
+        `engine.verify_database(Path(${JSON.stringify(postCopy.replace(/\\/g, '/'))}))`,
+        'print("BACKUP_ENGINE_OK")',
+      ].join('; ');
+      const out = execFileSync('python', ['-c', pyScript], { encoding: 'utf8' }).trim();
+      expect(out).toBe('BACKUP_ENGINE_OK');
+    } finally {
+      try {
+        fs.rmSync(tmpDir, { recursive: true, force: true, maxRetries: 5, retryDelay: 50 });
+      } catch {
+        // Ignore Windows transient file lock on temp test DB
+      }
+    }
+  });
+
+  it('it should track category slug history, prevent collisions and resolve aliases', async () => {
+    const client = createClient({ url: ':memory:' });
+    try {
+      await initDatabase(client);
+
+      const canecas = await getCategoryById('cat-canecas', client);
+      expect(canecas?.slug).toBe('canecas');
+
+      // Rename 'canecas' -> 'canecas-ceramica'
+      await updateCategory({ ...canecas!, slug: 'canecas-ceramica' }, client);
+
+      // Direct lookup on new slug
+      const direct = await resolveCategoryBySlugOrAlias('canecas-ceramica', client);
+      expect(direct).toMatchObject({ isAlias: false, canonicalSlug: 'canecas-ceramica' });
+
+      // Alias lookup on old slug 'canecas'
+      const alias = await resolveCategoryBySlugOrAlias('canecas', client);
+      expect(alias).toMatchObject({ isAlias: true, canonicalSlug: 'canecas-ceramica' });
+      expect(alias?.category.id).toBe('cat-canecas');
+
+      // Another category cannot steal the historical slug 'canecas'
+      await expect(
+        createCategory(
+          {
+            id: 'cat-outra',
+            slug: 'canecas',
+            title: 'Outra',
+            subtitle: '',
+            description: '',
+            badge: '',
+          },
+          client,
+        ),
+      ).rejects.toThrow('já está em uso ou pertence ao histórico');
+
+      const quadros = await getCategoryById('cat-quadros', client);
+      await expect(updateCategory({ ...quadros!, slug: 'canecas' }, client)).rejects.toThrow(
+        'já está em uso ou pertence ao histórico',
+      );
+
+      // Reverting 'cat-canecas' back to its own previous slug 'canecas' is allowed
+      await updateCategory({ ...canecas!, slug: 'canecas' }, client);
+      const reverted = await resolveCategoryBySlugOrAlias('canecas', client);
+      expect(reverted).toMatchObject({ isAlias: false, canonicalSlug: 'canecas' });
+      const oldIntermediate = await resolveCategoryBySlugOrAlias('canecas-ceramica', client);
+      expect(oldIntermediate).toMatchObject({ isAlias: true, canonicalSlug: 'canecas' });
+
+      const summary = await listAdminCategoriesWithCounts(client);
+      const canecasSummary = summary.find(c => c.id === 'cat-canecas');
+      expect(canecasSummary?.aliases).toContain('canecas-ceramica');
+      expect(canecasSummary?.productCount).toBe(2);
+
+      await toggleCategoryShowOnHome('cat-canecas', false, client);
+      expect((await getCategoryById('cat-canecas', client))?.showOnHome).toBe(false);
+      await toggleCategoryActive('cat-canecas', false, client);
+      expect((await getCategoryById('cat-canecas', client))?.isActive).toBe(false);
+
+      await toggleProductFeatured('prod-c1', true, client);
+      expect((await getProductById('prod-c1', client))?.isFeatured).toBe(true);
+    } finally {
+      client.close();
+    }
+  });
+
+  it('it should validate internal destinations and reject external URLs', () => {
+    expect(validateProductActionOverride('customizer', '/personalizar/caneca', 'Criar').actionHref).toBe(
+      '/personalizar/caneca',
+    );
+    expect(validateProductActionOverride('customizer', 'https://evil.example/x', '').error).toBeDefined();
+    expect(validateProductActionOverride('details', '/canecas', '').actionHref).toBe('/canecas');
+    expect(validateProductActionOverride('details', '/rota-inexistente', '').error).toBeDefined();
+
+    const validCat = validateCategoryPayload({
+      title: 'Corporativo',
+      slug: 'corporativo',
+      layoutType: 'grid',
+      destinationType: 'collection',
+      defaultProductAction: 'customizer',
+      defaultProductHref: '/personalizar/agenda',
+    });
+    expect(validCat.error).toBeUndefined();
+    expect(validCat.category?.destinationHref).toBe('/colecoes/corporativo');
+
+    const invalidCat = validateCategoryPayload({
+      title: 'Inválida',
+      slug: 'invalida',
+      destinationType: 'internal_page',
+      destinationHref: 'https://externo.com',
+    });
+    expect(invalidCat.error).toBeDefined();
+  });
+});
