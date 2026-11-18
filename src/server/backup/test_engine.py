@@ -123,6 +123,24 @@ class BackupTest(unittest.TestCase):
         self.assertTrue((self.root / "data" / ".env").exists())
         self.assertTrue((self.root / "public" / "uploads" / "ignored.txt").exists())
 
+    def test_restore_uses_configured_database_and_keeps_archive_paths(self):
+        self.make_backup()
+        original_db = self.db.read_bytes()
+        token = str(uuid.uuid4())
+        with patch.dict("os.environ", {"STUDIO_DB_PATH": "isolado/catalogo.db"}):
+            custom_db = engine.storage_path(self.root, engine.DB)
+            with closing(sqlite3.connect(self.db)) as source, closing(sqlite3.connect(custom_db)) as target:
+                source.backup(target)
+            candidate = engine.stage(self.root, self.zip, token)
+            self.assertEqual(candidate["files"], len(FILES) + 1)
+            state = self.root / "isolado" / ".backup-restore"
+            engine.write_json(state / "job.json", {"token": token, "phase": "pending"})
+            engine.offline(self.root)
+            self.assertEqual(engine.read_json(state / "result.json")["phase"], "committed")
+            self.assertEqual(engine.storage_path(self.root, PHOTO + "-thumb.webp").read_bytes(), b"gallery thumb")
+            self.assertEqual(custom_db, self.root / "isolado" / "catalogo.db")
+        self.assertEqual(self.db.read_bytes(), original_db)
+
     def test_failure_after_files_start_changing_rolls_back(self):
         token = self.prepare()
         self.change_live()

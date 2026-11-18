@@ -1,8 +1,10 @@
 import { spawn } from 'node:child_process';
 import { existsSync } from 'node:fs';
+import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const engine = fileURLToPath(new URL('./engine.py', import.meta.url));
+const restoreJob = join(dirname(resolve(process.env.STUDIO_DB_PATH?.trim() || 'data/studio678.db')), '.backup-restore', 'job.json');
 let current;
 let stopping = false;
 for (const signal of ['SIGTERM', 'SIGINT']) {
@@ -20,7 +22,7 @@ function waitForExit(child) {
 }
 
 while (!stopping) {
-  if (existsSync('data/.backup-restore/job.json')) {
+  if (existsSync(restoreJob)) {
     current = spawn(process.env.BACKUP_PYTHON || (process.platform === 'win32' ? 'python' : 'python3'), [engine, 'offline'], { stdio: 'inherit' });
     const code = await waitForExit(current);
     if (stopping) break;

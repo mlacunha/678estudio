@@ -149,6 +149,10 @@ async function confirm(request: Request) {
   if (!await pauseUntilIdle()) throw new BackupError('O site ainda está processando solicitações. Tente novamente.', 503);
   const temporary = join(state, `job-${randomUUID()}.part`);
   try {
+    const database = await lstat(getDatabasePath()).catch((error: NodeJS.ErrnoException) => {
+      if (error.code !== 'ENOENT') throw error;
+    });
+    if (!database) await initDatabase();
     const file = await open(temporary, 'wx', 0o600);
     try {
       await file.writeFile(JSON.stringify({ token, phase: 'pending' }));
