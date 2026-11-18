@@ -4,8 +4,8 @@ import { promisify } from 'node:util';
 import { gunzip } from 'node:zlib';
 import sharp from 'sharp';
 import { loadMugManifest } from './manifest.mjs';
-import { computeSlotPlacement, prepareSlotImage } from './prepare-input.mjs';
-import { combinePlacement, framedArtwork, hasAdjustment, neutralAdjustment, slotFrame } from './placement.mjs';
+import { prepareSlotImage } from './prepare-input.mjs';
+import { combinePlacement, hasAdjustment, instanceGeometry } from './placement.mjs';
 
 const unzip = promisify(gunzip);
 const bytesPerPixel = 16;
@@ -37,8 +37,7 @@ export async function renderMugMockup(id, artwork, { fit, placement: framing } =
     const placement = { ...slot.placement, ...(fit ? { fit } : {}) };
     const correction = slot.instance ? framing?.instances?.[slot.instance.id] : undefined;
     const individual = hasAdjustment(correction) ? correction : undefined;
-    const frame = custom && slot.framing !== 'original'
-      ? combinePlacement(custom, individual ?? neutralAdjustment) : null;
+    const frame = slot.framing !== 'original' ? custom : null;
     const key = JSON.stringify([slot.input, placement, frame, individual]);
     if (!prepared.has(key)) {
       const image = frame || individual
@@ -60,9 +59,7 @@ export async function renderMugMockup(id, artwork, { fit, placement: framing } =
 }
 
 async function prepareFramedSlot(artwork, dimensions, input, calibration, placement, individual) {
-  const frame = placement ? slotFrame(input, calibration) : { ...input, x: 0, y: 0 };
-  const rect = placement ? framedArtwork(dimensions, frame, placement, calibration)
-    : nativeArtwork(dimensions, frame, calibration, individual);
+  const { frame, rect } = instanceGeometry(dimensions, input, calibration, placement, individual);
   const left = Math.max(0, Math.ceil(rect.x));
   const top = Math.max(0, Math.ceil(rect.y));
   const right = Math.min(frame.width, Math.floor(rect.x + rect.width));
@@ -80,19 +77,6 @@ async function prepareFramedSlot(artwork, dimensions, input, calibration, placem
     width: Math.max(1, sourceRight - sourceLeft), height: Math.max(1, sourceBottom - sourceTop),
   }).resize(right - left, bottom - top, { fit: 'fill' }).png().toBuffer();
   return output.composite([{ input: visible, left: frame.x + left, top: frame.y + top }]).png().toBuffer();
-}
-
-function nativeArtwork(dimensions, frame, calibration, adjustment) {
-  const fitted = computeSlotPlacement(dimensions.width, dimensions.height, frame.width, frame.height, calibration);
-  const ratio = fitted.fit === 'contain' ? Math.min : Math.max;
-  const scale = ratio(frame.width / dimensions.width, frame.height / dimensions.height) * fitted.scale * adjustment.zoom / 100;
-  const width = dimensions.width * scale;
-  const height = dimensions.height * scale;
-  return {
-    width, height,
-    x: (frame.width - width) * fitted.anchorX + frame.width * adjustment.offsetX / 100,
-    y: (frame.height - height) * fitted.anchorY + frame.height * adjustment.offsetY / 100,
-  };
 }
 
 const colorAndDensityChunks = new Set(['iCCP', 'sRGB', 'gAMA', 'cHRM', 'pHYs']);

@@ -3,10 +3,20 @@ import { createHash } from 'node:crypto';
 import { describe, expect, it } from 'vitest';
 import { mugMockups } from './options.mjs';
 import { normalizeMugArtwork, renderMugMockup } from './render.mjs';
-import { combinePlacement, framedArtwork, mugFrame, neutralAdjustment, parseMugPlacement, slotFrame } from './placement.mjs';
+import { combinePlacement, framedArtwork, instanceGeometry, mugFrame, neutralAdjustment, parseMugPlacement, slotFrame } from './placement.mjs';
 import { getMugInstances } from './manifest.mjs';
 
 describe('Commercial mug mockups', () => {
+  it('shares the native crop with the visual editor and centers or changes fit independently', () => {
+    const photo = { width: 80, height: 40 };
+    const slot = { width: 100, height: 100 };
+    const native = { fit: 'cover' as const, scale: 1, anchorX: 0, anchorY: 0.5 };
+    expect(instanceGeometry(photo, slot, native, null).rect).toEqual({ width: 200, height: 100, x: 0, y: 0 });
+    expect(instanceGeometry(photo, slot, native, null, { ...neutralAdjustment, centered: true }).rect)
+      .toEqual({ width: 200, height: 100, x: -50, y: 0 });
+    expect(instanceGeometry(photo, slot, native, null, { ...neutralAdjustment, fit: 'contain' }).rect)
+      .toEqual({ width: 100, height: 50, x: 0, y: 25 });
+  });
   it('ships all four original scenes and replaces the visible artwork at native resolution', async () => {
     const artwork = async (background: string) => normalizeMugArtwork(
       await sharp({ create: { width: 420, height: 180, channels: 3, background } }).png().toBuffer(),

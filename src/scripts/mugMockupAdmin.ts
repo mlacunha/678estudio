@@ -1,7 +1,7 @@
 import { maxMugArtworkBytes } from '../server/mockups/options.mjs';
 import {
-  framedArtwork, hasAdjustment, mugFrame, neutralAdjustment, placementLimits,
-  type Adjustment, type Frame, type InstanceAdjustments, type Placement,
+  combinePlacement, framedArtwork, hasAdjustment, instanceGeometry, mugFrame, neutralAdjustment, placementLimits,
+  type Adjustment, type Frame, type InstanceAdjustment, type InstanceAdjustments, type Placement,
 } from '../server/mockups/placement.mjs';
 import type { MugInstance } from '../server/mockups/manifest.mjs';
 import { downloadMugFile, encodeMugExport, type MugExportFormat } from './mugMockupExport';
@@ -25,6 +25,7 @@ export function initMugMockupAdmin() {
   const zip = document.querySelector<HTMLButtonElement>('#mug-download-zip')!;
   const format = document.querySelector<HTMLSelectElement>('#mug-export-format')!;
   const template = document.querySelector<HTMLTemplateElement>('#mug-mockup-result')!;
+  const slotTemplate = document.querySelector<HTMLTemplateElement>('#mug-instance-editor')!;
   const globalControls = document.querySelector<HTMLFieldSetElement>('#mug-global-placement')!;
   const fit = document.querySelector<HTMLSelectElement>('#mug-fit')!;
   const surface = document.querySelector<HTMLDivElement>('#mug-art-frame')!;
@@ -109,7 +110,7 @@ export function initMugMockupAdmin() {
       download.textContent = 'Baixar ' + format.selectedOptions[0].text;
       card.querySelector<HTMLFieldSetElement>('[data-local]')!.disabled = rendering || zipping;
       card.querySelector<HTMLButtonElement>('[data-local-render]')!.disabled = Boolean(upToDate);
-      card.querySelector<HTMLFieldSetElement>('[data-instance-controls]')!.disabled = rendering || zipping;
+      card.querySelector<HTMLFieldSetElement>('[data-instance-controls]')!.disabled = rendering || zipping || !upload.files?.length;
       card.querySelector<HTMLButtonElement>('[data-mug-render]')!.disabled = Boolean(upToDate);
       instanceEditors.get(id)?.();
     }
@@ -141,90 +142,100 @@ export function initMugMockupAdmin() {
 
   function setupInstanceEditor(id: string, card: HTMLElement, model: HTMLInputElement) {
     const instances: MugInstance[] = JSON.parse(model.dataset.instances ?? '[]');
-    const image = card.querySelector<HTMLElement>('[data-mug-image]')!;
-    const panel = card.querySelector<HTMLDetailsElement>('[data-mug-panel]')!;
-    const controls = panel.querySelector<HTMLFieldSetElement>('[data-instance-controls]')!;
-    const picker = panel.querySelector<HTMLSelectElement>('[data-mug-picker]')!;
-    const overlay = card.querySelector<HTMLElement>('[data-mug-markers]')!;
-    const outline = document.createElement('div');
-    outline.className = 'pointer-events-none absolute rounded-[35%] border-2 border-amber-300 ring-1 ring-slate-900';
-    overlay.append(outline);
-    image.style.aspectRatio = model.dataset.ratio ?? '1';
+    const editors = card.querySelector<HTMLElement>('[data-mug-editors]')!;
+    const refresh = instances.map(instance => {
+      const tile = slotTemplate.content.firstElementChild!.cloneNode(true) as HTMLElement;
+      tile.dataset.instance = instance.id;
+      tile.querySelector('h4')!.textContent = 'Caneca ' + instance.label;
+      const surface = tile.querySelector<HTMLElement>('[data-slot-surface]')!;
+      surface.style.aspectRatio = `${instance.input.width} / ${instance.input.height}`;
+      surface.setAttribute('aria-label', `Recorte da caneca ${instance.label}. Use as setas para mover a arte.`);
+      const clip = tile.querySelector<HTMLElement>('[data-slot-clip]')!;
+      const picture = tile.querySelector<HTMLImageElement>('[data-slot-art]')!;
+      const fitSelect = tile.querySelector<HTMLSelectElement>('[data-slot-fit]')!;
+      const read = (): InstanceAdjustment => instanceCorrections.get(id)?.[instance.id] ?? neutralAdjustment;
 
-    const read = () => instanceCorrections.get(id)?.[picker.value] ?? neutralAdjustment;
-    function write(adjustment: Adjustment) {
-      instanceCorrections.set(id, { ...instanceCorrections.get(id), [picker.value]: adjustment });
-      failures.delete(id);
-      renderState();
-    }
-
-    const markers = instances.map((instance, index) => {
-      picker.add(new Option(instance.label, instance.id));
-      const marker = document.createElement('button');
-      marker.type = 'button';
-      marker.textContent = String(index + 1);
-      marker.title = instance.label;
-      marker.setAttribute('aria-label', `Selecionar caneca ${instance.label}`);
-      marker.className = 'pointer-events-auto absolute grid size-11 -translate-x-1/2 -translate-y-1/2 touch-none cursor-grab place-items-center rounded-full border-2 border-white bg-slate-900 text-sm font-bold text-white shadow aria-pressed:bg-amber-300 aria-pressed:text-slate-950';
-      marker.style.left = `${instance.left + instance.width / 2}%`;
-      marker.style.top = `${instance.top + instance.height / 2}%`;
-      const select = () => {
-        picker.value = instance.id;
+      function write(adjustment: InstanceAdjustment) {
+        instanceCorrections.set(id, { ...instanceCorrections.get(id), [instance.id]: adjustment });
+        failures.delete(id);
         renderState();
-      };
-      marker.addEventListener('click', select);
-      let drag: { x: number; y: number; adjustment: Adjustment } | undefined;
-      marker.addEventListener('pointerdown', event => {
-        if (event.button !== 0 || rendering || zipping) return;
-        select();
-        drag = { x: event.clientX, y: event.clientY, adjustment: read() };
-        marker.setPointerCapture(event.pointerId);
+      }
+
+      function geometry() {
+        const framing = placement(id);
+        const modelPlacement = framing.mode === 'custom' ? combinePlacement(framing.global, framing.local) : null;
+        return instanceGeometry(
+          { width: art.naturalWidth, height: art.naturalHeight }, instance.input, instance.calibration, modelPlacement, read(),
+        );
+      }
+
+      tile.addEventListener('input', event => {
+        const input = event.target as HTMLInputElement;
+        const key = input.dataset.control as Control;
+        if (key) write({ ...read(), [key]: Number(input.value) });
       });
-      marker.addEventListener('pointermove', event => {
+      fitSelect.addEventListener('change', () => {
+        const { fit: _, ...adjustment } = read();
+        const chosen = fitSelect.value;
+        write(chosen === 'contain' || chosen === 'cover' ? { ...adjustment, fit: chosen } : adjustment);
+      });
+      tile.querySelector('[data-mug-center]')!.addEventListener('click', () =>
+        write({ ...read(), offsetX: 0, offsetY: 0, centered: true }));
+      tile.querySelector('[data-mug-reset]')!.addEventListener('click', () => write(neutralAdjustment));
+
+      let drag: { x: number; y: number; adjustment: InstanceAdjustment; width: number; height: number } | undefined;
+      surface.addEventListener('pointerdown', event => {
+        if (event.button !== 0 || rendering || zipping || !art.naturalWidth) return;
+        const { frame } = geometry();
+        drag = {
+          x: event.clientX, y: event.clientY, adjustment: read(),
+          width: surface.clientWidth * frame.width / instance.input.width,
+          height: surface.clientHeight * frame.height / instance.input.height,
+        };
+        surface.setPointerCapture(event.pointerId);
+      });
+      surface.addEventListener('pointermove', event => {
         if (!drag || rendering || zipping) return;
         write({
           ...drag.adjustment,
-          offsetX: clamp(drag.adjustment.offsetX + (event.clientX - drag.x) / (image.clientWidth * instance.width / 100) * 100),
-          offsetY: clamp(drag.adjustment.offsetY + (event.clientY - drag.y) / (image.clientHeight * instance.height / 100) * 100),
+          offsetX: clamp(drag.adjustment.offsetX + (event.clientX - drag.x) / drag.width * 100),
+          offsetY: clamp(drag.adjustment.offsetY + (event.clientY - drag.y) / drag.height * 100),
         });
       });
-      marker.addEventListener('lostpointercapture', () => { drag = undefined; });
-      marker.addEventListener('keydown', event => {
+      surface.addEventListener('lostpointercapture', () => { drag = undefined; });
+      surface.addEventListener('keydown', event => {
         const delta = directions[event.key];
-        if (!delta || rendering || zipping) return;
+        if (!delta || rendering || zipping || !art.naturalWidth) return;
         event.preventDefault();
-        select();
-        const scale = event.shiftKey ? 5 : 1;
         const current = read();
-        write({ ...current, offsetX: clamp(current.offsetX + delta[0] * scale), offsetY: clamp(current.offsetY + delta[1] * scale) });
+        const step = event.shiftKey ? 5 : 1;
+        write({ ...current, offsetX: clamp(current.offsetX + delta[0] * step), offsetY: clamp(current.offsetY + delta[1] * step) });
       });
-      overlay.append(marker);
-      return marker;
+
+      editors.append(tile);
+      return () => {
+        const adjustment = read();
+        showControls(tile, adjustment);
+        fitSelect.value = adjustment.fit ?? '';
+        if (!art.getAttribute('src') || !art.naturalWidth) {
+          picture.removeAttribute('src');
+          return;
+        }
+        if (picture.getAttribute('src') !== artUrl) picture.src = artUrl;
+        const { frame, rect } = geometry();
+        const position = (node: HTMLElement, box: typeof rect, bounds: { width: number; height: number }) => {
+          node.style.left = `${box.x / bounds.width * 100}%`;
+          node.style.top = `${box.y / bounds.height * 100}%`;
+          node.style.width = `${box.width / bounds.width * 100}%`;
+          node.style.height = `${box.height / bounds.height * 100}%`;
+        };
+        position(clip, frame, instance.input);
+        position(picture, rect, frame);
+      };
     });
 
-    picker.addEventListener('change', renderState);
-    panel.addEventListener('toggle', renderState);
-    controls.addEventListener('input', event => {
-      const input = event.target as HTMLInputElement;
-      const key = input.dataset.control as Control;
-      if (key) write({ ...read(), [key]: Number(input.value) });
-    });
-    controls.querySelector('[data-mug-center]')!.addEventListener('click', () => write({ ...read(), offsetX: 0, offsetY: 0 }));
-    controls.querySelector('[data-mug-reset]')!.addEventListener('click', () => write(neutralAdjustment));
-    controls.querySelector('[data-mug-render]')!.addEventListener('click', () => void render([model]));
-    instanceEditors.set(id, () => {
-      showControls(controls, read());
-      overlay.hidden = !panel.open || !results.has(id);
-      const active = instances.find(instance => instance.id === picker.value);
-      outline.hidden = !active;
-      if (active) Object.assign(outline.style, {
-        left: `${active.left}%`, top: `${active.top}%`, width: `${active.width}%`, height: `${active.height}%`,
-      });
-      markers.forEach((marker, index) => {
-        marker.disabled = rendering || zipping;
-        marker.setAttribute('aria-pressed', String(instances[index].id === picker.value));
-      });
-    });
+    card.querySelector('[data-mug-render]')!.addEventListener('click', () => void render([model]));
+    instanceEditors.set(id, () => refresh.forEach(update => update()));
   }
 
   function ensureCard(model: HTMLInputElement) {
@@ -242,6 +253,7 @@ export function initMugMockupAdmin() {
       const result = current(id);
       if (result) void exportFiles([result], false);
     });
+    card.querySelector<HTMLElement>('[data-mug-image]')!.style.aspectRatio = model.dataset.ratio ?? '1';
     setupInstanceEditor(id, card, model);
     const local = card.querySelector<HTMLFieldSetElement>('[data-local]')!;
     showControls(local, localFor(id));
@@ -311,9 +323,9 @@ export function initMugMockupAdmin() {
           const previous = results.get(id);
           if (previous) URL.revokeObjectURL(previous.url);
           results.set(id, { name: `mockup-canecas-${id}.png`, blob, url, key });
-          const image = card.querySelector('img')!;
+          const image = card.querySelector<HTMLImageElement>('[data-mug-image] img')!;
           image.src = url;
-          image.hidden = false;
+          image.parentElement!.hidden = false;
         } catch (err) {
           failures.set(id, err instanceof Error ? err.message : 'Geração indisponível.');
         }
@@ -336,19 +348,25 @@ export function initMugMockupAdmin() {
     if (file && file.size <= maxMugArtworkBytes) {
       artUrl = URL.createObjectURL(file);
       art.src = artUrl;
+      const selectedCards = selected().map(ensureCard);
+      if (!selectedCards.some(card => card.querySelector<HTMLDetailsElement>('[data-mug-panel]')!.open)) {
+        const first = selectedCards[0]?.querySelector<HTMLDetailsElement>('[data-mug-panel]');
+        if (first) first.open = true;
+      }
+      if (!started) status.textContent = 'Ajuste os recortes e gere a foto do mockup.';
     }
     for (const result of results.values()) URL.revokeObjectURL(result.url);
     results.clear();
     for (const card of cards.values()) {
-      const image = card.querySelector('img')!;
+      const image = card.querySelector<HTMLImageElement>('[data-mug-image] img')!;
       image.removeAttribute('src');
-      image.hidden = true;
+      image.parentElement!.hidden = true;
     }
     failures.clear();
     showError('');
     renderState();
   });
-  art.addEventListener('load', drawFrame);
+  art.addEventListener('load', () => { drawFrame(); renderState(); });
   art.addEventListener('error', () => showError('Não foi possível abrir a arte no editor.'));
 
   fit.addEventListener('change', () => {
@@ -415,7 +433,7 @@ export function initMugMockupAdmin() {
   });
 
   models.forEach(model => model.addEventListener('change', () => {
-    if (started && model.checked) ensureCard(model);
+    if ((started || upload.files?.length) && model.checked) ensureCard(model);
     renderState();
   }));
   form.addEventListener('submit', event => { event.preventDefault(); void render(selected()); });

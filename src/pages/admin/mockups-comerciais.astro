@@ -93,37 +93,25 @@ const models = await Promise.all(mugMockups.map(async model => ({
             Baixar todos em ZIP
           </button>
         </div>
-        <p id="mug-mockup-status" role="status" class="mt-2 text-sm text-ink-secondary">Os mockups gerados aparecerão aqui.</p>
-        <div id="mug-mockup-results" class="mt-4 grid gap-4 sm:grid-cols-2"></div>
+        <p id="mug-mockup-status" role="status" class="mt-2 text-sm text-ink-secondary">Carregue a arte para abrir os recortes por caneca.</p>
+        <div id="mug-mockup-results" class="mt-4 grid gap-4"></div>
       </section>
     </div>
   </main>
 
   <template id="mug-mockup-result">
     <article class="min-w-0 overflow-hidden rounded-xl border border-line bg-canvas">
-      <div data-mug-image class="relative bg-white">
-        <img hidden class="block h-full w-full object-contain" decoding="async" alt="" draggable="false" />
-        <div data-mug-markers hidden aria-label="Canecas na imagem" class="pointer-events-none absolute inset-0"></div>
-      </div>
       <div class="space-y-2 p-3">
         <h3 class="text-sm font-semibold text-ink"></h3>
         <p data-state class="text-xs text-ink-secondary" aria-live="polite"></p>
         <button type="button" data-mug-download hidden class="min-h-11 items-center text-sm font-semibold text-accent hover:underline">Baixar PNG</button>
         <details data-mug-panel class="border-t border-line pt-1">
           <summary class="flex min-h-10 cursor-pointer items-center text-sm font-semibold text-accent">Ajustar canecas</summary>
-          <fieldset data-instance-controls class="space-y-2">
-            <legend class="sr-only">Ajustes da caneca selecionada</legend>
-            <label class="block text-sm">
-              Caneca
-              <select data-mug-picker class="mt-1 min-h-11 w-full rounded-lg border border-control bg-canvas px-2"></select>
-            </label>
-            <MugAdjustment />
-            <div class="flex flex-wrap gap-2">
-              <button type="button" data-mug-center class="min-h-11 rounded-lg border border-control px-2 text-xs">Centralizar</button>
-              <button type="button" data-mug-reset class="min-h-11 rounded-lg border border-control px-2 text-xs">Restaurar caneca</button>
-              <button type="button" data-mug-render class="min-h-11 rounded-lg border border-control px-2 text-xs font-semibold">Atualizar prévia</button>
-            </div>
-            <p class="text-xs text-ink-muted">Selecione ou arraste um marcador na imagem. Use as setas com o marcador em foco.</p>
+          <fieldset data-instance-controls class="space-y-3">
+            <legend class="sr-only">Recortes das canecas</legend>
+            <p class="text-xs text-ink-muted">Arraste a arte dentro de cada recorte ou use as setas. O recorte muda na hora.</p>
+            <div data-mug-editors class="grid gap-3 sm:grid-cols-2"></div>
+            <button type="button" data-mug-render class="min-h-11 rounded-lg bg-action px-3 text-sm font-semibold text-on-action disabled:opacity-50">Atualizar foto do mockup</button>
           </fieldset>
         </details>
         <details class="border-t border-line pt-1">
@@ -139,7 +127,33 @@ const models = await Promise.all(mugMockups.map(async model => ({
           </fieldset>
         </details>
       </div>
+      <div data-mug-image hidden class="bg-white">
+        <img class="block h-full w-full object-contain" decoding="async" alt="" draggable="false" />
+      </div>
     </article>
+  </template>
+
+  <template id="mug-instance-editor">
+    <section class="min-w-0 space-y-2 rounded-xl border border-line bg-surface p-3">
+      <h4 class="text-sm font-semibold text-ink"></h4>
+      <div data-slot-surface tabindex="0" role="group"
+        class="relative touch-none cursor-grab select-none overflow-hidden rounded-lg border border-control bg-white focus-visible:outline-accent active:cursor-grabbing">
+        <div data-slot-clip class="pointer-events-none absolute overflow-hidden">
+          <img data-slot-art alt="" draggable="false" class="absolute max-w-none" />
+        </div>
+      </div>
+      <div class="flex flex-wrap items-end gap-2">
+        <label class="min-w-0 flex-1 text-xs text-ink-secondary">
+          Encaixe
+          <select data-slot-fit class="mt-1 min-h-11 w-full rounded-lg border border-control bg-canvas px-2 text-sm">
+            <option value="">Do modelo</option><option value="contain">Conter</option><option value="cover">Preencher</option>
+          </select>
+        </label>
+        <button type="button" data-mug-center class="min-h-11 rounded-lg border border-control px-2 text-xs">Centralizar</button>
+        <button type="button" data-mug-reset class="min-h-11 rounded-lg border border-control px-2 text-xs">Restaurar</button>
+      </div>
+      <MugAdjustment />
+    </section>
   </template>
 </BaseLayout>
 
