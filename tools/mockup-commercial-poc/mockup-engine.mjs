@@ -4,7 +4,7 @@ import sharp from 'sharp';
 import { createPhotopeaBridge } from './photopea-bridge.mjs';
 import { prepareSlotImage } from './prepare-input.mjs';
 
-function openSlotJsx(layerPath) {
+export function openSlotJsx(layerPath) {
   return `
     (function() {
       var doc = app.documents[0];
@@ -25,7 +25,7 @@ function openSlotJsx(layerPath) {
   `;
 }
 
-const COMMIT_SLOT_JSX = `
+export const COMMIT_SLOT_JSX = `
   (function() {
     var soDoc = app.documents[1];
     var pngDoc = app.documents[2];

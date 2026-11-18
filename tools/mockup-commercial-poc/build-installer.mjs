@@ -22,7 +22,6 @@ const APP_FILES = [
   'editor-server.mjs',
   'editor.html',
   'mockup-engine.mjs',
-  'prepare-input.mjs',
   'photopea-bridge.mjs',
   'art-library-adapter.mjs',
   'art-library-remote-adapter.mjs',
@@ -49,6 +48,7 @@ function main() {
   for (const file of APP_FILES) {
     copyFileSync(join(HERE, file), join(APP_DIR, file));
   }
+  copyFileSync(join(HERE, '../../src/server/mockups/prepare-input.mjs'), join(APP_DIR, 'prepare-input.mjs'));
   cpSync(join(HERE, 'templates'), join(APP_DIR, 'templates'), { recursive: true });
 
   // 3. Manifesto mínimo de produção (sem devDependencies nem Astro/SQLite)

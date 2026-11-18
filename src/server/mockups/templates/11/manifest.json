@@ -1,0 +1,76 @@
+{
+  "width": 1920,
+  "height": 1920,
+  "density": 72,
+  "slots": [
+    {
+      "file": "caneca-esquerda.gz",
+      "left": 202,
+      "top": 307,
+      "width": 528,
+      "height": 665,
+      "input": {
+        "width": 738,
+        "height": 665
+      },
+      "placement": {
+        "fit": "cover",
+        "anchorX": 0.0,
+        "anchorY": 0.5,
+        "scale": 1.0
+      }
+    },
+    {
+      "file": "caneca-centro.gz",
+      "left": 659,
+      "top": 482,
+      "width": 589,
+      "height": 717,
+      "input": {
+        "width": 738,
+        "height": 665
+      },
+      "placement": {
+        "fit": "cover",
+        "anchorX": 0.5,
+        "anchorY": 0.5,
+        "scale": 1.0
+      }
+    },
+    {
+      "file": "caneca-direita.gz",
+      "left": 1179,
+      "top": 277,
+      "width": 508,
+      "height": 643,
+      "input": {
+        "width": 738,
+        "height": 665
+      },
+      "placement": {
+        "fit": "cover",
+        "anchorX": 1.0,
+        "anchorY": 0.5,
+        "scale": 1.0
+      }
+    },
+    {
+      "file": "papeis-sobrepostos.gz",
+      "left": 114,
+      "top": 1276,
+      "width": 1695,
+      "height": 525,
+      "input": {
+        "width": 1607,
+        "height": 724
+      },
+      "placement": {
+        "fit": "cover",
+        "anchorX": 0.5,
+        "anchorY": 0.5,
+        "scale": 1.0
+      }
+    }
+  ],
+  "profile": "profile.icc"
+}

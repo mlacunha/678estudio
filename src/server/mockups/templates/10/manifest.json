@@ -1,0 +1,41 @@
+{
+  "width": 1000,
+  "height": 1000,
+  "density": 200,
+  "slots": [
+    {
+      "file": "caneca-esquerda.gz",
+      "left": 76,
+      "top": 267,
+      "width": 511,
+      "height": 539,
+      "input": {
+        "width": 2301,
+        "height": 2310
+      },
+      "placement": {
+        "fit": "contain",
+        "anchorX": 0.2,
+        "anchorY": 0.5,
+        "scale": 1.0
+      }
+    },
+    {
+      "file": "caneca-direita.gz",
+      "left": 527,
+      "top": 177,
+      "width": 319,
+      "height": 435,
+      "input": {
+        "width": 2301,
+        "height": 2310
+      },
+      "placement": {
+        "fit": "contain",
+        "anchorX": 0.8,
+        "anchorY": 0.5,
+        "scale": 1.0
+      }
+    }
+  ]
+}
