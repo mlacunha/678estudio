@@ -1,14 +1,13 @@
 import { readFile } from 'node:fs/promises';
-import { join, resolve } from 'node:path';
+import { join } from 'node:path';
 import { promisify } from 'node:util';
 import { gunzip } from 'node:zlib';
 import sharp from 'sharp';
-import { mugMockups } from './options.mjs';
-import { prepareSlotImage } from './prepare-input.mjs';
-import { combinePlacement, framedArtwork, slotFrame } from './placement.mjs';
+import { loadMugManifest } from './manifest.mjs';
+import { computeSlotPlacement, prepareSlotImage } from './prepare-input.mjs';
+import { combinePlacement, framedArtwork, hasAdjustment, neutralAdjustment, slotFrame } from './placement.mjs';
 
 const unzip = promisify(gunzip);
-const templates = resolve('src/server/mockups/templates');
 const bytesPerPixel = 16;
 const toneStops = [0, 64, 128, 192, 255];
 
@@ -25,24 +24,25 @@ export async function normalizeMugArtwork(bytes) {
  * @param {{fit?: string, placement?: import('./placement.mjs').Placement}} [options]
  */
 export async function renderMugMockup(id, artwork, { fit, placement: framing } = {}) {
-  if (!mugMockups.some(model => model.id === id)) throw new RangeError('Modelo de mockup inválido.');
-  const directory = join(templates, id);
-  const manifest = JSON.parse(await readFile(join(directory, 'manifest.json'), 'utf8'));
-  const { width, height, slots, profile } = manifest;
+  const { directory, width, height, slots, profile } = await loadMugManifest(id);
   const base = await readFile(join(directory, 'base.png'));
   // Calibration is measured in the PSD's embedded color space, including Adobe RGB in model 11.
   const output = await sharp(base, { ignoreIcc: true }).ensureAlpha().raw().toBuffer();
   const prepared = new Map();
   const custom = framing?.mode === 'custom' ? combinePlacement(framing.global, framing.local) : null;
-  const dimensions = custom ? await sharp(artwork).metadata() : null;
+  const dimensions = custom || Object.values(framing?.instances ?? {}).some(hasAdjustment)
+    ? await sharp(artwork).metadata() : null;
 
   for (const slot of slots) {
     const placement = { ...slot.placement, ...(fit ? { fit } : {}) };
-    const frame = custom && slot.framing !== 'original';
-    const key = JSON.stringify([slot.input, placement, Boolean(frame)]);
+    const correction = slot.instance ? framing?.instances?.[slot.instance.id] : undefined;
+    const individual = hasAdjustment(correction) ? correction : undefined;
+    const frame = custom && slot.framing !== 'original'
+      ? combinePlacement(custom, individual ?? neutralAdjustment) : null;
+    const key = JSON.stringify([slot.input, placement, frame, individual]);
     if (!prepared.has(key)) {
-      const image = frame
-        ? await prepareFramedSlot(artwork, dimensions, slot.input, placement, custom)
+      const image = frame || individual
+        ? await prepareFramedSlot(artwork, dimensions, slot.input, placement, frame, individual)
         : await prepareSlotImage(artwork, slot.input, placement);
       const pixels = sharp(image).removeAlpha();
       if (profile) pixels.withIccProfile(join(directory, profile));
@@ -59,9 +59,10 @@ export async function renderMugMockup(id, artwork, { fit, placement: framing } =
   return withOriginalPngMetadata(png, base);
 }
 
-async function prepareFramedSlot(artwork, dimensions, input, calibration, placement) {
-  const frame = slotFrame(input, calibration);
-  const rect = framedArtwork(dimensions, frame, placement, calibration);
+async function prepareFramedSlot(artwork, dimensions, input, calibration, placement, individual) {
+  const frame = placement ? slotFrame(input, calibration) : { ...input, x: 0, y: 0 };
+  const rect = placement ? framedArtwork(dimensions, frame, placement, calibration)
+    : nativeArtwork(dimensions, frame, calibration, individual);
   const left = Math.max(0, Math.ceil(rect.x));
   const top = Math.max(0, Math.ceil(rect.y));
   const right = Math.min(frame.width, Math.floor(rect.x + rect.width));
@@ -79,6 +80,19 @@ async function prepareFramedSlot(artwork, dimensions, input, calibration, placem
     width: Math.max(1, sourceRight - sourceLeft), height: Math.max(1, sourceBottom - sourceTop),
   }).resize(right - left, bottom - top, { fit: 'fill' }).png().toBuffer();
   return output.composite([{ input: visible, left: frame.x + left, top: frame.y + top }]).png().toBuffer();
+}
+
+function nativeArtwork(dimensions, frame, calibration, adjustment) {
+  const fitted = computeSlotPlacement(dimensions.width, dimensions.height, frame.width, frame.height, calibration);
+  const ratio = fitted.fit === 'contain' ? Math.min : Math.max;
+  const scale = ratio(frame.width / dimensions.width, frame.height / dimensions.height) * fitted.scale * adjustment.zoom / 100;
+  const width = dimensions.width * scale;
+  const height = dimensions.height * scale;
+  return {
+    width, height,
+    x: (frame.width - width) * fitted.anchorX + frame.width * adjustment.offsetX / 100,
+    y: (frame.height - height) * fitted.anchorY + frame.height * adjustment.offsetY / 100,
+  };
 }
 
 const colorAndDensityChunks = new Set(['iCCP', 'sRGB', 'gAMA', 'cHRM', 'pHYs']);

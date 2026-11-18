@@ -43,4 +43,16 @@ describe('rota de enquadramento dos mockups', () => {
     vi.mocked(normalizeMugArtwork).mockRejectedValueOnce(new Error('invalid image'));
     expect((await call()).status).toBe(422);
   });
+
+  it('aceita três correções independentes na cena 9 e rejeita IDs externos ou da faixa', async () => {
+    const adjustment = (zoom: number, offsetX = 0) => ({ zoom, offsetX, offsetY: 0 });
+    const placement = { mode: 'original', instances: {
+      'caneca-esquerda': adjustment(155), 'caneca-meio': adjustment(70), 'caneca-direita': adjustment(100, 18),
+    } };
+    expect((await call({ placement: JSON.stringify(placement) })).status).toBe(200);
+    expect(vi.mocked(renderMugMockup)).toHaveBeenLastCalledWith('9', Buffer.from('normalized'), { placement });
+    for (const id of ['arte-superior', 'caneca-centro', 'papeis-sobrepostos']) {
+      expect((await call({ placement: JSON.stringify({ mode: 'original', instances: { [id]: adjustment(110) } }) })).status).toBe(400);
+    }
+  });
 });

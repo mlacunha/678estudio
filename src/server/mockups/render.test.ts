@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { mugMockups } from './options.mjs';
 import { normalizeMugArtwork, renderMugMockup } from './render.mjs';
 import { combinePlacement, framedArtwork, mugFrame, neutralAdjustment, parseMugPlacement, slotFrame } from './placement.mjs';
+import { getMugInstances } from './manifest.mjs';
 
 describe('Commercial mug mockups', () => {
   it('ships all four original scenes and replaces the visible artwork at native resolution', async () => {
@@ -86,4 +87,38 @@ describe('Commercial mug mockups', () => {
       JSON.stringify(valid).replace('"zoom":100', '"zoom":1e309'),
     ]) expect(() => parseMugPlacement(input)).toThrow();
   });
+
+  it('isolates two different zooms and restores just one caneca in original mode', async () => {
+    const art = await sharp({ create: { width: 48, height: 20, channels: 3, background: '#385a91' } }).png().toBuffer();
+    const model = '10';
+    const [left, right] = await getMugInstances(model);
+    const raw = async (instances: Record<string, typeof neutralAdjustment>) =>
+      sharp(await renderMugMockup(model, art, { placement: { mode: 'original', instances } })).ensureAlpha().raw().toBuffer();
+    const zoomIn = { ...neutralAdjustment, zoom: 150 };
+    const zoomOut = { ...neutralAdjustment, zoom: 65 };
+    const before = await raw({});
+    const leftOnly = await raw({ [left.id]: zoomIn });
+    const rightOnly = await raw({ [right.id]: zoomOut });
+    const both = await raw({ [left.id]: zoomIn, [right.id]: zoomOut });
+    expect(await raw({ [left.id]: neutralAdjustment, [right.id]: zoomOut })).toEqual(rightOnly);
+    const strip = (bytes: Buffer, from: number, to: number) => Buffer.concat(
+      Array.from({ length: 1000 }, (_, row) => bytes.subarray((row * 1000 + from) * 4, (row * 1000 + to) * 4)),
+    );
+    expect(strip(leftOnly, 600, 900)).toEqual(strip(before, 600, 900));
+    expect(strip(rightOnly, 70, 500)).toEqual(strip(before, 70, 500));
+    expect(strip(both, 70, 500)).toEqual(strip(leftOnly, 70, 500));
+    expect(strip(both, 600, 900)).toEqual(strip(rightOnly, 600, 900));
+    expect(strip(both, 70, 500).equals(strip(before, 70, 500))).toBe(false);
+    expect(strip(both, 600, 900).equals(strip(before, 600, 900))).toBe(false);
+  }, 30_000);
+
+  it('keeps neutral slot values identical with the previously calibrated custom transform', async () => {
+    const art = await sharp({ create: { width: 20, height: 9, channels: 3, background: '#73477c' } }).png().toBuffer();
+    const placement = { mode: 'custom' as const, global: { ...neutralAdjustment, fit: 'cover' as const }, local: neutralAdjustment };
+    const baseline = await renderMugMockup('9', art, { placement });
+    const neutral = await renderMugMockup('9', art, {
+      placement: { ...placement, instances: { 'caneca-meio': neutralAdjustment } },
+    });
+    expect(neutral).toEqual(baseline);
+  }, 30_000);
 });

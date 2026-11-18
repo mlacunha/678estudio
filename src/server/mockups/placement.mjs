@@ -1,10 +1,16 @@
 /** @typedef {{zoom: number, offsetX: number, offsetY: number}} Adjustment */
 /** @typedef {{fit: 'contain' | 'cover'} & Adjustment} Frame */
-/** @typedef {{mode: 'original'} | {mode: 'custom', global: Frame, local: Adjustment}} Placement */
+/** @typedef {Record<string, Adjustment>} InstanceAdjustments */
+/** @typedef {({mode: 'original'} | {mode: 'custom', global: Frame, local: Adjustment}) & {instances?: InstanceAdjustments}} Placement */
 
 export const mugFrame = { width: 20, height: 9 };
 export const neutralAdjustment = { zoom: 100, offsetX: 0, offsetY: 0 };
 export const placementLimits = { zoomMin: 25, zoomMax: 300, offset: 100 };
+
+/** @param {Adjustment | undefined} adjustment */
+export function hasAdjustment(adjustment) {
+  return Boolean(adjustment && (adjustment.zoom !== 100 || adjustment.offsetX !== 0 || adjustment.offsetY !== 0));
+}
 
 /** @param {Frame} global @param {Adjustment} local @returns {Frame} */
 export function combinePlacement(global, local) {
@@ -65,13 +71,21 @@ function validAdjustment(value, keys) {
     && inRange(value.offsetX, -offset, offset) && inRange(value.offsetY, -offset, offset);
 }
 
-/** @param {string} json @returns {Placement} */
-export function parseMugPlacement(json) {
+/** @param {string} json @param {string[]} [allowedInstances] @returns {Placement} */
+export function parseMugPlacement(json, allowedInstances = []) {
   const value = JSON.parse(json);
-  if (hasKeys(value, ['mode']) && value.mode === 'original') return value;
-  if (hasKeys(value, ['mode', 'global', 'local']) && value.mode === 'custom'
-    && validAdjustment(value.global, ['fit', 'zoom', 'offsetX', 'offsetY'])
-    && ['contain', 'cover'].includes(value.global.fit)
-    && validAdjustment(value.local, ['zoom', 'offsetX', 'offsetY'])) return value;
+  if (value && typeof value === 'object' && !Array.isArray(value)) {
+    const { instances, ...base } = value;
+    const validInstances = !Object.hasOwn(value, 'instances') || (
+      instances && typeof instances === 'object' && !Array.isArray(instances)
+      && Object.entries(instances).every(([id, adjustment]) => allowedInstances.includes(id)
+        && validAdjustment(adjustment, ['zoom', 'offsetX', 'offsetY']))
+    );
+    if (validInstances && hasKeys(base, ['mode']) && base.mode === 'original') return value;
+    if (validInstances && hasKeys(base, ['mode', 'global', 'local']) && base.mode === 'custom'
+      && validAdjustment(base.global, ['fit', 'zoom', 'offsetX', 'offsetY'])
+      && ['contain', 'cover'].includes(base.global.fit)
+      && validAdjustment(base.local, ['zoom', 'offsetX', 'offsetY'])) return value;
+  }
   throw new RangeError('Enquadramento inválido.');
 }

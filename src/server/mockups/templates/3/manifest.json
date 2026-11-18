@@ -5,6 +5,7 @@
   "slots": [
     {
       "file": "caneca-frente.gz",
+      "instance": { "id": "caneca-frente", "label": "Frente" },
       "left": 1256,
       "top": 628,
       "width": 1087,
@@ -22,6 +23,7 @@
     },
     {
       "file": "caneca-fundo.gz",
+      "instance": { "id": "caneca-fundo", "label": "Verso" },
       "left": 561,
       "top": 510,
       "width": 972,

@@ -2,8 +2,12 @@
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import MugAdjustment from '../../components/admin/MugAdjustment.astro';
 import { mugMockups } from '../../server/mockups/options.mjs';
+import { getMugInstances } from '../../server/mockups/manifest.mjs';
 
 export const prerender = false;
+const models = await Promise.all(mugMockups.map(async model => ({
+  ...model, instances: await getMugInstances(model.id),
+})));
 ---
 
 <BaseLayout title="Mockups de Canecas | Administração 678 Estudio">
@@ -57,9 +61,11 @@ export const prerender = false;
 
           <fieldset class="space-y-2">
             <legend class="mb-2 text-sm font-semibold text-ink">Modelos</legend>
-            {mugMockups.map((model) => (
+            {models.map((model) => (
               <label class="flex min-h-11 cursor-pointer items-center gap-3 rounded-lg border border-control px-3 py-2 text-sm">
-                <input name="model" type="checkbox" value={model.id} data-label={model.label} checked class="size-4 shrink-0 accent-accent" />
+                <input name="model" type="checkbox" value={model.id} data-label={model.label}
+                  data-instances={JSON.stringify(model.instances)} data-ratio={`${model.width} / ${model.height}`}
+                  checked class="size-4 shrink-0 accent-accent" />
                 <span>{model.label}</span>
               </label>
             ))}
@@ -75,6 +81,14 @@ export const prerender = false;
       <section class="min-w-0 rounded-2xl border border-line bg-surface p-4 sm:p-5" aria-labelledby="mug-results-title">
         <div class="flex flex-wrap items-center justify-between gap-3">
           <h2 id="mug-results-title" class="text-lg font-semibold text-ink">Resultados</h2>
+          <label class="flex items-center gap-2 text-sm">
+            Formato
+            <select id="mug-export-format" class="min-h-11 rounded-lg border border-control bg-canvas px-2">
+              <option value="png">PNG</option>
+              <option value="jpeg">JPEG</option>
+              <option value="webp">WebP</option>
+            </select>
+          </label>
           <button id="mug-download-zip" type="button" hidden class="min-h-11 rounded-lg border border-control px-4 text-sm font-semibold hover:border-accent disabled:opacity-50">
             Baixar todos em ZIP
           </button>
@@ -87,11 +101,31 @@ export const prerender = false;
 
   <template id="mug-mockup-result">
     <article class="min-w-0 overflow-hidden rounded-xl border border-line bg-canvas">
-      <img hidden class="aspect-square w-full bg-white object-contain" decoding="async" alt="" />
+      <div data-mug-image class="relative bg-white">
+        <img hidden class="block h-full w-full object-contain" decoding="async" alt="" draggable="false" />
+        <div data-mug-markers hidden aria-label="Canecas na imagem" class="pointer-events-none absolute inset-0"></div>
+      </div>
       <div class="space-y-2 p-3">
         <h3 class="text-sm font-semibold text-ink"></h3>
         <p data-state class="text-xs text-ink-secondary" aria-live="polite"></p>
-        <a hidden class="min-h-11 items-center text-sm font-semibold text-accent hover:underline">Baixar PNG</a>
+        <button type="button" data-mug-download hidden class="min-h-11 items-center text-sm font-semibold text-accent hover:underline">Baixar PNG</button>
+        <details data-mug-panel class="border-t border-line pt-1">
+          <summary class="flex min-h-10 cursor-pointer items-center text-sm font-semibold text-accent">Ajustar canecas</summary>
+          <fieldset data-instance-controls class="space-y-2">
+            <legend class="sr-only">Ajustes da caneca selecionada</legend>
+            <label class="block text-sm">
+              Caneca
+              <select data-mug-picker class="mt-1 min-h-11 w-full rounded-lg border border-control bg-canvas px-2"></select>
+            </label>
+            <MugAdjustment />
+            <div class="flex flex-wrap gap-2">
+              <button type="button" data-mug-center class="min-h-11 rounded-lg border border-control px-2 text-xs">Centralizar</button>
+              <button type="button" data-mug-reset class="min-h-11 rounded-lg border border-control px-2 text-xs">Restaurar caneca</button>
+              <button type="button" data-mug-render class="min-h-11 rounded-lg border border-control px-2 text-xs font-semibold">Atualizar prévia</button>
+            </div>
+            <p class="text-xs text-ink-muted">Selecione ou arraste um marcador na imagem. Use as setas com o marcador em foco.</p>
+          </fieldset>
+        </details>
         <details class="border-t border-line pt-1">
           <summary class="flex min-h-10 cursor-pointer items-center text-sm font-semibold text-accent">Ajustar este modelo</summary>
           <fieldset data-local class="space-y-2">
