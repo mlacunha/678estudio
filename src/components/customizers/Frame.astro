@@ -55,10 +55,10 @@ const { studioProducts } = Astro.props;
 
       <!-- Visualizador do Ambiente (Canvas / Preview) -->
       <div class="customizer-preview min-w-0 lg:col-span-7 space-y-2">
-        <div class="relative w-full aspect-[16/10] min-h-[190px] max-h-[34vh] [@media(max-height:500px)]:max-h-[240px] lg:max-h-none lg:aspect-[16/11] bg-canvas rounded-2xl border border-line overflow-hidden">
+        <div class="relative w-full aspect-[16/11] min-h-[190px] max-h-[34vh] [@media(max-height:500px)]:max-h-[240px] lg:max-h-none bg-canvas rounded-2xl border border-line overflow-hidden">
 
           <!-- Elemento Canvas Principal que gera a composição -->
-          <canvas id="frame-stage-canvas" width="1600" height="1100" role="img" aria-label="Prévia do quadro de 30 × 40 cm no ambiente selecionado" class="w-full h-full block"></canvas>
+          <canvas id="frame-stage-canvas" width="1600" height="1100" role="img" aria-label="Prévia do quadro de 30 × 40 cm no ambiente selecionado" class="w-full h-full block object-contain"></canvas>
 
           <!-- Selo de Ambiente Atual -->
           <div class="absolute top-3 left-3 sm:top-4 sm:left-4 pointer-events-none flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-media-badge/95 backdrop-blur-md text-[11px] font-medium text-on-media">
@@ -123,6 +123,15 @@ const { studioProducts } = Astro.props;
               <span class="block text-xs uppercase tracking-wider text-ink-muted font-medium mb-2">
                 1. Fotografia ou Arte
               </span>
+              <div id="frame-art-target" hidden class="mb-3">
+                <label for="frame-art-slot" class="block mb-1 text-xs font-medium text-ink-secondary">Selecionar arte para</label>
+                <select id="frame-art-slot" class="w-full min-h-11 rounded-md border border-control bg-canvas px-3 text-sm text-ink">
+                  <option value="0">Quadro 1</option>
+                  <option value="1">Quadro 2</option>
+                  <option value="2">Quadro 3</option>
+                </select>
+                <p class="mt-1 text-xs text-ink-muted">Quadros sem arte própria usam a arte do Quadro 1.</p>
+              </div>
               {studioProducts ? (
                 <label class="cursor-pointer min-h-11 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-surface-raised hover:bg-surface-hover border border-control text-ink-secondary text-xs font-semibold focus-within:outline focus-within:outline-2 focus-within:outline-accent">
                   <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -143,10 +152,24 @@ const { studioProducts } = Astro.props;
                 </ArtLibraryPicker>
               )}
               <p id="art-filename" data-art-status role="status" class="text-xs text-accent mt-2 break-all"></p>
+              <button id="btn-remove-frame-art" type="button" hidden class="mt-2 min-h-11 rounded-md border border-line px-3 text-xs font-medium text-ink-secondary hover:border-accent [&[hidden]]:hidden">
+                Remover arte deste quadro
+              </button>
             </div>
           </div>
 
           <div data-mobile-step-panel={!studioProducts ? 'ajustes' : undefined} class="space-y-4 sm:space-y-5 lg:!block">
+            <fieldset>
+              <legend class="mb-2 text-xs font-medium uppercase tracking-wider text-ink-muted">Composição</legend>
+              <div class="grid grid-cols-3 gap-2">
+                {[[1, '1 quadro'], [2, '2 quadros'], [3, '3 quadros']].map(([count, label]) => (
+                  <label class="relative cursor-pointer">
+                    <input type="radio" name="frame-count" value={count} checked={count === 1} class="peer sr-only" />
+                    <span class="flex min-h-11 items-center justify-center rounded-md border border-control px-1 text-center text-xs font-semibold text-ink-secondary hover:border-accent peer-checked:border-accent peer-checked:bg-accent/10 peer-checked:text-accent peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-accent">{label}</span>
+                  </label>
+                ))}
+              </div>
+            </fieldset>
             <fieldset>
               <legend class="mb-2 text-xs font-medium uppercase tracking-wider text-ink-muted">2. Orientação</legend>
               <div class="grid grid-cols-2 gap-2">
@@ -273,7 +296,8 @@ const { studioProducts } = Astro.props;
           <div data-mobile-step-panel={!studioProducts ? 'concluir' : undefined} class="lg:pt-4 lg:border-t lg:border-line space-y-3 lg:!block">
             {!studioProducts && (
               <div class="rounded-xl border border-line bg-canvas/70 p-3 text-xs space-y-1.5 lg:hidden">
-                <p class="font-semibold text-ink">Resumo do quadro</p>
+                <p class="font-semibold text-ink">Resumo da composição</p>
+                <p class="text-ink-secondary">Composição: <span data-summary-frame-count class="font-medium text-ink">1 quadro</span></p>
                 <p class="text-ink-secondary">Ambiente: <span data-summary-env class="font-medium text-ink">Sala Contemporânea</span></p>
                 <p class="text-ink-secondary">Orientação: <span data-summary-orientation class="font-medium text-ink">Retrato (30 × 40 cm)</span></p>
                 <p class="text-ink-secondary">Moldura: <span data-summary-color class="font-medium text-ink">Preta</span></p>
@@ -431,8 +455,11 @@ const { studioProducts } = Astro.props;
     const labelScale = document.getElementById('label-frame-scale');
     const badgeEnv = document.getElementById('badge-environment-name');
     const artFilename = document.getElementById('art-filename');
+    const artTarget = document.getElementById('frame-art-target');
+    const artSlot = document.querySelector<HTMLSelectElement>('#frame-art-slot');
     const btnExport = document.querySelector<HTMLButtonElement>('#btn-export-frame');
     const btnReset = document.getElementById('btn-reset-frame-art');
+    const btnRemove = document.getElementById('btn-remove-frame-art');
     const exportStatus = document.getElementById('frame-export-status');
     const quoteLink = document.querySelector<HTMLAnchorElement>('#frame-whatsapp');
     const studio = document.querySelector<HTMLFormElement>('[data-studio-publication]');
@@ -441,19 +468,26 @@ const { studioProducts } = Astro.props;
     const horizontalValue = document.getElementById('frame-margin-horizontal-value');
     const verticalValue = document.getElementById('frame-margin-vertical-value');
     const orientationOptions = Array.from(document.querySelectorAll<HTMLInputElement>('input[name="frame-orientation"]'));
+    const countOptions = Array.from(document.querySelectorAll<HTMLInputElement>('input[name="frame-count"]'));
     const colorOptions = Array.from(document.querySelectorAll<HTMLInputElement>('input[name="frame-color"]'));
     const measures = document.querySelectorAll('[data-frame-measure]');
 
     if (!stageCanvas || !marginHorizontal || !marginVertical) return;
     const ctx = stageCanvas.getContext('2d');
     if (!ctx) return;
+    const frameCanvas = document.createElement('canvas');
+    const frameBuffer = frameCanvas.getContext('2d');
+    if (!frameBuffer) return;
+    const frameContext = frameBuffer;
 
     let currentEnv: 'living' | 'office' = 'living';
-    let userArtImage: HTMLImageElement | null = null;
-    let selectedLibraryArt: SelectedLibraryArt | null = null;
-    let libraryLoadSeq = 0;
+    const artworks: Array<{ image: HTMLImageElement; name: string; library?: SelectedLibraryArt } | null> = [null, null, null];
+    const pendingSlots = new Map<number, symbol>();
+    const activeSlot = () => Number(artSlot?.value ?? 0);
     let artScale = 1;
     const orientation = () => orientationOptions.find(option => option.checked)?.value === 'landscape' ? 'landscape' : 'portrait';
+    const frameCount = () => Number(countOptions.find(option => option.checked)?.value ?? 1);
+    const compositionLabel = () => frameCount() === 1 ? '1 quadro' : `${frameCount()} quadros`;
     const frameColor = () => FRAME_COLORS[colorOptions.find(option => option.checked)?.value as keyof typeof FRAME_COLORS] ?? FRAME_COLORS.black;
     const measure = () => {
       const { widthCm, heightCm } = FRAME_ORIENTATIONS[orientation()];
@@ -484,7 +518,6 @@ const { studioProducts } = Astro.props;
         substrate.set(wood.data.subarray(start, start + artW * 4), row * artW * 4);
       }
       for (const label of measures) label.textContent = measure();
-      stageCanvas.setAttribute('aria-label', `Prévia do quadro de ${measure()} no ambiente selecionado`);
       if (horizontalValue) horizontalValue.textContent = marginText(marginHorizontal.valueAsNumber);
       if (verticalValue) verticalValue.textContent = marginText(marginVertical.valueAsNumber);
     };
@@ -590,9 +623,35 @@ const { studioProducts } = Astro.props;
         ctx.fillRect(1154, 884, 190, 26);
       }
 
+      const { frameW, frameH } = layout;
+      const count = frameCount();
+      stageCanvas.setAttribute('aria-label', `Prévia de ${compositionLabel()} de ${measure()} no ambiente selecionado`);
+      if (count === 1) {
+        drawFrame(ctx, (W - frameW) / 2, Math.round(H * 0.18 + (Math.max(frameW, frameH) - frameH) / 2), artworks[0]?.image);
+        return;
+      }
+
+      // Usa a mesma renderização para distribuir os quadros na faixa livre da parede.
+      const shadowPadding = 80;
+      frameCanvas.width = frameW + shadowPadding * 2;
+      frameCanvas.height = frameH + shadowPadding * 2;
+      const gap = Math.round(W * 0.035);
+      const scale = Math.min(0.9, (W * 0.84 - (count - 1) * gap) / (count * frameW));
+      const width = frameW * scale;
+      const height = frameH * scale;
+      const startX = (W - (width * count + gap * (count - 1))) / 2;
+      const top = H * 0.39 - height / 2;
+      const padding = shadowPadding * scale;
+      for (let index = 0; index < count; index++) {
+        frameContext.clearRect(0, 0, frameCanvas.width, frameCanvas.height);
+        drawFrame(frameContext, shadowPadding, shadowPadding, (artworks[index] ?? artworks[0])?.image, false);
+        ctx.drawImage(frameCanvas, startX + index * (width + gap) - padding, top - padding,
+          width + 2 * padding, height + 2 * padding);
+      }
+    }
+
+    function drawFrame(ctx: CanvasRenderingContext2D, frameX: number, frameY: number, userArtImage?: HTMLImageElement, useCrop = true) {
       const { frameW, frameH, inset, boardW, boardH, artW, artH, artLeft, artTop } = layout;
-      const frameX = (W - frameW) / 2;
-      const frameY = Math.round(H * 0.18 + (Math.max(frameW, frameH) - frameH) / 2);
       const color = frameColor();
 
       // Sombra projetada realista na parede
@@ -622,10 +681,11 @@ const { studioProducts } = Astro.props;
       printContext.clearRect(0, 0, artW, artH);
       if (userArtImage) {
         const baseScale = Math.max(artW / userArtImage.naturalWidth, artH / userArtImage.naturalHeight);
-        const drawW = userArtImage.naturalWidth * baseScale * artScale;
-        const drawH = userArtImage.naturalHeight * baseScale * artScale;
-        const x = (artW - drawW) / 2 + adjustPan(sliderX, drawW - artW);
-        const y = (artH - drawH) / 2 + adjustPan(sliderY, drawH - artH);
+        const scale = baseScale * (useCrop ? artScale : 1);
+        const drawW = userArtImage.naturalWidth * scale;
+        const drawH = userArtImage.naturalHeight * scale;
+        const x = (artW - drawW) / 2 + (useCrop ? adjustPan(sliderX, drawW - artW) : 0);
+        const y = (artH - drawH) / 2 + (useCrop ? adjustPan(sliderY, drawH - artH) : 0);
         printContext.drawImage(userArtImage, x, y, drawW, drawH);
       } else {
         printContext.fillStyle = '#24262b';
@@ -659,21 +719,25 @@ const { studioProducts } = Astro.props;
     preparePrint();
     renderScene();
 
-    const quote = studio ? setupStudioPublication(studio, () => stageCanvas, () => Boolean(userArtImage)) : btnExport && exportStatus && quoteLink
+    const quote = studio ? setupStudioPublication(studio, () => stageCanvas, () => artworks.slice(0, frameCount()).some(Boolean)) : btnExport && exportStatus && quoteLink
       ? setupMockupQuote(btnExport, exportStatus, quoteLink, () => {
           const zoom = Number(sliderScale?.value ?? 100);
           const posX = Number(sliderX?.value ?? 0);
           const posY = Number(sliderY?.value ?? 0);
+          const selectedLibraryArt = frameCount() === 1 ? artworks[0]?.library : undefined;
+          const artDetails = frameCount() === 1
+            ? [`• Ajuste da arte: escala ${zoom}%, posição X ${posX}, Y ${posY}`]
+            : artworks.slice(0, frameCount()).map((art, index) => `• Quadro ${index + 1}: ${(art ?? artworks[0])?.name ?? 'Arte padrão do estúdio'}`);
           return {
             imageBase64: stageCanvas.toDataURL('image/png'),
-            productName: `Quadro Decorativo ${measure()}`,
+            productName: frameCount() === 1 ? `Quadro Decorativo ${measure()}` : `Composição com ${compositionLabel()} de ${measure()}`,
             details: [
               `• Ambiente: *${environmentName()}*`,
               `• Orientação: ${FRAME_ORIENTATIONS[orientation()].label}`,
               `• Moldura: ${frameColor().label}`,
               `• Margem horizontal: ${marginText(marginHorizontal.valueAsNumber)} por lado`,
               `• Margem vertical: ${marginText(marginVertical.valueAsNumber)} por lado`,
-              `• Ajuste da arte: escala ${zoom}%, posição X ${posX}, Y ${posY}`,
+              ...artDetails,
               '• Sublimação em madeira clara',
             ].join('\n'),
             ...(selectedLibraryArt ? {
@@ -710,6 +774,10 @@ const { studioProducts } = Astro.props;
       updateScene();
     };
     for (const option of orientationOptions) option.addEventListener('change', updateLayout);
+    for (const option of countOptions) option.addEventListener('change', () => {
+      syncArtworkUi();
+      updateScene();
+    });
     for (const option of colorOptions) option.addEventListener('change', updateScene);
     marginHorizontal.addEventListener('input', updateLayout);
     marginVertical.addEventListener('input', updateLayout);
@@ -736,93 +804,84 @@ const { studioProducts } = Astro.props;
       });
     }
 
-    const artPicker = studio
-      ? null
-      : connectArtLibraryPicker(document.querySelector<HTMLElement>('[data-art-picker-root]'), {
-          onSelect: async art => {
-            const seq = ++libraryLoadSeq;
-            quote?.invalidate();
-            quote?.setArtworkPending(true);
-            if (artFilename) artFilename.textContent = `Carregando ${art.code}…`;
-            try {
-              const image = await loadImageFromUrl(art.previewUrl);
-              if (seq !== libraryLoadSeq) return;
-              userArtImage = image;
-              selectedLibraryArt = art;
-              artScale = 1;
-              if (sliderScale) {
-                sliderScale.value = '100';
-                sliderScale.disabled = false;
-              }
-              if (sliderX) sliderX.value = '0';
-              if (sliderY) sliderY.value = '0';
-              if (labelScale) labelScale.textContent = '100%';
-              if (artFilename) artFilename.textContent = `[${art.code}] ${art.title} (v${art.version})`;
-              updateScene();
-            } catch {
-              if (seq === libraryLoadSeq && artFilename) {
-                artFilename.textContent = 'Não foi possível carregar a arte da biblioteca. A arte anterior foi mantida.';
-              }
-            } finally {
-              if (seq === libraryLoadSeq) quote?.setArtworkPending(false);
-            }
-          },
-        });
+    function syncArtworkUi(message?: string) {
+      const count = frameCount();
+      if (artTarget) artTarget.hidden = count === 1;
+      if (artSlot) {
+        if (activeSlot() >= count) artSlot.value = '0';
+        for (const option of artSlot.options) option.hidden = option.disabled = Number(option.value) >= count;
+      }
+      const slot = activeSlot();
+      if (btnRemove) btnRemove.hidden = count === 1 || (!artworks[slot] && !pendingSlots.has(slot));
+      if (btnReset) btnReset.hidden = count > 1;
+      if (artFilename) artFilename.textContent = message ?? (pendingSlots.has(slot) ? 'Carregando imagem…' : artworks[slot]?.name ?? '');
+      quote?.setArtworkPending([...pendingSlots.keys()].some(index => index < count));
+      syncFrameMobileUi();
+    }
 
-    inputArt?.addEventListener('change', async () => {
-      const file = inputArt.files?.[0];
-      if (!file) return;
-      libraryLoadSeq++;
+    async function setArtwork(name: string, load: () => Promise<HTMLImageElement>, library?: SelectedLibraryArt) {
+      const slot = activeSlot();
+      const request = Symbol();
+      pendingSlots.set(slot, request);
       quote?.invalidate();
-      quote?.setArtworkPending(true);
-      if (artFilename) artFilename.textContent = 'Carregando imagem…';
-
+      syncArtworkUi();
+      let error: string | undefined;
       try {
-        const image = await (studio ? loadStudioArtwork(file) : loadArtwork(file));
-        if (inputArt.files?.[0] !== file) return;
-        userArtImage = image;
-        selectedLibraryArt = null;
-        artPicker?.clearSelection();
-        artScale = 1;
-        if (sliderScale) {
-          sliderScale.value = '100';
-          sliderScale.disabled = false;
-        }
-        if (sliderX) sliderX.value = '0';
-        if (sliderY) sliderY.value = '0';
-        if (labelScale) labelScale.textContent = '100%';
-        if (artFilename) artFilename.textContent = file.name;
+        const image = await load();
+        if (pendingSlots.get(slot) !== request) return;
+        artworks[slot] = { image, name, library };
+        if (slot === 0) resetCrop();
         updateScene();
       } catch {
-        if (inputArt.files?.[0] === file && artFilename) {
-          artFilename.textContent = 'Não foi possível abrir a imagem. A arte anterior foi mantida.';
-        }
+        error = 'Não foi possível abrir a imagem. A arte anterior foi mantida.';
       } finally {
-        if (inputArt.files?.[0] === file) {
-          inputArt.value = '';
-          quote?.setArtworkPending(false);
+        if (pendingSlots.get(slot) === request) {
+          pendingSlots.delete(slot);
+          syncArtworkUi(activeSlot() === slot ? error : undefined);
         }
       }
-    });
+    }
 
-    btnReset?.addEventListener('click', () => {
-      libraryLoadSeq++;
-      userArtImage = null;
-      selectedLibraryArt = null;
-      artPicker?.clearSelection();
+    function resetCrop() {
       artScale = 1;
-      if (inputArt) inputArt.value = '';
       if (sliderScale) {
         sliderScale.value = '100';
-        sliderScale.disabled = true;
+        sliderScale.disabled = !artworks[0];
       }
       if (sliderX) sliderX.value = '0';
       if (sliderY) sliderY.value = '0';
       if (labelScale) labelScale.textContent = '100%';
-      if (artFilename) artFilename.textContent = '';
-      quote?.setArtworkPending(false);
-      updateScene();
+    }
+
+    const artPicker = studio ? null
+      : connectArtLibraryPicker(document.querySelector<HTMLElement>('[data-art-picker-root]'), {
+          onSelect: art => setArtwork(`[${art.code}] ${art.title} (v${art.version})`, () => loadImageFromUrl(art.previewUrl), art),
+        });
+
+    artSlot?.addEventListener('change', () => {
+      artPicker?.clearSelection();
+      syncArtworkUi();
     });
+
+    inputArt?.addEventListener('change', () => {
+      const file = inputArt.files?.[0];
+      if (!file) return;
+      inputArt.value = '';
+      artPicker?.clearSelection();
+      void setArtwork(file.name, () => studio ? loadStudioArtwork(file) : loadArtwork(file));
+    });
+
+    function resetArtwork() {
+      const slot = activeSlot();
+      pendingSlots.delete(slot);
+      artworks[slot] = null;
+      artPicker?.clearSelection();
+      if (slot === 0) resetCrop();
+      syncArtworkUi();
+      updateScene();
+    }
+    btnReset?.addEventListener('click', resetArtwork);
+    btnRemove?.addEventListener('click', resetArtwork);
 
     sliderScale?.addEventListener('input', () => {
       const zoom = Number(sliderScale.value);
@@ -980,6 +1039,7 @@ const { studioProducts } = Astro.props;
     const summaryColor = document.querySelector<HTMLElement>('[data-summary-color]');
     const summaryMargins = document.querySelector<HTMLElement>('[data-summary-margins]');
     const summaryArt = document.querySelector<HTMLElement>('[data-summary-frame-art]');
+    const summaryCount = document.querySelector<HTMLElement>('[data-summary-frame-count]');
     const barStatus = document.querySelector<HTMLElement>('[data-mobile-bar-status]');
 
     const MARGIN_PRESETS: Record<string, { h: number; v: number }> = {
@@ -1005,7 +1065,11 @@ const { studioProducts } = Astro.props;
 
     function syncFrameMobileUi(): void {
       const hasCustomImage = Boolean(sliderScale && !sliderScale.disabled);
-      if (cropGroup) cropGroup.classList.toggle('hidden', !hasCustomImage);
+      if (cropGroup) {
+        cropGroup.hidden = frameCount() > 1;
+        cropGroup.classList.toggle('lg:block', frameCount() === 1);
+        cropGroup.classList.toggle('hidden', frameCount() > 1 || !hasCustomImage);
+      }
       syncMarginPresetUi();
 
       const envName = document.getElementById('badge-environment-name')?.textContent?.trim() || 'Sala Contemporânea';
@@ -1014,14 +1078,17 @@ const { studioProducts } = Astro.props;
       const colorVal = (document.querySelector<HTMLInputElement>('input[name="frame-color"]:checked')?.value || 'black') as keyof typeof FRAME_COLORS;
       const colorLabel = FRAME_COLORS[colorVal]?.label ?? 'Preta';
       const marginsText = `${marginHorizontal?.value ?? FRAME_MARGINS.horizontal} × ${marginVertical?.value ?? FRAME_MARGINS.vertical} cm`;
-      const artText = artFilename?.textContent?.trim() || 'Arte padrão do estúdio';
+      const artText = frameCount() === 1
+        ? artworks[0]?.name ?? 'Arte padrão do estúdio'
+        : artworks.slice(0, frameCount()).map((art, index) => `${index + 1}: ${(art ?? artworks[0])?.name ?? 'Arte padrão'}`).join(' · ');
 
       if (summaryEnv) summaryEnv.textContent = envName;
       if (summaryOri) summaryOri.textContent = `${oriMeta.label} (${oriMeta.widthCm} × ${oriMeta.heightCm} cm)`;
       if (summaryColor) summaryColor.textContent = colorLabel;
       if (summaryMargins) summaryMargins.textContent = marginsText;
       if (summaryArt) summaryArt.textContent = artText;
-      if (barStatus) barStatus.textContent = `${oriMeta.widthCm}×${oriMeta.heightCm} cm · Moldura ${colorLabel}`;
+      if (summaryCount) summaryCount.textContent = compositionLabel();
+      if (barStatus) barStatus.textContent = `${compositionLabel()} · ${oriMeta.widthCm}×${oriMeta.heightCm} cm`;
     }
 
     for (const btn of presetBtns) {
@@ -1039,7 +1106,7 @@ const { studioProducts } = Astro.props;
     for (const el of [marginHorizontal, marginVertical, sliderScale, sliderX, sliderY]) {
       el?.addEventListener('input', syncFrameMobileUi);
     }
-    for (const el of document.querySelectorAll('input[name="frame-orientation"], input[name="frame-color"]')) {
+    for (const el of [...orientationOptions, ...colorOptions, ...countOptions]) {
       el.addEventListener('change', syncFrameMobileUi);
     }
     for (const btn of document.querySelectorAll('.btn-env-select')) {
@@ -1055,7 +1122,7 @@ const { studioProducts } = Astro.props;
     initCustomizerMobileSteps(document.querySelector<HTMLElement>('[data-customizer-mobile-root]'), {
       onStepChange: syncFrameMobileUi,
     });
-    syncFrameMobileUi();
+    syncArtworkUi();
 
   }
 
