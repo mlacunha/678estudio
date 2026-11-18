@@ -1,4 +1,5 @@
 import {
+  comboPalette,
   maxPlannerLogoBytes,
   plannerFormats,
   plannerLogoTypes,
@@ -30,6 +31,10 @@ export function initPlannerCustomizer(): void {
   const submit = document.querySelector<HTMLButtonElement>('#planner-submit')!;
   const error = document.querySelector<HTMLParagraphElement>('#planner-error')!;
   const modeDetail = document.querySelector<HTMLParagraphElement>('#planner-mode-detail')!;
+  const modelSelect = form.querySelector<HTMLSelectElement>('select[name="model"]')!;
+  const modelDetail = document.querySelector<HTMLParagraphElement>('#planner-model-detail')!;
+  const coverTitle = form.querySelector<HTMLInputElement>('input[name="cover_title"]');
+  const essentialOptions = form.querySelectorAll<HTMLFieldSetElement>('[data-essencial-option]');
   const styleDetail = document.querySelector<HTMLParagraphElement>('#planner-style-detail')!;
   const typoDetail = document.querySelector<HTMLParagraphElement>('#planner-typography-detail')!;
   const yearContainer = document.querySelector<HTMLDivElement>('#planner-year-container')!;
@@ -97,6 +102,15 @@ export function initPlannerCustomizer(): void {
   }
 
   function refreshOptions(): void {
+    const model = plannerModels[modelSelect.value as keyof typeof plannerModels] ?? plannerModels['planner-essencial'];
+    const isCombo = modelSelect.value === 'planner-combo-v1';
+    modelDetail.textContent = model.detail;
+    for (const group of essentialOptions) group.disabled = group.hidden = isCombo;
+    if (coverTitle && coverTitle.value !== model.label
+      && Object.values(plannerModels).some(option => option.label === coverTitle.value)) {
+      coverTitle.value = model.label;
+      coverTitle.dispatchEvent(new Event('input'));
+    }
     const modeValue = (form.elements.namedItem('mode') as RadioNodeList)?.value as keyof typeof plannerModes;
     const mode = plannerModes[modeValue] ?? plannerModes.dated;
     if (modeDetail) modeDetail.textContent = mode.detail;
@@ -125,8 +139,8 @@ export function initPlannerCustomizer(): void {
       if (!customColors.checked) {
         const primaryInput = form.elements.namedItem('primary') as HTMLInputElement | null;
         const secondaryInput = form.elements.namedItem('secondary') as HTMLInputElement | null;
-        if (primaryInput) primaryInput.value = style.primary;
-        if (secondaryInput) secondaryInput.value = style.secondary;
+        if (primaryInput) primaryInput.value = (isCombo ? comboPalette : style).primary;
+        if (secondaryInput) secondaryInput.value = (isCombo ? comboPalette : style).secondary;
       }
     }
   }
@@ -137,7 +151,7 @@ export function initPlannerCustomizer(): void {
     const item = previews[index];
     if (title) title.textContent = `${item.label} · Seção ${index + 1}/${previews.length}`;
     enlarged.src = item.src;
-    enlarged.alt = `Prévia da seção ${item.label} do Planner Essencial`;
+    enlarged.alt = `Prévia da seção ${item.label}`;
     if (prev) prev.disabled = index === 0;
     if (next) next.disabled = index === previews.length - 1;
     viewport?.scrollTo(0, 0);
@@ -307,12 +321,16 @@ export function initPlannerCustomizer(): void {
       const format = plannerFormats[formData.get('format') as keyof typeof plannerFormats]?.label ?? 'A5';
 
       if (summary) {
-        summary.textContent = `${model} · ${mode}${year} · Formato ${format} · Estilo ${style} · Tipografia ${typo}`;
+        const design = formData.get('model') === 'planner-combo-v1'
+          ? 'Acabamento editorial'
+          : `Estilo ${style} · Tipografia ${typo}`;
+        summary.textContent = `${model} · ${mode}${year} · Formato ${format} · ${design}`;
         summary.hidden = false;
       }
       if (placeholder) placeholder.hidden = true;
 
       gallery.replaceChildren(...previews.map((item, index) => createPreviewCard(item, index)));
+      gallery.hidden = false;
       if (status) status.textContent = `${previews.length} seções reais prontas`;
 
       if (!window.matchMedia('(min-width: 1024px)').matches && results) {

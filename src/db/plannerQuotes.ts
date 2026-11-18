@@ -8,6 +8,7 @@ import {
   type PlannerQuoteAsset,
   type PlannerQuoteConfig,
 } from '../server/planner/quoteConfig';
+import { plannerModels } from '../server/planner/options.mjs';
 
 export const plannerQuotesPerPage = 25;
 const columns = 'id, product, created_at, status, config_version, config_json';
@@ -60,7 +61,7 @@ export async function savePlannerQuote(
     args: [
       id,
       token,
-      plannerProduct,
+      plannerModels[config.model]?.label ?? plannerProduct,
       new Date().toISOString(),
       plannerConfigVersion,
       JSON.stringify(config),

@@ -1,6 +1,6 @@
 import type { APIRoute } from 'astro';
 import { getPlannerQuote, getPlannerQuoteAsset } from '../../../../db/plannerQuotes';
-import { compilePlannerEssencial } from '../../../../server/planner/essencial.mjs';
+import { compilePlanner } from '../../../../server/planner/essencial.mjs';
 import { parseA4PrintQuery, renderSelectedA4Output } from '../../../../server/print/a4Imposition';
 
 export const prerender = false;
@@ -30,7 +30,7 @@ export const GET: APIRoute = async ({ params, url }) => {
       if (asset) logoBuffer = asset.content;
     }
 
-    const pdfBuffer = await compilePlannerEssencial(
+    const pdfBuffer = await compilePlanner(
       {
         ...quote.config,
         logo: logoBuffer,
@@ -40,7 +40,8 @@ export const GET: APIRoute = async ({ params, url }) => {
 
     const finalPdf = await renderSelectedA4Output(new Uint8Array(pdfBuffer), parsedPrint.mode, parsedPrint.options);
     const suffix = parsedPrint.mode === 'a5' ? '' : `-${parsedPrint.mode}`;
-    const filename = `planner-essencial-${quote.config.mode}-${quote.id}${suffix}.pdf`;
+    const model = quote.config.model === 'planner-combo-v1' ? 'planner-combo' : 'planner-essencial';
+    const filename = `${model}-${quote.config.mode}-${quote.id}${suffix}.pdf`;
 
     return new Response(new Uint8Array(finalPdf), {
       headers: {

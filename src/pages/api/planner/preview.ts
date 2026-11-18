@@ -1,9 +1,11 @@
 import type { APIRoute } from 'astro';
 import { normalizeAgendaLogo } from '../../../server/agenda/logo';
-import { compilePlannerEssencial, isPlannerColor } from '../../../server/planner/essencial.mjs';
+import { compilePlanner, isPlannerColor, renderComboPreviews } from '../../../server/planner/essencial.mjs';
 import { storePlannerDraft } from '../../../server/planner/drafts';
-import type { PlannerAssetRole, PlannerQuoteAsset, PlannerQuoteConfig } from '../../../server/planner/quoteConfig';
+import type { PlannerQuoteAsset, PlannerQuoteConfig } from '../../../server/planner/quoteConfig';
 import {
+  comboPalette,
+  comboPreviewSections,
   plannerFormats,
   plannerModels,
   plannerModes,
@@ -60,8 +62,9 @@ export const POST: APIRoute = async ({ request, url }) => {
     const yearValue = form.get('year');
     const year = yearValue ? Number(yearValue) : 2027;
     const format = String(form.get('format') || 'a5');
-    const style = String(form.get('style') || 'classic');
-    const typography = String(form.get('typography') || 'modern');
+    const isCombo = model === 'planner-combo-v1';
+    const style = isCombo ? 'classic' : String(form.get('style') || 'classic');
+    const typography = isCombo ? 'editorial' : String(form.get('typography') || 'modern');
     const personalizationName = String(form.get('personalizationName') || '').trim();
 
     if (!Object.hasOwn(plannerModels, model) || !Object.hasOwn(plannerModes, mode)
@@ -119,9 +122,10 @@ export const POST: APIRoute = async ({ request, url }) => {
       return reply({ error: coverResult.error }, coverResult.status);
     }
 
-    const palette = plannerStyles[style as keyof typeof plannerStyles];
+    const palette = isCombo ? comboPalette : plannerStyles[style as keyof typeof plannerStyles];
+    const sections = isCombo ? comboPreviewSections : plannerSections;
     const config: PlannerQuoteConfig = {
-      template: 'planner-essencial-v1',
+      template: plannerModels[model as keyof typeof plannerModels].template,
       model: model as keyof typeof plannerModels,
       mode,
       year: mode === 'dated' ? year : undefined,
@@ -135,7 +139,7 @@ export const POST: APIRoute = async ({ request, url }) => {
       logo: logo && logoFile
         ? { originalName: logoFile.name.slice(0, 255), original: 'original', normalized: 'logo' }
         : null,
-      sections: plannerSections.map(s => s.id),
+      sections: sections.map(s => s.id),
       ...(coverResult?.ok ? { cover: coverResult.cover } : {}),
     };
 
@@ -153,34 +157,26 @@ export const POST: APIRoute = async ({ request, url }) => {
     // Renderizar as prévias reais Typst para as seções em memória
     const previews: Array<{ id: string; label: string; detail: string; src: string }> = [];
 
-    for (const section of plannerSections) {
-      try {
-        const pngBuffer = await compilePlannerEssencial({
-          ...config,
-          logo: logo?.normalized,
-          section: section.id,
-        }, { format: 'png', pages: [1] });
+    if (isCombo) {
+      const rendered = await renderComboPreviews({ ...config, logo: logo?.normalized });
+      for (const { png, ...section } of rendered) {
+        previews.push({ ...section, src: `data:image/png;base64,${png.toString('base64')}` });
+        assets.push({ name: `preview-${section.id}`, mime: 'image/png', content: png });
+      }
+    } else {
+      for (const section of plannerSections) {
+        try {
+          const png = await compilePlanner({
+            ...config,
+            logo: logo?.normalized,
+            section: section.id,
+          }, { format: 'png', pages: [1] });
 
-        const base64 = pngBuffer.toString('base64');
-        previews.push({
-          id: section.id,
-          label: section.label,
-          detail: section.detail,
-          src: `data:image/png;base64,${base64}`,
-        });
-
-        assets.push({
-          name: `preview-${section.id}` as PlannerAssetRole,
-          mime: 'image/png',
-          content: pngBuffer,
-        });
-      } catch {
-        previews.push({
-          id: section.id,
-          label: section.label,
-          detail: section.detail,
-          src: '',
-        });
+          previews.push({ ...section, src: `data:image/png;base64,${png.toString('base64')}` });
+          assets.push({ name: `preview-${section.id}`, mime: 'image/png', content: png });
+        } catch {
+          previews.push({ ...section, src: '' });
+        }
       }
     }
 

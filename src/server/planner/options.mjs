@@ -4,8 +4,18 @@ export const plannerModels = {
   'planner-essencial': {
     label: 'Planner Essencial',
     detail: 'Organização pessoal, profissional e financeira completa',
+    template: 'planner-essencial-v1',
+    file: 'essencial.typ',
+  },
+  'planner-combo-v1': {
+    label: 'Combo Planner',
+    detail: 'Calendário em dupla, orçamento detalhado, bem-estar e registros culturais',
+    template: 'planner-combo-v1',
+    file: 'combo.typ',
   },
 };
+
+export const comboPalette = { primary: '#253638', secondary: '#385E58', accent: '#A75539' };
 
 export const plannerModes = {
   dated: {
@@ -79,6 +89,29 @@ export const plannerSections = [
   { id: 'financeiro', label: 'Controle Financeiro', detail: 'Receitas, despesas, contas e balanço mensal' },
   { id: 'revisao', label: 'Revisão Mensal', detail: 'Avaliação de resultados e aprendizados' },
   { id: 'anotacoes', label: 'Anotações', detail: 'Páginas pautadas e pontilhadas para notas' },
+];
+
+export const comboPreviewSections = [
+  { id: 'abertura', page: 1, label: 'Identificação', detail: 'Abertura e dados de contato' },
+  { id: 'anual', page: 2, label: 'Calendário anual', detail: 'Doze meses em uma página' },
+  { id: 'trimestre', page: 4, label: 'Planejamento trimestral', detail: 'Marcos e prioridades por mês' },
+  { id: 'economia', page: 8, label: 'Desafio de economia', detail: 'Metas e depósitos ao longo do ano' },
+  { id: 'divisoria', page: 11, label: 'Abertura mensal', detail: 'Propósito e foco do mês' },
+  { id: 'mensal', page: 12, label: 'Calendário mensal', detail: 'Segunda a quinta' },
+  { id: 'mensal-direita', page: 13, label: 'Calendário mensal', detail: 'Sexta a domingo e lembretes' },
+  { id: 'checklist', page: 14, label: 'Checklist', detail: 'Prioridades e compromissos' },
+  { id: 'autoavaliacao', page: 15, label: 'Autoavaliação', detail: 'Oito áreas para acompanhar' },
+  { id: 'habitos', page: 16, label: 'Hábitos', detail: 'Acompanhamento diário por mês' },
+  { id: 'sono', page: 17, label: 'Sono', detail: 'Registro de horas por dia' },
+  { id: 'financeiro', page: 18, label: 'Entradas', detail: 'Recebimentos do mês' },
+  { id: 'saidas', page: 19, label: 'Saídas', detail: 'Despesas e categorias' },
+  { id: 'cartoes', page: 20, label: 'Cartão 1', detail: 'Compras e parcelas' },
+  { id: 'balanco', page: 22, label: 'Balanço mensal', detail: 'Totais, economia e saldo' },
+  { id: 'anotacoes', page: 23, label: 'Notas', detail: 'Pauta para escrita livre' },
+  { id: 'semanal', page: 24, label: 'Semana', detail: 'Segunda a quarta' },
+  { id: 'semanal-direita', page: 25, label: 'Semana', detail: 'Quinta a domingo' },
+  { id: 'revisao', page: 24, afterFirstMonthWeeks: true, label: 'Revisão do mês', detail: 'Resultados e próximos passos' },
+  { id: 'cultura', page: 5, fromEnd: true, label: 'Registros culturais', detail: 'Livros, séries, filmes e música' },
 ];
 
 export const maxPlannerLogoBytes = 2 * 1024 * 1024;
