@@ -4,6 +4,7 @@ import AdminA4PrintPanel from '../../../../components/admin/AdminA4PrintPanel.as
 import { getPlannerQuote } from '../../../../db/plannerQuotes';
 import {
   formatPlannerQuoteDate,
+  plannerQuoteCoverTitle,
   plannerQuoteLabels,
   plannerQuotePath,
 } from '../../../../server/planner/quoteConfig';
@@ -102,7 +103,7 @@ const labelClass = 'text-xs font-semibold uppercase tracking-wider text-ink-mute
             </div>
             <div>
               <dt class={labelClass}>Título / Nome</dt>
-              <dd class="mt-0.5 font-medium">{config.cover.title || '—'} / {config.cover.name || '—'}</dd>
+              <dd class="mt-0.5 font-medium">{plannerQuoteCoverTitle(config) || '—'} / {config.cover.name || '—'}</dd>
             </div>
             <div>
               <dt class={labelClass}>Cores (base / detalhe)</dt>

@@ -1,4 +1,4 @@
-# Combo Planner A5
+# Planner Harmonia A5
 
 ## Inventário da referência
 

@@ -1,7 +1,7 @@
 // A family owns its route; models and visual styles stay inside its customizer.
 export const stationeryFamilies = {
   'family-agendas': { route: '/personalizar/agenda', available: true, models: ['agenda-classica-v2', 'agenda-juridica-v1'] },
-  'family-planners': { route: '/personalizar/planner', available: true, models: ['planner-essencial'] },
+  'family-planners': { route: '/personalizar/planner', available: true, models: ['planner-essencial', 'planner-combo-v1'] },
   'family-cadernos': {
     route: '/personalizar/caderno',
     available: true,

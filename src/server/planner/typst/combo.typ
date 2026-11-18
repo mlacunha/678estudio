@@ -15,7 +15,7 @@
 #let heading = "DM Serif Display"
 #let weekdays = ("Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom")
 
-#set document(title: "Combo Planner", author: "678 Estudio")
+#set document(title: "Planner Harmonia", author: "678 Estudio")
 #set text(lang: "pt", region: "BR", font: "DM Sans 9pt", size: 9pt, fill: ink)
 #set par(leading: 0.55em)
 #set block(spacing: 0pt)
@@ -33,7 +33,7 @@
       #if has-logo and counter(page).get().first() > 1 [
         #box(baseline: 40%, image("logo.png", width: 11mm, height: 3.8mm, fit: "contain")) #h(2mm)
       ]
-      #text(size: 7pt, fill: leaf)[678 Estudio / Combo Planner]
+      #text(size: 7pt, fill: leaf)[678 Estudio / Planner Harmonia]
     ],
     text(size: 8pt, fill: ink, counter(page).display("1")),
   ),
@@ -128,7 +128,7 @@
   #field(if days.len() == 3 { "Prioridades da semana" } else { "Notas da semana" }, n: 3)
 ]
 
-#head(period, "Combo Planner")
+#head(period, "Planner Harmonia")
 #v(7mm)
 #if has-logo [
   #image("logo.png", width: 48mm, height: 20mm, fit: "contain")

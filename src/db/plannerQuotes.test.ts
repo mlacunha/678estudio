@@ -83,6 +83,26 @@ describe('Planner Quotes Repository', () => {
     expect(previewAsset?.content.toString()).toBe('fake-preview-financeiro');
   });
 
+  it('usa o nome Planner Harmonia em orçamentos novos e anteriores à renomeação', async () => {
+    const token = randomUUID();
+    const config: PlannerQuoteConfig = {
+      ...sampleConfig,
+      model: 'planner-combo-v1',
+      template: 'planner-combo-v1',
+    };
+    const saved = await savePlannerQuote(token, config, sampleAssets, mocked.client);
+    expect(saved.product).toBe('Planner Harmonia');
+    await mocked.client!.execute({
+      sql: 'UPDATE planner_quotes SET product = ? WHERE id = ?',
+      args: ['Combo Planner', saved.id],
+    });
+    expect(await getPlannerQuote(saved.id, mocked.client)).toMatchObject({
+      product: 'Planner Harmonia',
+      config,
+    });
+    expect((await listPlannerQuotes(1, mocked.client)).quotes[0].product).toBe('Planner Harmonia');
+  });
+
   it('should list quotes with pagination and preserve custom colors, typography and watermark', async () => {
     const token1 = randomUUID();
     const token2 = randomUUID();

@@ -8,8 +8,9 @@ export const plannerModels = {
     file: 'essencial.typ',
   },
   'planner-combo-v1': {
-    label: 'Combo Planner',
-    detail: 'Calendário em dupla, orçamento detalhado, bem-estar e registros culturais',
+    label: 'Planner Harmonia',
+    detail: 'Planejamento integrado, com organização pessoal, hábitos, finanças, bem-estar e reflexão.',
+    tagline: 'Organize seus planos. Cultive seu equilíbrio.',
     template: 'planner-combo-v1',
     file: 'combo.typ',
   },

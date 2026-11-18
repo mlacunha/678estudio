@@ -23,13 +23,14 @@ export interface PlannerQuoteRecord {
 }
 
 function mapPlannerQuote(row: Row): PlannerQuoteRecord {
+  const config = JSON.parse(String(row.config_json)) as PlannerQuoteConfig;
   return {
     id: String(row.id),
-    product: String(row.product),
+    product: plannerModels[config.model]?.label ?? String(row.product),
     createdAt: String(row.created_at),
     status: String(row.status),
     configVersion: Number(row.config_version),
-    config: JSON.parse(String(row.config_json)) as PlannerQuoteConfig,
+    config,
   };
 }
 

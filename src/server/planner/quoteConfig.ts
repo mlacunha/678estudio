@@ -53,6 +53,14 @@ export function plannerQuotePath(id: string): string {
   return `/planner/orcamento/${id}`;
 }
 
+export function plannerQuoteCoverTitle(config: PlannerQuoteConfig): string | undefined {
+  const title = config.cover?.title;
+  if (config.model === 'planner-combo-v1' && (!title || title === 'Combo Planner')) {
+    return plannerModels[config.model].label;
+  }
+  return title;
+}
+
 export function plannerQuoteLabels(config: PlannerQuoteConfig): string[] {
   const modeLabel = config.mode === 'dated' && config.year ? String(config.year) : plannerModes.undated.label;
   const typoLabel = plannerTypographies[config.typography ?? 'modern']?.label ?? 'Moderna';

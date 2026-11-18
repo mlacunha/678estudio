@@ -40,7 +40,7 @@ export const GET: APIRoute = async ({ params, url }) => {
 
     const finalPdf = await renderSelectedA4Output(new Uint8Array(pdfBuffer), parsedPrint.mode, parsedPrint.options);
     const suffix = parsedPrint.mode === 'a5' ? '' : `-${parsedPrint.mode}`;
-    const model = quote.config.model === 'planner-combo-v1' ? 'planner-combo' : 'planner-essencial';
+    const model = quote.config.model === 'planner-combo-v1' ? 'planner-harmonia' : 'planner-essencial';
     const filename = `${model}-${quote.config.mode}-${quote.id}${suffix}.pdf`;
 
     return new Response(new Uint8Array(finalPdf), {

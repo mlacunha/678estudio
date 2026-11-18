@@ -17,7 +17,7 @@ const fieldClass = 'w-full min-h-11 rounded-lg border border-control bg-canvas p
 
 <BaseLayout
   title="Personalize seu planner A5 | 678 Estudio"
-  description="Escolha o Planner Essencial ou o Combo Planner e confira páginas reais do miolo personalizado."
+  description="Escolha o Planner Essencial ou o Planner Harmonia e confira páginas reais do miolo personalizado."
 >
   <div class="mx-auto max-w-7xl px-4 py-8 sm:px-6 md:py-12 lg:px-8">
     <header class="mb-7 border-b border-line pb-7 lg:mb-9">
@@ -26,7 +26,7 @@ const fieldClass = 'w-full min-h-11 rounded-lg border border-control bg-canvas p
         Planner <span class="font-normal text-accent">personalizado</span>
       </h1>
       <p class="mt-3 max-w-2xl text-sm leading-relaxed text-ink-secondary sm:text-base">
-        Configure capa, contracapa e miolo A5. Escolha o Planner Essencial ou o Combo Planner,
+        Configure capa, contracapa e miolo A5. Escolha o Planner Essencial ou o Planner Harmonia,
         em edição datada ou atemporal, e confira as páginas antes de solicitar um orçamento.
       </p>
     </header>
@@ -64,6 +64,9 @@ const fieldClass = 'w-full min-h-11 rounded-lg border border-control bg-canvas p
               </select>
             </label>
             <p id="planner-model-detail" class="mt-1 text-xs text-ink-muted">{plannerModels['planner-essencial'].detail}</p>
+            <p id="planner-model-tagline" class="mt-1 text-xs font-medium text-ink-secondary" hidden>
+              {plannerModels['planner-combo-v1'].tagline}
+            </p>
           </div>
 
           <fieldset class="space-y-2">

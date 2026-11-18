@@ -17,7 +17,7 @@ function countPdfPages(buffer: Buffer): number {
   return matches ? matches.length : 0;
 }
 
-describe('Combo Planner', () => {
+describe('Planner Harmonia', () => {
   it('gera as edições completas com a paginação prevista', async () => {
     for (const [mode, year, pageCount] of [
       ['dated', 2027, 316],
