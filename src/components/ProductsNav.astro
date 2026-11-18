@@ -1,0 +1,22 @@
+---
+import HeaderDisclosure from './HeaderDisclosure.astro';
+
+interface Props {
+  categories: { title: string; href: string }[];
+  mobile?: boolean;
+}
+
+const { categories, mobile = false } = Astro.props;
+---
+
+{categories.length > 0 && (
+  <HeaderDisclosure label="Produtos" mobile={mobile}>
+    {categories.map(({ title, href }) => (
+      <li>
+        <a href={href} class="flex min-h-11 items-center rounded-md px-3 py-2 text-sm font-medium text-ink hover:bg-surface-muted focus-visible:-outline-offset-2">
+          <span class="min-w-0 break-words">{title}</span>
+        </a>
+      </li>
+    ))}
+  </HeaderDisclosure>
+)}
