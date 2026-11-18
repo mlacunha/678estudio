@@ -3,6 +3,7 @@ import type { ProductCategory } from '../types/catalog';
 import { getActiveProductsByCategory, getHomeFeaturedProducts } from '../db/catalogRepository';
 import { resolveCategoryDestination } from '../data/internalDestinations';
 import ProductCard from './ProductCard.astro';
+import './carousel.css';
 import { getRequestStudioSettings } from '../db/studioSettings';
 import { buildWhatsAppQuotePath } from '../utils/whatsapp';
 
@@ -171,7 +172,10 @@ const categoryDest = resolveCategoryDestination(category);
       </div>
     ) : layoutType === 'grid' ? (
       products.length > 0 ? (
-        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5">
+        <div class:list={[
+          'grid gap-3 sm:gap-5 lg:grid-cols-4',
+          category.slug === 'papelaria' ? 'carousel-track carousel-track--mobile sm:grid-cols-2' : 'grid-cols-2',
+        ]}>
           {products.map((product) => (
             <ProductCard product={product} category={category} />
           ))}
@@ -187,7 +191,7 @@ const categoryDest = resolveCategoryDestination(category);
         data-carousel-track
         role="group"
         aria-label={`Produtos de ${category.title}`}
-        class="carousel-track"
+        class="carousel-track gap-4"
       >
         {products.map((product) => (
           <ProductCard product={product} category={category} />
@@ -202,24 +206,6 @@ const categoryDest = resolveCategoryDestination(category);
 </section>
 
 <style>
-  .carousel-track {
-    display: grid;
-    grid-auto-flow: column;
-    grid-auto-columns: min(82%, 23rem);
-    gap: 1rem;
-    overflow-x: auto;
-    padding: 4px 4px 0.75rem;
-    margin-inline: -4px;
-    scroll-padding-inline: 4px;
-    scroll-snap-type: x mandatory;
-    scrollbar-color: rgb(var(--color-control)) rgb(var(--color-surface-muted));
-    scrollbar-width: thin;
-  }
-
-  .carousel-track > :global(article) {
-    scroll-snap-align: start;
-  }
-
   .carousel-button {
     width: 2.75rem;
     height: 2.75rem;
@@ -239,13 +225,13 @@ const categoryDest = resolveCategoryDestination(category);
   }
 
   @media (min-width: 640px) {
-    .carousel-track {
+    [data-carousel-track] {
       grid-auto-columns: 40%;
     }
   }
 
   @media (min-width: 1024px) {
-    .carousel-track {
+    [data-carousel-track] {
       grid-auto-columns: calc((100% - 2rem) / 3);
     }
   }

@@ -12,6 +12,9 @@ export const onRequest = defineMiddleware(async ({ request, url }, next) => {
   } catch {
     return new Response('Endereço inválido.', { status: 400 });
   }
+  if (pathname === '/healthz' && request.method === 'GET') {
+    return new Response(null, { status: 204, headers: { 'Cache-Control': 'no-store' } });
+  }
   // O catálogo serve imagens prontas e não usa o otimizador SSR.
   if (/^\/_image\/?$/.test(pathname)) return new Response(null, { status: 404 });
 

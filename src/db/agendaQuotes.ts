@@ -1,7 +1,8 @@
 import { randomUUID } from 'node:crypto';
 import type { Client, InStatement, Row } from '@libsql/client';
 import { getDbClient, initDatabase } from './database';
-import { agendaConfigVersion, agendaProduct, isAgendaReference, type QuoteAsset, type QuoteConfig } from '../server/agenda/quoteConfig';
+import { agendaConfigVersion, agendaProduct, isAgendaReference, legalAgendaProduct, type QuoteAsset, type QuoteConfig } from '../server/agenda/quoteConfig';
+import { legalAgendaTemplate } from '../server/agenda/options.mjs';
 
 export const agendaQuotesPerPage = 25;
 const columns = 'id, product, created_at, status, config_version, config_json';
@@ -32,7 +33,7 @@ export async function saveAgendaQuote(token: string, config: QuoteConfig, assets
   const statements: InStatement[] = [{
     sql: `INSERT INTO agenda_quotes (id, draft_token, product, created_at, status, config_version, config_json)
       VALUES (?, ?, ?, ?, 'requested', ?, ?) ON CONFLICT(draft_token) DO NOTHING`,
-    args: [id, token, agendaProduct, new Date().toISOString(), agendaConfigVersion, JSON.stringify(config)],
+    args: [id, token, config.template === legalAgendaTemplate ? legalAgendaProduct : agendaProduct, new Date().toISOString(), agendaConfigVersion, JSON.stringify(config)],
   }];
   for (const { name, mime, content } of assets) {
     // Apenas a transação que criou o pedido pode inserir seus arquivos.

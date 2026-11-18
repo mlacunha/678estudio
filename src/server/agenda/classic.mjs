@@ -3,7 +3,7 @@ import { cp, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { promisify } from 'node:util';
-import { agendaFormats, agendaLayouts, agendaStyles } from './options.mjs';
+import { agendaFormats, agendaLayouts, agendaStyles, agendaTemplates, legalAgendaPalettes, legalAgendaTemplate } from './options.mjs';
 
 const run = promisify(execFile);
 
@@ -70,7 +70,10 @@ export function agendaPreviewSections({ year, layout }) {
  *   customColors?: boolean,
  *   logo?: Buffer,
  *   watermark?: boolean,
- *   template?: string,
+ *   template?: keyof typeof agendaTemplates,
+ *   legalPalette?: keyof typeof legalAgendaPalettes,
+ *   legalFinance?: boolean,
+ *   legalDates?: { year: number, month: number, day: number, name: string }[],
  *   studio?: { instagram?: string, site?: string, whatsapp?: string, email?: string }
  * }} AgendaConfig
  */
@@ -97,9 +100,11 @@ export function isClassicAgendaConfig(layout, year) {
  */
 export async function compileClassicAgenda(config, preview) {
   const { layout, year, style = 'classic', format = 'a5', colors, customColors = Boolean(colors), logo, watermark, studio } = config;
+  const template = config.template ?? 'agenda-classica-v2';
   if (!isClassicAgendaConfig(layout, year) || !Object.hasOwn(agendaStyles, style)
     || !Object.hasOwn(agendaFormats, format) || (watermark && !logo)
-    || (config.template !== undefined && !['agenda-classica-v1', 'agenda-classica-v2'].includes(config.template))
+    || !Object.hasOwn(agendaTemplates, template)
+    || (template === legalAgendaTemplate && (layout !== 'daily-1dpp' || style !== 'classic'))
     || (colors && (!isAgendaColor(colors.primary) || !isAgendaColor(colors.secondary)))) {
     throw new RangeError('Configuração de agenda inválida.');
   }
@@ -118,8 +123,14 @@ export async function compileClassicAgenda(config, preview) {
       '--jobs', '2', '--input', `layout=${layout}`, '--input', `year=${year}`,
       '--input', `style=${style}`, '--input', `format=${format}`,
     ];
-    const palette = colors ?? agendaStyles[/** @type {keyof typeof agendaStyles} */ (style)];
+    const legalPalette = legalAgendaPalettes[config.legalPalette ?? 'blue'];
+    const palette = colors ?? (template === legalAgendaTemplate ? legalPalette : agendaStyles[/** @type {keyof typeof agendaStyles} */ (style)]);
     args.push('--input', `primary=${palette.primary}`, '--input', `secondary=${palette.secondary}`);
+    if (template === legalAgendaTemplate) {
+      if (!customColors) args.push('--input', `tint=${legalPalette.tint}`);
+      if (config.legalDates) args.push('--input', `dates=${JSON.stringify(config.legalDates)}`);
+      if (config.legalFinance) args.push('--input', 'finance=true');
+    }
     if (customColors) args.push('--input', 'custom-colors=true');
     if (logo) args.push('--input', 'logo=true');
     if (watermark) args.push('--input', 'watermark=true');
@@ -130,7 +141,7 @@ export async function compileClassicAgenda(config, preview) {
     if (preview?.prefix) args.push('--input', `preview-limit=${Math.max(...preview.pages)}`);
     if (preview) args.push('--format', 'png', '--pages', preview.pages.join(','));
     else args.push('--format', 'pdf');
-    args.push(resolve(root, config.template === 'agenda-classica-v1' ? 'classic-v1.typ' : 'classic.typ'), preview?.output ?? '-');
+    args.push(resolve(root, agendaTemplates[template]), preview?.output ?? '-');
 
     const { stdout, stderr } = await run(process.env.TYPST_BINARY || 'typst', args, {
       encoding: 'buffer',
@@ -149,7 +160,13 @@ export async function compileClassicAgenda(config, preview) {
 export async function renderAgendaPreview(config) {
   const directory = await mkdtemp(join(tmpdir(), '678-agenda-preview-'));
   try {
-    const sections = config.template === 'agenda-classica-v1'
+    /** @type {[number, string][]} */
+    const legalSections = [[1, 'Abertura'], [2, 'Dados pessoais e do escritório'], [3, 'Calendário anual'],
+      config.legalFinance ? [46, 'Controle financeiro mensal'] : [5, 'Objetivos e metas'],
+      [10, 'Planejamento anual'], [13, 'Calendário mensal'], [14, 'Prioridades do mês'], [15, 'Compromissos e audiências']];
+    const sections = config.template === legalAgendaTemplate
+      ? legalSections.sort(([a], [b]) => a - b).map(([pdfPage, section], index) => ({ page: index + 1, pdfPage, section }))
+      : config.template === 'agenda-classica-v1'
       ? [1, 2, 3].map(page => ({ page, pdfPage: page, section: 'Layout da agenda' }))
       : agendaPreviewSections(config);
     await compileClassicAgenda(config, { pages: sections.map(item => item.pdfPage), output: join(directory, 'page-{p}.png') });

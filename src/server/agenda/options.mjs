@@ -1,4 +1,17 @@
 export const agendaYears = [2027, 2028];
+export const agendaTemplates = {
+  'agenda-classica-v1': 'classic-v1.typ',
+  'agenda-classica-v2': 'classic.typ',
+  'agenda-juridica-v1': 'juridica.typ',
+};
+export const legalAgendaTemplate = 'agenda-juridica-v1';
+export const legalAgendaPalettes = {
+  blue: { label: 'Azul', primary: '#232323', secondary: '#2677a0', tint: '#d8effb' },
+  gray: { label: 'Cinza', primary: '#232323', secondary: '#646464', tint: '#e0e0e0' },
+  lilac: { label: 'Lilás', primary: '#232323', secondary: '#8554a0', tint: '#f7e8fd' },
+  pink: { label: 'Rosa', primary: '#232323', secondary: '#a04e72', tint: '#ffe7f0' },
+  green: { label: 'Verde', primary: '#232323', secondary: '#267055', tint: '#cdf2e1' },
+};
 export const agendaLayouts = {
   'daily-1dpp': { label: 'Um dia por página', detail: 'Uma página inteira para cada dia' },
   'daily-2dpp': { label: 'Dois dias por página', detail: 'Dois dias lado a lado' },

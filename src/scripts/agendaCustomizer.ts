@@ -1,9 +1,13 @@
-import { agendaFormats, agendaLayouts, agendaLogoTypes, agendaStyles, maxAgendaLogoBytes } from '../server/agenda/options.mjs';
+import { agendaFormats, agendaLayouts, agendaLogoTypes, agendaStyles, legalAgendaPalettes, maxAgendaLogoBytes } from '../server/agenda/options.mjs';
 
 type Preview = { page: number; pdfPage: number; section: string; src: string };
 
 export function initAgendaCustomizer() {
   const form = document.querySelector<HTMLFormElement>('#agenda-form')!;
+  const legal = Boolean(form.elements.namedItem('template'));
+  const legalPalette = form.elements.namedItem('legal_palette') as HTMLSelectElement | null;
+  const storageKey = legal ? '678-agenda-juridica-opcoes' : '678-agenda-opcoes';
+  const referenceKey = legal ? '678-agenda-juridica-referencia' : '678-agenda-referencia';
   const fields = document.querySelector<HTMLFieldSetElement>('#agenda-fields')!;
   const logo = document.querySelector<HTMLInputElement>('#agenda-logo')!;
   const removeLogo = document.querySelector<HTMLButtonElement>('#agenda-remove-logo')!;
@@ -12,7 +16,7 @@ export function initAgendaCustomizer() {
   const colors = document.querySelector<HTMLFieldSetElement>('#agenda-colors')!;
   const submit = document.querySelector<HTMLButtonElement>('#agenda-submit')!;
   const error = document.querySelector<HTMLParagraphElement>('#agenda-error')!;
-  const styleDetail = document.querySelector<HTMLParagraphElement>('#agenda-style-detail')!;
+  const styleDetail = document.querySelector<HTMLParagraphElement>('#agenda-style-detail');
   const status = document.querySelector<HTMLParagraphElement>('#agenda-status')!;
   const results = document.querySelector<HTMLElement>('#agenda-results')!;
   const placeholder = document.querySelector<HTMLDivElement>('#agenda-placeholder')!;
@@ -43,13 +47,13 @@ export function initAgendaCustomizer() {
   function saveOptions() {
     try {
       const options = Object.fromEntries([...new FormData(form)].filter(([key, value]) => key !== 'logo' && key !== 'watermark' && typeof value === 'string'));
-      sessionStorage.setItem('678-agenda-opcoes', JSON.stringify(options));
+      sessionStorage.setItem(storageKey, JSON.stringify(options));
     } catch { /* O formulário funciona sem armazenamento do navegador. */ }
   }
 
   try {
-    const options = JSON.parse(sessionStorage.getItem('678-agenda-opcoes') ?? '{}');
-    for (const name of ['year', 'format', 'layout', 'style', 'primary', 'secondary']) {
+    const options = JSON.parse(sessionStorage.getItem(storageKey) ?? '{}');
+    for (const name of ['year', 'format', 'layout', 'style', 'legal_palette', 'primary', 'secondary']) {
       const field = form.elements.namedItem(name);
       const value = options[name];
       if (!field || typeof value !== 'string') continue;
@@ -60,20 +64,23 @@ export function initAgendaCustomizer() {
       } else if (field instanceof HTMLInputElement && /^#[0-9a-f]{6}$/i.test(value)) field.value = value;
     }
     customColors.checked = Boolean(options.primary && options.secondary);
-    const reference = sessionStorage.getItem('678-agenda-referencia');
+    const finance = form.elements.namedItem('legal_finance');
+    if (finance instanceof HTMLInputElement) finance.checked = options.legal_finance === 'true';
+    const reference = sessionStorage.getItem(referenceKey);
     if (reference) showReference(reference);
   } catch { /* Opções padrão quando a sessão não pode ser recuperada. */ }
 
   function refreshOptions() {
     const style = agendaStyles[(form.elements.namedItem('style') as RadioNodeList).value as keyof typeof agendaStyles];
-    styleDetail.textContent = style.detail;
+    if (styleDetail) styleDetail.textContent = style.detail;
     watermark.disabled = !logo.files?.length;
     removeLogo.hidden = watermark.disabled;
     if (watermark.disabled) watermark.checked = false;
     colors.disabled = colors.hidden = !customColors.checked;
     if (!customColors.checked) {
-      (form.elements.namedItem('primary') as HTMLInputElement).value = style.primary;
-      (form.elements.namedItem('secondary') as HTMLInputElement).value = style.secondary;
+      const palette = legalPalette ? legalAgendaPalettes[legalPalette.value as keyof typeof legalAgendaPalettes] : style;
+      (form.elements.namedItem('primary') as HTMLInputElement).value = palette.primary;
+      (form.elements.namedItem('secondary') as HTMLInputElement).value = palette.secondary;
     }
   }
 
@@ -162,7 +169,7 @@ export function initAgendaCustomizer() {
       }
       savedDraft = token;
       showReference(payload.referencePath);
-      try { sessionStorage.setItem('678-agenda-referencia', payload.referencePath); } catch { /* Referência visível na página. */ }
+      try { sessionStorage.setItem(referenceKey, payload.referencePath); } catch { /* Referência visível na página. */ }
       if (!payload.whatsappUrl) {
         quoteStatus.textContent = 'Solicitação salva. O WhatsApp está indisponível no momento. Guarde sua referência.';
         popup?.close();
@@ -221,7 +228,7 @@ export function initAgendaCustomizer() {
       const layout = agendaLayouts[data.get('layout') as keyof typeof agendaLayouts];
       const style = agendaStyles[data.get('style') as keyof typeof agendaStyles];
       const format = agendaFormats[data.get('format') as keyof typeof agendaFormats];
-      summary.textContent = `${data.get('year')} · ${layout.label} · ${format.label} · ${style.label}`;
+      summary.textContent = `${data.get('year')} · ${layout.label} · ${format.label} · ${legal ? 'Agenda Jurídica' : style.label}`;
       summary.hidden = false;
       placeholder.hidden = true;
       gallery.replaceChildren(...images.map(({ pdfPage, section, src }, index) => {
