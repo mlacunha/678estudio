@@ -11,6 +11,7 @@
     "src/pages/admin/**",
     "src/server/agenda/**",
     "src/server/planner/**",
+    "src/server/mockups/**",
     "src/server/caderno/**",
     "src/db/**",
     "src/pages/api/agenda/**",

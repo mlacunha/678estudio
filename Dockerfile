@@ -51,6 +51,7 @@ COPY --from=build /app/src/server/backup/engine.py /app/src/server/backup/superv
 COPY --from=build /app/src/server/planner ./src/server/planner
 COPY --from=build /app/src/server/caderno ./src/server/caderno
 COPY --from=build /app/src/server/cover ./src/server/cover
+COPY --from=build /app/src/server/mockups/templates ./src/server/mockups/templates
 RUN typst --version \
   && python3 --version \
   && test -f dist/server/entry.mjs \

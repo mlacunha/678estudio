@@ -1,0 +1,75 @@
+{
+  "width": 1000,
+  "height": 1000,
+  "density": 200,
+  "slots": [
+    {
+      "file": "caneca-esquerda.gz",
+      "left": 45,
+      "top": 439,
+      "width": 432,
+      "height": 459,
+      "input": {
+        "width": 2301,
+        "height": 2310
+      },
+      "placement": {
+        "fit": "contain",
+        "anchorX": 0.15,
+        "anchorY": 0.5,
+        "scale": 1.0
+      }
+    },
+    {
+      "file": "caneca-meio.gz",
+      "left": 344,
+      "top": 336,
+      "width": 298,
+      "height": 396,
+      "input": {
+        "width": 2301,
+        "height": 2310
+      },
+      "placement": {
+        "fit": "contain",
+        "anchorX": 0.5,
+        "anchorY": 0.5,
+        "scale": 1.0
+      }
+    },
+    {
+      "file": "caneca-direita.gz",
+      "left": 578,
+      "top": 410,
+      "width": 285,
+      "height": 389,
+      "input": {
+        "width": 2301,
+        "height": 2310
+      },
+      "placement": {
+        "fit": "contain",
+        "anchorX": 0.85,
+        "anchorY": 0.5,
+        "scale": 1.0
+      }
+    },
+    {
+      "file": "arte-superior.gz",
+      "left": 23,
+      "top": 107,
+      "width": 383,
+      "height": 232,
+      "input": {
+        "width": 680,
+        "height": 283
+      },
+      "placement": {
+        "fit": "cover",
+        "anchorX": 0.5,
+        "anchorY": 0.5,
+        "scale": 1.0
+      }
+    }
+  ]
+}
