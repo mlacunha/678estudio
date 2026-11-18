@@ -1,11 +1,17 @@
 import { maxMugArtworkBytes } from '../server/mockups/options.mjs';
 import {
-  framedArtwork, mugFrame, neutralAdjustment, placementLimits,
-  type Adjustment, type Frame, type Placement,
+  framedArtwork, hasAdjustment, mugFrame, neutralAdjustment, placementLimits,
+  type Adjustment, type Frame, type InstanceAdjustments, type Placement,
 } from '../server/mockups/placement.mjs';
+import type { MugInstance } from '../server/mockups/manifest.mjs';
+import { downloadMugFile, encodeMugExport, type MugExportFormat } from './mugMockupExport';
 import { createMugMockupZip } from './mugMockupZip';
 
 const controlKeys = ['zoom', 'offsetX', 'offsetY'] as const;
+const directions: Record<string, [number, number]> = {
+  ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1],
+};
+const clamp = (value: number) => Math.round(Math.max(-placementLimits.offset, Math.min(placementLimits.offset, value)));
 type Control = typeof controlKeys[number];
 type Result = { name: string; blob: Blob; url: string; key: string };
 
@@ -17,6 +23,7 @@ export function initMugMockupAdmin() {
   const status = document.querySelector<HTMLParagraphElement>('#mug-mockup-status')!;
   const gallery = document.querySelector<HTMLDivElement>('#mug-mockup-results')!;
   const zip = document.querySelector<HTMLButtonElement>('#mug-download-zip')!;
+  const format = document.querySelector<HTMLSelectElement>('#mug-export-format')!;
   const template = document.querySelector<HTMLTemplateElement>('#mug-mockup-result')!;
   const globalControls = document.querySelector<HTMLFieldSetElement>('#mug-global-placement')!;
   const fit = document.querySelector<HTMLSelectElement>('#mug-fit')!;
@@ -28,6 +35,8 @@ export function initMugMockupAdmin() {
   const cards = new Map<string, HTMLElement>();
   const results = new Map<string, Result>();
   const corrections = new Map<string, Adjustment>();
+  const instanceCorrections = new Map<string, InstanceAdjustments>();
+  const instanceEditors = new Map<string, () => void>();
   const failures = new Map<string, string>();
   let global: Frame = { fit: 'contain', ...neutralAdjustment };
   let artUrl = '';
@@ -40,8 +49,11 @@ export function initMugMockupAdmin() {
   const locallyAdjusted = (id: string) => controlKeys.some(key => localFor(id)[key] !== neutralAdjustment[key]);
 
   function placement(id: string): Placement {
-    if (fit.value === 'original' && !locallyAdjusted(id)) return { mode: 'original' };
-    return { mode: 'custom', global, local: localFor(id) };
+    const active = Object.entries(instanceCorrections.get(id) ?? {})
+      .filter(([, adjustment]) => hasAdjustment(adjustment)).sort(([a], [b]) => a.localeCompare(b));
+    const instances = active.length ? { instances: Object.fromEntries(active) } : {};
+    if (fit.value === 'original' && !locallyAdjusted(id)) return { mode: 'original', ...instances };
+    return { mode: 'custom', global, local: localFor(id), ...instances };
   }
 
   function current(id: string) {
@@ -87,21 +99,23 @@ export function initMugMockupAdmin() {
       const result = results.get(id);
       const upToDate = current(id);
       const label = card.querySelector<HTMLElement>('[data-state]')!;
-      const link = card.querySelector('a')!;
+      const download = card.querySelector<HTMLButtonElement>('[data-mug-download]')!;
       const note = failures.get(id) ?? (upToDate ? 'Prévia atualizada' : result ? 'Prévia desatualizada' : 'Aguardando prévia');
-      label.textContent = locallyAdjusted(id) ? `${note} · Ajuste individual ativo` : note;
-      link.hidden = !upToDate || rendering || zipping;
-      if (upToDate && !rendering && !zipping) {
-        link.href = upToDate.url;
-        link.download = upToDate.name;
-      } else {
-        link.removeAttribute('href');
-      }
+      const adjusted = Object.values(instanceCorrections.get(id) ?? {}).filter(hasAdjustment).length;
+      const edits = [locallyAdjusted(id) && 'Ajuste do modelo', adjusted && `Canecas ajustadas: ${adjusted}`].filter(Boolean);
+      label.textContent = [note, ...edits].join(' · ');
+      download.hidden = !upToDate;
+      download.disabled = !upToDate || rendering || zipping;
+      download.textContent = 'Baixar ' + format.selectedOptions[0].text;
       card.querySelector<HTMLFieldSetElement>('[data-local]')!.disabled = rendering || zipping;
       card.querySelector<HTMLButtonElement>('[data-local-render]')!.disabled = Boolean(upToDate);
+      card.querySelector<HTMLFieldSetElement>('[data-instance-controls]')!.disabled = rendering || zipping;
+      card.querySelector<HTMLButtonElement>('[data-mug-render]')!.disabled = Boolean(upToDate);
+      instanceEditors.get(id)?.();
     }
     zip.hidden = !started;
     zip.disabled = rendering || zipping || !selection.length || ready !== selection.length;
+    format.disabled = rendering || zipping;
     generate.textContent = started ? 'Atualizar prévias selecionadas' : 'Gerar prévias';
     if (!rendering && started) status.textContent = `${ready} de ${selection.length} prévias atualizadas.`;
   }
@@ -121,7 +135,96 @@ export function initMugMockupAdmin() {
     global = { fit: 'contain', ...neutralAdjustment };
     fit.value = 'original';
     corrections.clear();
-    for (const card of cards.values()) showControls(card, neutralAdjustment);
+    instanceCorrections.clear();
+    for (const card of cards.values()) showControls(card.querySelector('[data-local]')!, neutralAdjustment);
+  }
+
+  function setupInstanceEditor(id: string, card: HTMLElement, model: HTMLInputElement) {
+    const instances: MugInstance[] = JSON.parse(model.dataset.instances ?? '[]');
+    const image = card.querySelector<HTMLElement>('[data-mug-image]')!;
+    const panel = card.querySelector<HTMLDetailsElement>('[data-mug-panel]')!;
+    const controls = panel.querySelector<HTMLFieldSetElement>('[data-instance-controls]')!;
+    const picker = panel.querySelector<HTMLSelectElement>('[data-mug-picker]')!;
+    const overlay = card.querySelector<HTMLElement>('[data-mug-markers]')!;
+    const outline = document.createElement('div');
+    outline.className = 'pointer-events-none absolute rounded-[35%] border-2 border-amber-300 ring-1 ring-slate-900';
+    overlay.append(outline);
+    image.style.aspectRatio = model.dataset.ratio ?? '1';
+
+    const read = () => instanceCorrections.get(id)?.[picker.value] ?? neutralAdjustment;
+    function write(adjustment: Adjustment) {
+      instanceCorrections.set(id, { ...instanceCorrections.get(id), [picker.value]: adjustment });
+      failures.delete(id);
+      renderState();
+    }
+
+    const markers = instances.map((instance, index) => {
+      picker.add(new Option(instance.label, instance.id));
+      const marker = document.createElement('button');
+      marker.type = 'button';
+      marker.textContent = String(index + 1);
+      marker.title = instance.label;
+      marker.setAttribute('aria-label', `Selecionar caneca ${instance.label}`);
+      marker.className = 'pointer-events-auto absolute grid size-11 -translate-x-1/2 -translate-y-1/2 touch-none cursor-grab place-items-center rounded-full border-2 border-white bg-slate-900 text-sm font-bold text-white shadow aria-pressed:bg-amber-300 aria-pressed:text-slate-950';
+      marker.style.left = `${instance.left + instance.width / 2}%`;
+      marker.style.top = `${instance.top + instance.height / 2}%`;
+      const select = () => {
+        picker.value = instance.id;
+        renderState();
+      };
+      marker.addEventListener('click', select);
+      let drag: { x: number; y: number; adjustment: Adjustment } | undefined;
+      marker.addEventListener('pointerdown', event => {
+        if (event.button !== 0 || rendering || zipping) return;
+        select();
+        drag = { x: event.clientX, y: event.clientY, adjustment: read() };
+        marker.setPointerCapture(event.pointerId);
+      });
+      marker.addEventListener('pointermove', event => {
+        if (!drag || rendering || zipping) return;
+        write({
+          ...drag.adjustment,
+          offsetX: clamp(drag.adjustment.offsetX + (event.clientX - drag.x) / (image.clientWidth * instance.width / 100) * 100),
+          offsetY: clamp(drag.adjustment.offsetY + (event.clientY - drag.y) / (image.clientHeight * instance.height / 100) * 100),
+        });
+      });
+      marker.addEventListener('lostpointercapture', () => { drag = undefined; });
+      marker.addEventListener('keydown', event => {
+        const delta = directions[event.key];
+        if (!delta || rendering || zipping) return;
+        event.preventDefault();
+        select();
+        const scale = event.shiftKey ? 5 : 1;
+        const current = read();
+        write({ ...current, offsetX: clamp(current.offsetX + delta[0] * scale), offsetY: clamp(current.offsetY + delta[1] * scale) });
+      });
+      overlay.append(marker);
+      return marker;
+    });
+
+    picker.addEventListener('change', renderState);
+    panel.addEventListener('toggle', renderState);
+    controls.addEventListener('input', event => {
+      const input = event.target as HTMLInputElement;
+      const key = input.dataset.control as Control;
+      if (key) write({ ...read(), [key]: Number(input.value) });
+    });
+    controls.querySelector('[data-mug-center]')!.addEventListener('click', () => write({ ...read(), offsetX: 0, offsetY: 0 }));
+    controls.querySelector('[data-mug-reset]')!.addEventListener('click', () => write(neutralAdjustment));
+    controls.querySelector('[data-mug-render]')!.addEventListener('click', () => void render([model]));
+    instanceEditors.set(id, () => {
+      showControls(controls, read());
+      overlay.hidden = !panel.open || !results.has(id);
+      const active = instances.find(instance => instance.id === picker.value);
+      outline.hidden = !active;
+      if (active) Object.assign(outline.style, {
+        left: `${active.left}%`, top: `${active.top}%`, width: `${active.width}%`, height: `${active.height}%`,
+      });
+      markers.forEach((marker, index) => {
+        marker.disabled = rendering || zipping;
+        marker.setAttribute('aria-pressed', String(instances[index].id === picker.value));
+      });
+    });
   }
 
   function ensureCard(model: HTMLInputElement) {
@@ -133,7 +236,13 @@ export function initMugMockupAdmin() {
     const label = model.dataset.label ?? 'Mockup de canecas';
     card.querySelector('h3')!.textContent = label;
     card.querySelector('img')!.alt = label;
-    card.querySelector('a')!.setAttribute('aria-label', `Baixar PNG: ${label}`);
+    const download = card.querySelector<HTMLButtonElement>('[data-mug-download]')!;
+    download.setAttribute('aria-label', `Baixar mockup: ${label}`);
+    download.addEventListener('click', () => {
+      const result = current(id);
+      if (result) void exportFiles([result], false);
+    });
+    setupInstanceEditor(id, card, model);
     const local = card.querySelector<HTMLFieldSetElement>('[data-local]')!;
     showControls(local, localFor(id));
     local.addEventListener('input', event => {
@@ -280,7 +389,6 @@ export function initMugMockupAdmin() {
     });
   });
 
-  const clamp = (value: number) => Math.round(Math.max(-placementLimits.offset, Math.min(placementLimits.offset, value)));
   function move(x: number, y: number) {
     global = { ...global, offsetX: clamp(x), offsetY: clamp(y) };
     setManual();
@@ -299,9 +407,6 @@ export function initMugMockupAdmin() {
   });
   surface.addEventListener('lostpointercapture', () => { drag = undefined; });
   surface.addEventListener('keydown', event => {
-    const directions: Record<string, [number, number]> = {
-      ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1],
-    };
     const direction = directions[event.key];
     if (!direction || !art.naturalWidth || fields.disabled) return;
     event.preventDefault();
@@ -314,27 +419,28 @@ export function initMugMockupAdmin() {
     renderState();
   }));
   form.addEventListener('submit', event => { event.preventDefault(); void render(selected()); });
-  zip.addEventListener('click', async () => {
-    if (zip.disabled) return;
-    const entries = selected().map(model => current(model.value));
-    if (!entries.length || entries.some(entry => !entry)) return;
+  async function exportFiles(entries: Result[], archive: boolean) {
+    if (rendering || zipping) return;
+    showError('');
     zipping = true;
     fields.disabled = true;
     renderState();
     try {
-      const archive = await createMugMockupZip(entries.filter((entry): entry is Result => Boolean(entry)));
-      const url = URL.createObjectURL(archive);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = 'mockups-canecas.zip';
-      link.click();
-      setTimeout(() => URL.revokeObjectURL(url), 60_000);
-    } catch {
-      showError('Não foi possível criar o ZIP. Os PNGs continuam disponíveis.');
+      const files = [];
+      for (const entry of entries) files.push(await encodeMugExport(entry, format.value as MugExportFormat));
+      downloadMugFile(archive ? { name: 'mockups-canecas.zip', blob: await createMugMockupZip(files) } : files[0]);
+    } catch (err) {
+      showError(err instanceof Error ? err.message : 'Não foi possível exportar o mockup.');
     } finally {
       zipping = false;
       fields.disabled = false;
       renderState();
     }
+  }
+  format.addEventListener('change', renderState);
+  zip.addEventListener('click', () => {
+    if (zip.disabled) return;
+    const entries = selected().map(model => current(model.value));
+    if (entries.length && entries.every((entry): entry is Result => Boolean(entry))) void exportFiles(entries, true);
   });
 }

@@ -2,6 +2,7 @@ import type { APIRoute } from 'astro';
 import { maxMugArtworkBytes, mugMockups } from '../../../server/mockups/options.mjs';
 import { normalizeMugArtwork, renderMugMockup } from '../../../server/mockups/render.mjs';
 import { parseMugPlacement } from '../../../server/mockups/placement.mjs';
+import { getMugInstances } from '../../../server/mockups/manifest.mjs';
 import { readBoundedForm } from '../../../utils/webpUpload';
 
 export const prerender = false;
@@ -39,7 +40,8 @@ export const POST: APIRoute = async ({ request }) => {
       if (values.length !== 1 || typeof json !== 'string' || json.length > 1024) {
         return failure('Enquadramento inválido.', 400);
       }
-      try { placement = parseMugPlacement(json); }
+      const instances = await getMugInstances(model);
+      try { placement = parseMugPlacement(json, instances.map(instance => instance.id)); }
       catch { return failure('Enquadramento inválido.', 400); }
     }
 

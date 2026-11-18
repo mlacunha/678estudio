@@ -5,6 +5,7 @@
   "slots": [
     {
       "file": "caneca-esquerda.gz",
+      "instance": { "id": "caneca-esquerda", "label": "Esquerda" },
       "left": 76,
       "top": 267,
       "width": 511,
@@ -22,6 +23,7 @@
     },
     {
       "file": "caneca-direita.gz",
+      "instance": { "id": "caneca-direita", "label": "Direita" },
       "left": 527,
       "top": 177,
       "width": 319,
