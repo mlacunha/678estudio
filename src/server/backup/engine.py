@@ -115,7 +115,7 @@ def regular(path):
 
 def description(name):
     if name == DB:
-        return "SQLite do catálogo, galeria, contatos e solicitações de agendas, incluindo seus arquivos"
+        return "SQLite do catálogo, galeria, contatos, biblioteca de artes e orçamentos de papelaria"
     directory, _, filename = name.rpartition("/")
     pattern = DIRECTORIES.get(directory)
     if pattern and pattern.fullmatch(filename):
@@ -130,10 +130,25 @@ def description(name):
     raise InvalidBackup("O ZIP contém um caminho inseguro ou um arquivo inesperado.")
 
 
+def database_path(root):
+    configured = os.environ.get("STUDIO_DB_PATH", "").strip()
+    return root / (configured or DB)
+
+
+def state_path(root):
+    return ensure_directory(ensure_directory(database_path(root).parent) / ".backup-restore")
+
+
 def storage_path(root, name):
+    if name == DB:
+        database = database_path(root)
+        return ensure_directory(database.parent) / database.name
     parts = name.split("/")
     if parts[0] == "uploads":
         parts.insert(0, "public")
+    else:
+        root = ensure_directory(database_path(root).parent)
+        parts.pop(0)
     return child_directories(root, parts[:-1]) / parts[-1]
 
 
@@ -291,7 +306,7 @@ def verify_zip_directory(path):
 
 def stage(root, archive_path, token):
     check(re.fullmatch(r"[0-9a-f-]{36}", token), "Identificador de validação inválido.")
-    state = child_directories(root, ("data", ".backup-restore"))
+    state = state_path(root)
     check(not (state / "job.json").exists(), "Há uma restauração em andamento.")
     verify_zip_directory(archive_path)
     current = read_json(state / "candidate.json") if (state / "candidate.json").exists() else {}
@@ -395,7 +410,7 @@ def install(root, source, names, verify_references=True):
 
 
 def offline(root):
-    state = child_directories(root, ("data", ".backup-restore"))
+    state = state_path(root)
     job_file = state / "job.json"
     if not job_file.exists():
         return

@@ -3,6 +3,7 @@
   "allowLegacyEdits": false,
   "allowedPaths": [
     "Dockerfile",
+    "docs/backup.md",
     "src/server/cover/**",
     "src/components/customizer/**",
     "src/scripts/**",
