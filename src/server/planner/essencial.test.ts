@@ -8,13 +8,34 @@ import {
   listPlannerQuotes,
   savePlannerQuote,
 } from '../../db/plannerQuotes';
-import { compilePlannerEssencial, isPlannerColor } from './essencial.mjs';
+import { compilePlanner, compilePlannerEssencial, isPlannerColor, renderComboPreviews } from './essencial.mjs';
+import { comboPreviewSections } from './options.mjs';
 
 function countPdfPages(buffer: Buffer): number {
   const text = buffer.toString('binary');
   const matches = text.match(/\/Type\s*\/Page\b/g);
   return matches ? matches.length : 0;
 }
+
+describe('Planner Harmonia', () => {
+  it('gera as edições completas com a paginação prevista', async () => {
+    for (const [mode, year, pageCount] of [
+      ['dated', 2027, 316],
+      ['dated', 2028, 316],
+      ['undated', undefined, 314],
+    ] as const) {
+      const pdf = await compilePlanner({ model: 'planner-combo-v1', mode, year });
+      expect(countPdfPages(pdf)).toBe(pageCount);
+      expect(pdf.toString('binary')).toContain('DMSerifDisplay');
+    }
+  }, 30_000);
+
+  it('renderiza todas as seções de prévia como PNG', async () => {
+    const previews = await renderComboPreviews({ model: 'planner-combo-v1' });
+    expect(previews.map(({ id }) => id)).toEqual(comboPreviewSections.map(({ id }) => id));
+    expect(previews.every(({ png }) => png.subarray(1, 4).toString() === 'PNG')).toBe(true);
+  }, 30_000);
+});
 
 describe('Motor de compilação Typst do Planner Essencial', () => {
   const baseConfig = {

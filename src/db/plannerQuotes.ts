@@ -8,6 +8,7 @@ import {
   type PlannerQuoteAsset,
   type PlannerQuoteConfig,
 } from '../server/planner/quoteConfig';
+import { plannerModels } from '../server/planner/options.mjs';
 
 export const plannerQuotesPerPage = 25;
 const columns = 'id, product, created_at, status, config_version, config_json';
@@ -22,13 +23,14 @@ export interface PlannerQuoteRecord {
 }
 
 function mapPlannerQuote(row: Row): PlannerQuoteRecord {
+  const config = JSON.parse(String(row.config_json)) as PlannerQuoteConfig;
   return {
     id: String(row.id),
-    product: String(row.product),
+    product: plannerModels[config.model]?.label ?? String(row.product),
     createdAt: String(row.created_at),
     status: String(row.status),
     configVersion: Number(row.config_version),
-    config: JSON.parse(String(row.config_json)) as PlannerQuoteConfig,
+    config,
   };
 }
 
@@ -60,7 +62,7 @@ export async function savePlannerQuote(
     args: [
       id,
       token,
-      plannerProduct,
+      plannerModels[config.model]?.label ?? plannerProduct,
       new Date().toISOString(),
       plannerConfigVersion,
       JSON.stringify(config),

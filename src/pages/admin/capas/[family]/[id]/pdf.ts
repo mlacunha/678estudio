@@ -3,6 +3,7 @@ import { compileCoverPdf } from '../../../../../server/cover/compiler.mjs';
 import { getNotebookQuote, getNotebookQuoteAsset } from '../../../../../db/notebookQuotes';
 import { getAgendaQuote, getAgendaQuoteAsset } from '../../../../../db/agendaQuotes';
 import { getPlannerQuote, getPlannerQuoteAsset } from '../../../../../db/plannerQuotes';
+import { plannerQuoteCoverTitle } from '../../../../../server/planner/quoteConfig';
 
 export const prerender = false;
 
@@ -17,6 +18,7 @@ export const GET: APIRoute = async ({ params, url }) => {
     const bleed = url.searchParams.get('bleed') || '3mm';
 
     let config: any = null;
+    let plannerTitle: string | undefined;
     let photoBuffer: Buffer | null = null;
 
     if (family === 'cadernos') {
@@ -39,6 +41,7 @@ export const GET: APIRoute = async ({ params, url }) => {
       const quote = await getPlannerQuote(id);
       if (!quote) return new Response('Orçamento de planner não encontrado', { status: 404 });
       config = quote.config;
+      plannerTitle = plannerQuoteCoverTitle(quote.config);
       if (config?.cover?.hasCustomImage) {
         const asset = await getPlannerQuoteAsset(id, 'cover_image');
         photoBuffer = asset?.content ?? null;
@@ -53,7 +56,7 @@ export const GET: APIRoute = async ({ params, url }) => {
       bleed,
       style: coverConfig?.style || 'classic',
       typography: coverConfig?.typography || 'editorial',
-      title: coverConfig?.title || config?.title || '678 Estudio',
+      title: plannerTitle || coverConfig?.title || config?.title || '678 Estudio',
       name: coverConfig?.name || config?.personalizationName || '',
       subtitle: coverConfig?.subtitle || '',
       colors: coverConfig?.colors || {},

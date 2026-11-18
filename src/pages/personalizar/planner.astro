@@ -16,18 +16,18 @@ const fieldClass = 'w-full min-h-11 rounded-lg border border-control bg-canvas p
 ---
 
 <BaseLayout
-  title="Personalize seu Planner Essencial | 678 Estudio"
-  description="Personalize o miolo do seu Planner Essencial A5 com organização pessoal, profissional e financeira. Veja páginas reais antes de decidir."
+  title="Personalize seu planner A5 | 678 Estudio"
+  description="Escolha o Planner Essencial ou o Planner Harmonia e confira páginas reais do miolo personalizado."
 >
   <div class="mx-auto max-w-7xl px-4 py-8 sm:px-6 md:py-12 lg:px-8">
     <header class="mb-7 border-b border-line pb-7 lg:mb-9">
       <p class="mb-2 text-xs font-semibold uppercase tracking-[.2em] text-accent">Papelaria personalizada</p>
       <h1 class="text-4xl font-light leading-tight text-ink sm:text-5xl">
-        Planner <span class="font-normal text-accent">Essencial</span>
+        Planner <span class="font-normal text-accent">personalizado</span>
       </h1>
       <p class="mt-3 max-w-2xl text-sm leading-relaxed text-ink-secondary sm:text-base">
-        Organização pessoal, profissional e financeira completa em formato A5 com calha de encadernação. Escolha entre
-        a edição datada ou atemporal, selecione o estilo visual e confira páginas reais do seu miolo.
+        Configure capa, contracapa e miolo A5. Escolha o Planner Essencial ou o Planner Harmonia,
+        em edição datada ou atemporal, e confira as páginas antes de solicitar um orçamento.
       </p>
     </header>
 
@@ -63,7 +63,10 @@ const fieldClass = 'w-full min-h-11 rounded-lg border border-control bg-canvas p
                 ))}
               </select>
             </label>
-            <p class="mt-1 text-xs text-ink-muted">{plannerModels['planner-essencial'].detail}</p>
+            <p id="planner-model-detail" class="mt-1 text-xs text-ink-muted">{plannerModels['planner-essencial'].detail}</p>
+            <p id="planner-model-tagline" class="mt-1 text-xs font-medium text-ink-secondary" hidden>
+              {plannerModels['planner-combo-v1'].tagline}
+            </p>
           </div>
 
           <fieldset class="space-y-2">
@@ -107,7 +110,7 @@ const fieldClass = 'w-full min-h-11 rounded-lg border border-control bg-canvas p
             </div>
           </div>
 
-          <fieldset>
+          <fieldset data-essencial-option>
             <legend class="mb-2 text-sm font-medium">Estilo visual</legend>
             <div class="grid grid-cols-3 gap-2">
               {Object.entries(plannerStyles).map(([id, style], index) => (
@@ -122,7 +125,7 @@ const fieldClass = 'w-full min-h-11 rounded-lg border border-control bg-canvas p
             <p id="planner-style-detail" class="mt-2 text-xs text-ink-muted">{plannerStyles.classic.detail}</p>
           </fieldset>
 
-          <fieldset>
+          <fieldset data-essencial-option>
             <legend class="mb-2 text-sm font-medium">Tipografia</legend>
             <div class="grid grid-cols-3 gap-2">
               {Object.entries(plannerTypographies).map(([id, typo], index) => (
@@ -285,7 +288,7 @@ const fieldClass = 'w-full min-h-11 rounded-lg border border-control bg-canvas p
           </svg>
           <p class="text-base font-semibold">Seu Planner Essencial começa aqui</p>
           <p class="mt-2 max-w-sm text-sm leading-relaxed text-ink-secondary">
-            Escolha as opções à esquerda e clique em “Visualizar meu planner” para renderizar páginas reais das 8 seções
+            Escolha o miolo e clique em “Visualizar meu planner” para conferir páginas reais das seções
             (abertura, anual, mensal, semanal em duas páginas, hábitos, financeiro, revisão e anotações).
           </p>
         </div>

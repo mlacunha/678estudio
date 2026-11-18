@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { promisify } from 'node:util';
 import { isAgendaColor } from '../agenda/classic.mjs';
-import { plannerModels, plannerModes, plannerStyles, plannerTypographies, plannerSections } from './options.mjs';
+import { comboPalette, comboPreviewSections, plannerModels, plannerModes, plannerStyles, plannerTypographies, plannerSections } from './options.mjs';
 
 const run = promisify(execFile);
 
@@ -29,12 +29,12 @@ export const isPlannerColor = isAgendaColor;
  */
 
 /**
- * Compila o miolo ou seções do Planner Essencial via Typst CLI.
+ * Compila um miolo ou páginas selecionadas via Typst CLI.
  * @param {PlannerConfig} config
  * @param {{ pages?: number[], output?: string, format?: 'pdf' | 'png' | 'svg' }} [options]
  * @returns {Promise<Buffer>}
  */
-export async function compilePlannerEssencial(config, options = {}) {
+export async function compilePlanner(config, options = {}) {
   const {
     model = 'planner-essencial',
     mode = 'dated',
@@ -80,7 +80,9 @@ export async function compilePlannerEssencial(config, options = {}) {
       await writeFile(join(workspace, 'logo.png'), logo);
     }
 
-    const stylePalette = plannerStyles[/** @type {keyof typeof plannerStyles} */ (style)];
+    const stylePalette = model === 'planner-combo-v1'
+      ? comboPalette
+      : plannerStyles[/** @type {keyof typeof plannerStyles} */ (style)];
     const palette = colors
       ? {
           primary: colors.primary,
@@ -125,7 +127,7 @@ export async function compilePlannerEssencial(config, options = {}) {
       args.push('--pages', options.pages.join(','));
     }
 
-    args.push(resolve(root, 'essencial.typ'), options.output ?? '-');
+    args.push(resolve(root, plannerModels[/** @type {keyof typeof plannerModels} */ (model)].file), options.output ?? '-');
 
     const { stdout, stderr } = await run(process.env.TYPST_BINARY || 'typst', args, {
       encoding: 'buffer',
@@ -146,6 +148,38 @@ export async function compilePlannerEssencial(config, options = {}) {
     if (workspace) {
       await rm(workspace, { recursive: true, force: true });
     }
+  }
+}
+
+export const compilePlannerEssencial = compilePlanner;
+
+/**
+ * Renderiza páginas do miolo completo para preservar paginação e margens espelhadas.
+ * @param {PlannerConfig} config
+ */
+export async function renderComboPreviews(config) {
+  const directory = await mkdtemp(join(tmpdir(), '678-planner-combo-'));
+  try {
+    const calendar = JSON.parse(await readFile(resolve('src/server/planner/typst/data',
+      config.mode === 'undated' ? 'weeks-undated.json' : `weeks-${config.year ?? 2027}.json`), 'utf8'));
+    const pageCount = 10 + calendar.months.length * 16 + calendar.totalWeeks * 2 + 8;
+    const pages = comboPreviewSections.map(section => {
+      const page = section.fromEnd ? pageCount - section.page
+        : section.afterFirstMonthWeeks ? section.page + calendar.months[0].weeks.length * 2
+        : section.page;
+      return { id: section.id, label: section.label, detail: section.detail, page };
+    });
+    await compilePlanner(config, {
+      pages: pages.map(section => section.page),
+      output: join(directory, 'preview-{p}.png'),
+      format: 'png',
+    });
+    return await Promise.all(pages.map(async ({ page, ...section }) => ({
+      ...section,
+      png: await readFile(join(directory, `preview-${page}.png`)),
+    })));
+  } finally {
+    await rm(directory, { recursive: true, force: true });
   }
 }
 
@@ -177,6 +211,11 @@ export async function renderPlannerSectionPreview(config, sectionId) {
  * @returns {Promise<Array<{ id: string, label: string, detail: string, src: string }>>}
  */
 export async function renderAllPlannerPreviews(config) {
+  if (config.model === 'planner-combo-v1') {
+    return (await renderComboPreviews(config)).map(({ png, ...section }) => ({
+      ...section, src: `data:image/png;base64,${png.toString('base64')}`,
+    }));
+  }
   const results = [];
   for (const section of plannerSections) {
     try {

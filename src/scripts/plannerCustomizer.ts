@@ -1,4 +1,5 @@
 import {
+  comboPalette,
   maxPlannerLogoBytes,
   plannerFormats,
   plannerLogoTypes,
@@ -15,6 +16,9 @@ type SectionPreview = {
   src: string;
 };
 
+type PlannerModel = keyof typeof plannerModels;
+type PlannerOptions = Record<string, string>;
+
 const QUOTE_LABEL = 'Solicitar orçamento pelo WhatsApp';
 
 export function initPlannerCustomizer(): void {
@@ -30,6 +34,11 @@ export function initPlannerCustomizer(): void {
   const submit = document.querySelector<HTMLButtonElement>('#planner-submit')!;
   const error = document.querySelector<HTMLParagraphElement>('#planner-error')!;
   const modeDetail = document.querySelector<HTMLParagraphElement>('#planner-mode-detail')!;
+  const modelSelect = form.querySelector<HTMLSelectElement>('select[name="model"]')!;
+  const modelDetail = document.querySelector<HTMLParagraphElement>('#planner-model-detail')!;
+  const modelTagline = document.querySelector<HTMLParagraphElement>('#planner-model-tagline')!;
+  const coverTitle = form.querySelector<HTMLInputElement>('input[name="cover_title"]');
+  const essentialOptions = form.querySelectorAll<HTMLFieldSetElement>('[data-essencial-option]');
   const styleDetail = document.querySelector<HTMLParagraphElement>('#planner-style-detail')!;
   const typoDetail = document.querySelector<HTMLParagraphElement>('#planner-typography-detail')!;
   const yearContainer = document.querySelector<HTMLDivElement>('#planner-year-container')!;
@@ -54,6 +63,10 @@ export function initPlannerCustomizer(): void {
   let currentIndex = 0;
   let draftToken: string | undefined;
   let savedToken: string | undefined;
+  let activeModel: PlannerModel = 'planner-essencial';
+  const optionsByModel: Partial<Record<PlannerModel, PlannerOptions>> = {};
+  const uploadsByModel: Partial<Record<PlannerModel, Map<HTMLInputElement, File[]>>> = {};
+  const uploadFields = form.querySelectorAll<HTMLInputElement>('input[type=file]');
 
   function showReference(path: string): void {
     if (!quoteReference) return;
@@ -62,33 +75,63 @@ export function initPlannerCustomizer(): void {
   }
 
   function saveStoredOptions(): void {
+    const data: PlannerOptions = {};
+    for (const field of form.querySelectorAll<HTMLInputElement | HTMLSelectElement>('input[name], select[name]')) {
+      if (field.name === 'model' || (field instanceof HTMLInputElement && field.type === 'file')) continue;
+      if (field instanceof HTMLInputElement && ['checkbox', 'radio'].includes(field.type) && !field.checked) continue;
+      data[field.name] = field.value;
+    }
+    if (!customColors.checked) {
+      delete data.primary;
+      delete data.secondary;
+    }
+    const uploads = new Map<HTMLInputElement, File[]>();
+    for (const field of uploadFields) {
+      if (field.files?.length) uploads.set(field, Array.from(field.files));
+    }
+    if (!uploads.has(logo)) delete data.watermark;
+    optionsByModel[activeModel] = data;
+    uploadsByModel[activeModel] = uploads;
     try {
-      const data = Object.fromEntries(
-        [...new FormData(form)].filter(
-          ([key, value]) => key !== 'logo' && key !== 'watermark' && typeof value === 'string'
-        )
-      );
-      sessionStorage.setItem('678-planner-opcoes', JSON.stringify(data));
+      sessionStorage.setItem('678-planner-opcoes', JSON.stringify({ model: activeModel, byModel: optionsByModel }));
     } catch {
       // Navegação sem storage
     }
   }
 
+  function applyModelOptions(): void {
+    form.reset();
+    modelSelect.value = activeModel;
+    const stored = optionsByModel[activeModel] ?? {};
+    for (const [key, value] of Object.entries(stored)) {
+      if (key === 'model' || typeof value !== 'string') continue;
+      const field = form.elements.namedItem(key);
+      if (field instanceof RadioNodeList || field instanceof HTMLSelectElement) {
+        field.value = value;
+      } else if (field instanceof HTMLInputElement && field.type !== 'file') {
+        if (field.type === 'checkbox') field.checked = value === 'true';
+        else field.value = value;
+      }
+    }
+    customColors.checked = Boolean(stored.primary && stored.secondary);
+    for (const [field, files] of uploadsByModel[activeModel] ?? []) {
+      const transfer = new DataTransfer();
+      for (const file of files) transfer.items.add(file);
+      field.files = transfer.files;
+    }
+    if (coverTitle && (stored.cover_title === undefined
+      || (activeModel === 'planner-combo-v1' && stored.cover_title === 'Combo Planner'))) {
+      coverTitle.value = plannerModels[activeModel].label;
+    }
+    coverTitle?.dispatchEvent(new Event('input'));
+  }
+
   function restoreStoredOptions(): void {
     try {
       const stored = JSON.parse(sessionStorage.getItem('678-planner-opcoes') ?? '{}');
-      for (const [key, value] of Object.entries(stored)) {
-        if (typeof value !== 'string') continue;
-        const field = form.elements.namedItem(key);
-        if (field instanceof RadioNodeList) {
-          field.value = value;
-        } else if (field instanceof HTMLSelectElement || field instanceof HTMLInputElement) {
-          field.value = value;
-        }
-      }
-      if (customColors) {
-        customColors.checked = Boolean(stored.primary && stored.secondary);
-      }
+      if (Object.hasOwn(plannerModels, stored.model ?? '')) activeModel = stored.model;
+      Object.assign(optionsByModel, stored.byModel ?? { [activeModel]: stored });
+      applyModelOptions();
       const ref = sessionStorage.getItem('678-planner-referencia');
       if (ref) showReference(ref);
     } catch {
@@ -97,6 +140,11 @@ export function initPlannerCustomizer(): void {
   }
 
   function refreshOptions(): void {
+    const model = plannerModels[modelSelect.value as keyof typeof plannerModels] ?? plannerModels['planner-essencial'];
+    const isCombo = modelSelect.value === 'planner-combo-v1';
+    modelDetail.textContent = model.detail;
+    modelTagline.hidden = !isCombo;
+    for (const group of essentialOptions) group.disabled = group.hidden = isCombo;
     const modeValue = (form.elements.namedItem('mode') as RadioNodeList)?.value as keyof typeof plannerModes;
     const mode = plannerModes[modeValue] ?? plannerModes.dated;
     if (modeDetail) modeDetail.textContent = mode.detail;
@@ -125,8 +173,8 @@ export function initPlannerCustomizer(): void {
       if (!customColors.checked) {
         const primaryInput = form.elements.namedItem('primary') as HTMLInputElement | null;
         const secondaryInput = form.elements.namedItem('secondary') as HTMLInputElement | null;
-        if (primaryInput) primaryInput.value = style.primary;
-        if (secondaryInput) secondaryInput.value = style.secondary;
+        if (primaryInput) primaryInput.value = (isCombo ? comboPalette : style).primary;
+        if (secondaryInput) secondaryInput.value = (isCombo ? comboPalette : style).secondary;
       }
     }
   }
@@ -137,7 +185,7 @@ export function initPlannerCustomizer(): void {
     const item = previews[index];
     if (title) title.textContent = `${item.label} · Seção ${index + 1}/${previews.length}`;
     enlarged.src = item.src;
-    enlarged.alt = `Prévia da seção ${item.label} do Planner Essencial`;
+    enlarged.alt = `Prévia da seção ${item.label}`;
     if (prev) prev.disabled = index === 0;
     if (next) next.disabled = index === previews.length - 1;
     viewport?.scrollTo(0, 0);
@@ -178,6 +226,19 @@ export function initPlannerCustomizer(): void {
   }
 
   function handleFormChange(): void {
+    const selectedModel = modelSelect.value as PlannerModel;
+    if (selectedModel !== activeModel) {
+      saveStoredOptions();
+      activeModel = selectedModel;
+      applyModelOptions();
+      previews = [];
+      gallery.replaceChildren();
+      gallery.hidden = true;
+      placeholder.hidden = false;
+      summary.hidden = true;
+      status.textContent = '';
+      quoteStatus.textContent = 'Gere as prévias para solicitar um orçamento deste modelo.';
+    }
     refreshOptions();
     saveStoredOptions();
     showError('');
@@ -307,12 +368,16 @@ export function initPlannerCustomizer(): void {
       const format = plannerFormats[formData.get('format') as keyof typeof plannerFormats]?.label ?? 'A5';
 
       if (summary) {
-        summary.textContent = `${model} · ${mode}${year} · Formato ${format} · Estilo ${style} · Tipografia ${typo}`;
+        const design = formData.get('model') === 'planner-combo-v1'
+          ? 'Acabamento editorial'
+          : `Estilo ${style} · Tipografia ${typo}`;
+        summary.textContent = `${model} · ${mode}${year} · Formato ${format} · ${design}`;
         summary.hidden = false;
       }
       if (placeholder) placeholder.hidden = true;
 
       gallery.replaceChildren(...previews.map((item, index) => createPreviewCard(item, index)));
+      gallery.hidden = false;
       if (status) status.textContent = `${previews.length} seções reais prontas`;
 
       if (!window.matchMedia('(min-width: 1024px)').matches && results) {

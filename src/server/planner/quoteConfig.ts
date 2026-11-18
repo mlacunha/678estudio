@@ -20,7 +20,7 @@ export const isPlannerReference = (value: string): boolean =>
   /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/.test(value);
 
 export type PlannerQuoteConfig = {
-  template: 'planner-essencial-v1';
+  template: typeof plannerModels[keyof typeof plannerModels]['template'];
   model: keyof typeof plannerModels;
   mode: keyof typeof plannerModes;
   year?: number;
@@ -41,7 +41,7 @@ export type PlannerAssetRole =
   | 'logo'
   | 'cover_image'
   | 'cover_image_original'
-  | `preview-${PlannerPreviewSection}`;
+  | `preview-${string}`;
 
 export type PlannerQuoteAsset = {
   name: PlannerAssetRole;
@@ -53,13 +53,21 @@ export function plannerQuotePath(id: string): string {
   return `/planner/orcamento/${id}`;
 }
 
+export function plannerQuoteCoverTitle(config: PlannerQuoteConfig): string | undefined {
+  const title = config.cover?.title;
+  if (config.model === 'planner-combo-v1' && (!title || title === 'Combo Planner')) {
+    return plannerModels[config.model].label;
+  }
+  return title;
+}
+
 export function plannerQuoteLabels(config: PlannerQuoteConfig): string[] {
   const modeLabel = config.mode === 'dated' && config.year ? String(config.year) : plannerModes.undated.label;
   const typoLabel = plannerTypographies[config.typography ?? 'modern']?.label ?? 'Moderna';
   return [
     plannerModels[config.model]?.label ?? plannerProduct,
     modeLabel,
-    plannerStyles[config.style]?.label ?? 'Clássico',
+    config.model === 'planner-combo-v1' ? 'Editorial' : plannerStyles[config.style]?.label ?? 'Clássico',
     typoLabel,
     plannerFormats[config.format]?.label ?? 'A5',
   ];

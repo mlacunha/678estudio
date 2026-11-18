@@ -15,6 +15,7 @@
     "src/db/**",
     "src/pages/api/agenda/**",
     "src/pages/api/planner/**",
+    "src/pages/planner/orcamento/**",
     "src/server/agenda-preview.test.ts",
     "src/components/CustomizerNav.astro",
     ".github/workflows/publish-image.yml"

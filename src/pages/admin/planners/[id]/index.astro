@@ -4,10 +4,11 @@ import AdminA4PrintPanel from '../../../../components/admin/AdminA4PrintPanel.as
 import { getPlannerQuote } from '../../../../db/plannerQuotes';
 import {
   formatPlannerQuoteDate,
+  plannerQuoteCoverTitle,
   plannerQuoteLabels,
   plannerQuotePath,
 } from '../../../../server/planner/quoteConfig';
-import { plannerSections } from '../../../../server/planner/options.mjs';
+import { comboPreviewSections, plannerSections } from '../../../../server/planner/options.mjs';
 
 export const prerender = false;
 
@@ -16,6 +17,7 @@ const quote = await getPlannerQuote(id);
 if (!quote) return new Response('Solicitação de planner não encontrada.', { status: 404 });
 
 const { config } = quote;
+const sections = config.model === 'planner-combo-v1' ? comboPreviewSections : plannerSections;
 const files = `/admin/planners/${quote.id}/arquivo`;
 const labelClass = 'text-xs font-semibold uppercase tracking-wider text-ink-muted';
 ---
@@ -101,7 +103,7 @@ const labelClass = 'text-xs font-semibold uppercase tracking-wider text-ink-mute
             </div>
             <div>
               <dt class={labelClass}>Título / Nome</dt>
-              <dd class="mt-0.5 font-medium">{config.cover.title || '—'} / {config.cover.name || '—'}</dd>
+              <dd class="mt-0.5 font-medium">{plannerQuoteCoverTitle(config) || '—'} / {config.cover.name || '—'}</dd>
             </div>
             <div>
               <dt class={labelClass}>Cores (base / detalhe)</dt>
@@ -126,7 +128,7 @@ const labelClass = 'text-xs font-semibold uppercase tracking-wider text-ink-mute
 
       <AdminA4PrintPanel
         pdfEndpoint={`/admin/planners/${quote.id}/pdf`}
-        productLabel="Planner Essencial A5"
+        productLabel={`${quote.product} A5`}
       />
     </div>
 
@@ -139,7 +141,7 @@ const labelClass = 'text-xs font-semibold uppercase tracking-wider text-ink-mute
       </div>
 
       <div class="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
-        {plannerSections.map((section) => (
+        {sections.map((section) => (
           <div class="rounded-xl border border-line bg-surface p-2">
             <img
               src={`${files}/preview-${section.id}`}
