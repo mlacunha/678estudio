@@ -15,21 +15,36 @@ const models = await Promise.all(mugMockups.map(async model => ({
     <header class="border-b border-line pb-5">
       <a href="/admin" class="text-sm font-semibold text-accent hover:underline">← Voltar ao painel</a>
       <h1 class="mt-3 text-3xl font-semibold text-ink">Mockups de Canecas</h1>
-      <p class="mt-2 text-sm text-ink-secondary">Envie uma arte e selecione as cenas para gerar imagens em resolução original.</p>
+      <p class="mt-2 text-sm text-ink-secondary">Escolha um modelo, ajuste as artes nos recortes e gere a foto do mockup.</p>
     </header>
 
-    <div class="grid items-start gap-6 lg:grid-cols-[minmax(0,24rem)_minmax(0,1fr)]">
+    <div class="grid items-start gap-6 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)]">
       <form id="mug-mockup-form" class="min-w-0 rounded-2xl border border-line bg-surface p-4 sm:p-5"
         action="/admin/mockups-comerciais/render" method="post" enctype="multipart/form-data">
         <fieldset id="mug-mockup-fields" class="min-w-0 space-y-5">
+          <label class="block space-y-1 text-sm font-semibold text-ink">
+            <span>Modelo</span>
+            <select id="mug-model" name="model" class="block min-h-11 w-full rounded-lg border border-control bg-canvas px-2">
+              {models.map(model => (
+                <option value={model.id} data-label={model.label} data-instances={JSON.stringify(model.instances)}
+                  data-ratio={`${model.width} / ${model.height}`}>{model.label}</option>
+              ))}
+            </select>
+          </label>
           <div class="space-y-2">
-            <label for="mug-artwork" class="block text-sm font-semibold text-ink">Arte</label>
-            <input id="mug-artwork" name="artwork" type="file" required accept="image/png,image/jpeg,image/webp"
+            <label for="mug-artwork" class="block text-sm font-semibold text-ink">Arte para todos os espaços</label>
+            <input id="mug-artwork" name="artwork" type="file" accept="image/png,image/jpeg,image/webp"
               class="w-full min-w-0 text-sm text-ink-secondary file:mr-2 file:rounded-lg file:border-0 file:bg-surface-muted file:px-3 file:py-2"
               aria-describedby="mug-artwork-help" />
+            <div class="flex flex-wrap gap-2">
+              <button type="button" data-all-library class="min-h-11 rounded-lg border border-control px-3 text-xs">Biblioteca (todos os espaços)</button>
+              <button type="button" data-distribute class="min-h-11 rounded-lg border border-control px-3 text-xs">Distribuir automaticamente (Esq. / Centro / Dir.)</button>
+            </div>
             <p id="mug-artwork-help" class="text-xs text-ink-muted">PNG, JPEG ou WebP estático · Até 8 MB e 16 megapixels.</p>
           </div>
 
+          <details>
+            <summary class="min-h-10 cursor-pointer text-sm font-semibold text-ink">Ajustes gerais da arte</summary>
           <fieldset id="mug-global-placement" class="space-y-3 border-t border-line pt-4">
             <legend class="pr-2 text-base font-semibold text-ink">Ajustar arte</legend>
             <label class="block space-y-1 text-sm">
@@ -47,7 +62,7 @@ const models = await Promise.all(mugMockups.map(async model => ({
               <img id="mug-frame-art" hidden alt="" draggable="false" class="pointer-events-none absolute max-w-none" />
               <div aria-hidden="true" class="pointer-events-none absolute inset-1 rounded border border-dashed border-slate-500/60"></div>
             </div>
-            <p id="mug-frame-help" class="text-xs text-ink-muted">Área útil de 20 × 9 cm. Arraste, use as setas ou ajuste pelos controles. No ajuste original, vale a prévia de cada modelo. A faixa e os papéis mantêm o encaixe original.</p>
+            <p id="mug-frame-help" class="text-xs text-ink-muted">Área útil de 20 × 9 cm. Arraste, use as setas ou ajuste pelos controles. No ajuste original, vale a prévia de cada modelo. A faixa e os papéis têm controles próprios.</p>
             <MugAdjustment />
             <div class="flex flex-wrap gap-2">
               {[
@@ -58,21 +73,11 @@ const models = await Promise.all(mugMockups.map(async model => ({
               ))}
             </div>
           </fieldset>
+          </details>
 
-          <fieldset class="space-y-2">
-            <legend class="mb-2 text-sm font-semibold text-ink">Modelos</legend>
-            {models.map((model) => (
-              <label class="flex min-h-11 cursor-pointer items-center gap-3 rounded-lg border border-control px-3 py-2 text-sm">
-                <input name="model" type="checkbox" value={model.id} data-label={model.label}
-                  data-instances={JSON.stringify(model.instances)} data-ratio={`${model.width} / ${model.height}`}
-                  checked class="size-4 shrink-0 accent-accent" />
-                <span>{model.label}</span>
-              </label>
-            ))}
-          </fieldset>
-
+          <div id="mug-mockup-results" class="grid gap-4"></div>
           <button id="mug-generate" class="min-h-11 w-full rounded-lg bg-action px-4 text-sm font-semibold text-on-action hover:bg-action-hover disabled:opacity-50" type="submit">
-            Gerar prévias
+            Gerar foto do mockup
           </button>
         </fieldset>
         <p id="mug-mockup-error" role="alert" class="mt-3 text-sm text-danger" hidden></p>
@@ -80,7 +85,7 @@ const models = await Promise.all(mugMockups.map(async model => ({
 
       <section class="min-w-0 rounded-2xl border border-line bg-surface p-4 sm:p-5" aria-labelledby="mug-results-title">
         <div class="flex flex-wrap items-center justify-between gap-3">
-          <h2 id="mug-results-title" class="text-lg font-semibold text-ink">Resultados</h2>
+          <h2 id="mug-results-title" class="text-lg font-semibold text-ink">Resultado</h2>
           <label class="flex items-center gap-2 text-sm">
             Formato
             <select id="mug-export-format" class="min-h-11 rounded-lg border border-control bg-canvas px-2">
@@ -90,30 +95,41 @@ const models = await Promise.all(mugMockups.map(async model => ({
             </select>
           </label>
           <button id="mug-download-zip" type="button" hidden class="min-h-11 rounded-lg border border-control px-4 text-sm font-semibold hover:border-accent disabled:opacity-50">
-            Baixar todos em ZIP
+            Baixar ZIP
           </button>
         </div>
-        <p id="mug-mockup-status" role="status" class="mt-2 text-sm text-ink-secondary">Carregue a arte para abrir os recortes por caneca.</p>
-        <div id="mug-mockup-results" class="mt-4 grid gap-4"></div>
+        <p id="mug-mockup-status" role="status" class="mt-2 text-sm text-ink-secondary">A foto do modelo selecionado aparecerá aqui.</p>
+        <div id="mug-rendered-photo" class="mt-4">
+          <img id="mug-result-image" hidden alt="" class="w-full rounded-lg bg-white" decoding="async" />
+          <button id="mug-result-download" type="button" hidden class="mt-3 min-h-11 rounded-lg bg-action px-4 text-sm font-semibold text-on-action">Baixar PNG</button>
+        </div>
       </section>
     </div>
   </main>
 
+  <dialog id="mug-library" class="w-[min(90vw,32rem)] rounded-xl border border-line bg-surface p-4 text-ink backdrop:bg-black/40">
+    <div class="space-y-3">
+      <h2 class="text-lg font-semibold">Biblioteca de artes</h2>
+      <label class="block text-sm">Arte
+        <select data-library-choice class="block min-h-11 w-full rounded-lg border border-control bg-canvas px-2"></select>
+      </label>
+      <p data-library-status role="status" class="text-sm text-ink-secondary"></p>
+      <div class="flex gap-2">
+        <button type="button" data-library-apply class="min-h-11 rounded-lg bg-action px-3 text-sm text-on-action">Usar arte</button>
+        <form method="dialog"><button class="min-h-11 rounded-lg border border-control px-3 text-sm">Fechar</button></form>
+      </div>
+    </div>
+  </dialog>
+
   <template id="mug-mockup-result">
     <article class="min-w-0 overflow-hidden rounded-xl border border-line bg-canvas">
       <div class="space-y-2 p-3">
-        <h3 class="text-sm font-semibold text-ink"></h3>
-        <p data-state class="text-xs text-ink-secondary" aria-live="polite"></p>
-        <button type="button" data-mug-download hidden class="min-h-11 items-center text-sm font-semibold text-accent hover:underline">Baixar PNG</button>
-        <details data-mug-panel class="border-t border-line pt-1">
-          <summary class="flex min-h-10 cursor-pointer items-center text-sm font-semibold text-accent">Ajustar canecas</summary>
           <fieldset data-instance-controls class="space-y-3">
             <legend class="sr-only">Recortes das canecas</legend>
             <p class="text-xs text-ink-muted">Arraste a arte dentro de cada recorte ou use as setas. O recorte muda na hora.</p>
             <div data-mug-editors class="grid gap-3 sm:grid-cols-2"></div>
-            <button type="button" data-mug-render class="min-h-11 rounded-lg bg-action px-3 text-sm font-semibold text-on-action disabled:opacity-50">Atualizar foto do mockup</button>
+
           </fieldset>
-        </details>
         <details class="border-t border-line pt-1">
           <summary class="flex min-h-10 cursor-pointer items-center text-sm font-semibold text-accent">Ajustar este modelo</summary>
           <fieldset data-local class="space-y-2">
@@ -126,9 +142,6 @@ const models = await Promise.all(mugMockups.map(async model => ({
             </div>
           </fieldset>
         </details>
-      </div>
-      <div data-mug-image hidden class="bg-white">
-        <img class="block h-full w-full object-contain" decoding="async" alt="" draggable="false" />
       </div>
     </article>
   </template>
@@ -143,7 +156,7 @@ const models = await Promise.all(mugMockups.map(async model => ({
         </div>
       </div>
       <div class="flex flex-wrap items-end gap-2">
-        <label class="min-w-0 flex-1 text-xs text-ink-secondary">
+        <label class="min-w-28 flex-1 text-xs text-ink-secondary">
           Encaixe
           <select data-slot-fit class="mt-1 min-h-11 w-full rounded-lg border border-control bg-canvas px-2 text-sm">
             <option value="">Do modelo</option><option value="contain">Conter</option><option value="cover">Preencher</option>
@@ -153,6 +166,14 @@ const models = await Promise.all(mugMockups.map(async model => ({
         <button type="button" data-mug-reset class="min-h-11 rounded-lg border border-control px-2 text-xs">Restaurar</button>
       </div>
       <MugAdjustment />
+      <div class="flex flex-wrap items-center gap-2">
+        <button type="button" data-slot-library class="min-h-11 rounded-lg border border-control px-2 text-xs">Biblioteca</button>
+        <label class="block min-w-0 flex-1 text-xs text-ink-secondary">
+          <span class="sr-only">Arte deste espaço</span>
+          <input data-slot-upload type="file" accept="image/png,image/jpeg,image/webp" class="w-full text-xs" />
+        </label>
+      </div>
+      <button type="button" data-slot-clear hidden class="min-h-10 text-xs font-semibold text-accent">Usar arte geral novamente</button>
     </section>
   </template>
 </BaseLayout>

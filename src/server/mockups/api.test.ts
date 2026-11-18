@@ -13,12 +13,15 @@ const custom = {
   local: { zoom: 90, offsetX: 2, offsetY: -11 },
 };
 
-function call({ model = '9', placement, content = 'image', headers }: {
-  model?: string; placement?: string | string[]; content?: string; headers?: HeadersInit;
+function call({ model = '9', placement, content = 'image', overrides = {}, headers }: {
+  model?: string; placement?: string | string[]; content?: string; overrides?: Record<string, string>; headers?: HeadersInit;
 } = {}) {
   const body = new FormData();
   body.set('model', model);
-  body.set('artwork', new Blob([content], { type: 'image/png' }), 'art.png');
+  if (content) body.set('artwork', new Blob([content], { type: 'image/png' }), 'art.png');
+  for (const [slot, image] of Object.entries(overrides)) {
+    body.set('artwork-' + slot, new Blob([image], { type: 'image/png' }), 'slot.png');
+  }
   for (const value of placement === undefined ? [] : [placement].flat()) body.append('placement', value);
   const request = new Request('http://localhost/admin/mockups-comerciais/render', { method: 'POST', body, headers });
   return POST({ request } as Parameters<typeof POST>[0]);
@@ -39,20 +42,29 @@ describe('rota de enquadramento dos mockups', () => {
     expect((await call({ placement: '{broken' })).status).toBe(400);
     expect((await call({ placement: ['{"mode":"original"}', '{"mode":"original"}'] })).status).toBe(400);
     expect((await call({ headers: { 'Sec-Fetch-Site': 'cross-site' } })).status).toBe(403);
-    expect((await call({ headers: { 'Content-Length': String(9 * 1024 * 1024) } })).status).toBe(413);
+    expect((await call({ headers: { 'Content-Length': String(17 * 1024 * 1024) } })).status).toBe(413);
     vi.mocked(normalizeMugArtwork).mockRejectedValueOnce(new Error('invalid image'));
     expect((await call()).status).toBe(422);
   });
 
-  it('aceita três correções independentes na cena 9 e rejeita IDs externos ou da faixa', async () => {
+  it('aceita correções independentes na cena 9 e rejeita IDs externos', async () => {
     const adjustment = (zoom: number, offsetX = 0) => ({ zoom, offsetX, offsetY: 0 });
     const placement = { mode: 'original', instances: {
       'caneca-esquerda': adjustment(155), 'caneca-meio': adjustment(70), 'caneca-direita': adjustment(100, 18),
     } };
     expect((await call({ placement: JSON.stringify(placement) })).status).toBe(200);
     expect(vi.mocked(renderMugMockup)).toHaveBeenLastCalledWith('9', Buffer.from('normalized'), { placement });
-    for (const id of ['arte-superior', 'caneca-centro', 'papeis-sobrepostos']) {
+    expect((await call({ placement: JSON.stringify({ mode: 'original', instances: { 'arte-superior': adjustment(110) } }) })).status).toBe(200);
+    for (const id of ['caneca-centro', 'papeis-sobrepostos']) {
       expect((await call({ placement: JSON.stringify({ mode: 'original', instances: { [id]: adjustment(110) } }) })).status).toBe(400);
     }
+  });
+
+  it('aceita uma arte específica para a faixa e exige imagens nos demais espaços sem arte geral', async () => {
+    expect((await call({ overrides: { 'arte-superior': 'imagem da faixa' } })).status).toBe(200);
+    expect(vi.mocked(renderMugMockup)).toHaveBeenLastCalledWith('9', Buffer.from('normalized'), {
+      placement: undefined, artworks: { 'arte-superior': Buffer.from('normalized') },
+    });
+    expect((await call({ content: '', overrides: { 'arte-superior': 'imagem da faixa' } })).status).toBe(400);
   });
 });

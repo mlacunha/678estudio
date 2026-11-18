@@ -81,8 +81,8 @@ export function instanceGeometry(art, input, calibration, model, individual = ne
     const height = Math.max(1, Math.round(art.height * scale));
     return { frame, rect: {
       width, height,
-      x: Math.round((input.width - width) * calibration.anchorX),
-      y: Math.round((input.height - height) * calibration.anchorY),
+      x: 0 + Math.round((input.width - width) * calibration.anchorX),
+      y: 0 + Math.round((input.height - height) * calibration.anchorY),
     } };
   }
   const width = art.width * scale;

@@ -3,7 +3,7 @@ import { join, resolve } from 'node:path';
 import { mugMockups } from './options.mjs';
 
 /** @typedef {{id: string, label: string, left: number, top: number, width: number, height: number,
- * input: {width: number, height: number},
+ * input: {width: number, height: number}, framing?: 'original',
  * calibration: {fit: 'contain' | 'cover', scale: number, anchorX: number, anchorY: number}} MugInstance */
 
 export async function loadMugManifest(id) {
@@ -19,6 +19,7 @@ export async function getMugInstances(id) {
   return slots.filter(slot => slot.instance).map(slot => ({
     ...slot.instance,
     input: slot.input,
+    framing: slot.framing,
     calibration: slot.placement,
     left: slot.left / width * 100,
     top: slot.top / height * 100,

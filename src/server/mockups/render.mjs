@@ -21,28 +21,30 @@ export async function normalizeMugArtwork(bytes) {
 }
 
 /** @param {string} id @param {Buffer} artwork
- * @param {{fit?: string, placement?: import('./placement.mjs').Placement}} [options]
+ * @param {{fit?: string, placement?: import('./placement.mjs').Placement, artworks?: Record<string, Buffer>}} [options]
  */
-export async function renderMugMockup(id, artwork, { fit, placement: framing } = {}) {
+export async function renderMugMockup(id, artwork, { fit, placement: framing, artworks } = {}) {
   const { directory, width, height, slots, profile } = await loadMugManifest(id);
   const base = await readFile(join(directory, 'base.png'));
   // Calibration is measured in the PSD's embedded color space, including Adobe RGB in model 11.
   const output = await sharp(base, { ignoreIcc: true }).ensureAlpha().raw().toBuffer();
   const prepared = new Map();
   const custom = framing?.mode === 'custom' ? combinePlacement(framing.global, framing.local) : null;
-  const dimensions = custom || Object.values(framing?.instances ?? {}).some(hasAdjustment)
-    ? await sharp(artwork).metadata() : null;
+  const dimensions = new Map();
 
   for (const slot of slots) {
     const placement = { ...slot.placement, ...(fit ? { fit } : {}) };
     const correction = slot.instance ? framing?.instances?.[slot.instance.id] : undefined;
+    const specific = slot.instance ? artworks?.[slot.instance.id] : undefined;
+    const source = specific ?? artwork;
     const individual = hasAdjustment(correction) ? correction : undefined;
     const frame = slot.framing !== 'original' ? custom : null;
-    const key = JSON.stringify([slot.input, placement, frame, individual]);
+    const key = JSON.stringify([slot.input, placement, frame, individual, specific ? slot.instance.id : null]);
     if (!prepared.has(key)) {
+      if ((frame || individual) && !dimensions.has(source)) dimensions.set(source, await sharp(source).metadata());
       const image = frame || individual
-        ? await prepareFramedSlot(artwork, dimensions, slot.input, placement, frame, individual)
-        : await prepareSlotImage(artwork, slot.input, placement);
+        ? await prepareFramedSlot(source, dimensions.get(source), slot.input, placement, frame, individual)
+        : await prepareSlotImage(source, slot.input, placement);
       const pixels = sharp(image).removeAlpha();
       if (profile) pixels.withIccProfile(join(directory, profile));
       prepared.set(key, await pixels.raw().toBuffer());
