@@ -13,7 +13,7 @@ describe('Agenda Jurídica', () => {
     { year: 2027, legalFinance: false, pageCount: 408 },
     { year: 2028, legalFinance: true, pageCount: 434 },
   ])('gera o miolo A5 de $year e as prévias correspondentes', async ({ year, legalFinance, pageCount }) => {
-    const config = { template: legalAgendaTemplate, layout: 'daily-1dpp', year, legalFinance };
+    const config: Parameters<typeof compileClassicAgenda>[0] = { template: legalAgendaTemplate, layout: 'daily-1dpp', year, legalFinance };
     const pdf = await PDFDocument.load(await compileClassicAgenda(config));
     expect(pdf.getPageCount()).toBe(pageCount);
     expect(pdf.getPage(0).getWidth()).toBeCloseTo(419.528, 2);
