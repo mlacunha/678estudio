@@ -59,6 +59,7 @@
     },
     {
       "file": "arte-superior.gz",
+      "instance": { "id": "arte-superior", "label": "Faixa superior" },
       "framing": "original",
       "left": 23,
       "top": 107,

@@ -75,10 +75,12 @@ for model in args.ids:
         maps[:, :, 4:] = tones.reshape(*tones.shape[:2], 12)
         filename = slot["id"] + ".gz"
         (target / filename).write_bytes(gzip.compress(maps.tobytes(), compresslevel=9, mtime=0))
-        labels = {"left": "Esquerda", "center": "Centro", "right": "Direita"}
+        labels = {"left": "Esquerda", "center": "Centro", "right": "Direita",
+                  "label": "Faixa superior", "sheet": "Papéis sobrepostos"}
         front_back = {"caneca-frente": "Frente", "caneca-fundo": "Verso"}
-        instance = ({"instance": {"id": slot["id"], "label": front_back[slot["id"]] if model == "3" else labels[slot["role"]]}}
-                    if slot["type"] == "mug" else {"framing": "original"})
+        instance = {"instance": {"id": slot["id"], "label": front_back[slot["id"]] if model == "3" else labels[slot["role"]]}}
+        if slot["type"] != "mug":
+            instance["framing"] = "original"
         manifest["slots"].append({
             "file": filename, "left": left, "top": top, "width": right-left, "height": bottom-top,
             "input": slot["expectedSize"], "placement": slot["defaultPlacement"],

@@ -59,6 +59,7 @@
     },
     {
       "file": "papeis-sobrepostos.gz",
+      "instance": { "id": "papeis-sobrepostos", "label": "Papéis sobrepostos" },
       "framing": "original",
       "left": 114,
       "top": 1276,
