@@ -1,6 +1,7 @@
 import type { APIRoute } from 'astro';
 import { maxMugArtworkBytes, mugMockups } from '../../../server/mockups/options.mjs';
 import { normalizeMugArtwork, renderMugMockup } from '../../../server/mockups/render.mjs';
+import { parseMugPlacement } from '../../../server/mockups/placement.mjs';
 import { readBoundedForm } from '../../../utils/webpUpload';
 
 export const prerender = false;
@@ -31,13 +32,24 @@ export const POST: APIRoute = async ({ request }) => {
       return failure('Escolha um modelo de mockup válido.', 400);
     }
 
+    const values = form.getAll('placement');
+    let placement: ReturnType<typeof parseMugPlacement> | undefined;
+    if (values.length) {
+      const [json] = values;
+      if (values.length !== 1 || typeof json !== 'string' || json.length > 1024) {
+        return failure('Enquadramento inválido.', 400);
+      }
+      try { placement = parseMugPlacement(json); }
+      catch { return failure('Enquadramento inválido.', 400); }
+    }
+
     const artwork = form.get('artwork');
     if (!(artwork instanceof File) || !artwork.size) return failure('Selecione uma imagem de arte.', 400);
     if (artwork.size > maxMugArtworkBytes) return failure('A arte deve ter até 8 MB.', 413);
     const normalized = await normalizeMugArtwork(Buffer.from(await artwork.arrayBuffer())).catch(() => null);
     if (!normalized) return failure('Use um PNG, JPEG ou WebP estático válido de até 16 megapixels.', 422);
 
-    const png = await renderMugMockup(model, normalized);
+    const png = await renderMugMockup(model, normalized, { placement });
     return new Response(new Uint8Array(png), {
       headers: { 'Content-Type': 'image/png', 'X-Content-Type-Options': 'nosniff' },
     });

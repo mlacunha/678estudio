@@ -5,6 +5,7 @@ import { gunzip } from 'node:zlib';
 import sharp from 'sharp';
 import { mugMockups } from './options.mjs';
 import { prepareSlotImage } from './prepare-input.mjs';
+import { combinePlacement, framedArtwork, slotFrame } from './placement.mjs';
 
 const unzip = promisify(gunzip);
 const templates = resolve('src/server/mockups/templates');
@@ -20,7 +21,10 @@ export async function normalizeMugArtwork(bytes) {
   return source.rotate().toColourspace('srgb').png().toBuffer();
 }
 
-export async function renderMugMockup(id, artwork, { fit } = {}) {
+/** @param {string} id @param {Buffer} artwork
+ * @param {{fit?: string, placement?: import('./placement.mjs').Placement}} [options]
+ */
+export async function renderMugMockup(id, artwork, { fit, placement: framing } = {}) {
   if (!mugMockups.some(model => model.id === id)) throw new RangeError('Modelo de mockup inválido.');
   const directory = join(templates, id);
   const manifest = JSON.parse(await readFile(join(directory, 'manifest.json'), 'utf8'));
@@ -29,13 +33,18 @@ export async function renderMugMockup(id, artwork, { fit } = {}) {
   // Calibration is measured in the PSD's embedded color space, including Adobe RGB in model 11.
   const output = await sharp(base, { ignoreIcc: true }).ensureAlpha().raw().toBuffer();
   const prepared = new Map();
+  const custom = framing?.mode === 'custom' ? combinePlacement(framing.global, framing.local) : null;
+  const dimensions = custom ? await sharp(artwork).metadata() : null;
 
   for (const slot of slots) {
     const placement = { ...slot.placement, ...(fit ? { fit } : {}) };
-    const key = JSON.stringify([slot.input, placement]);
+    const frame = custom && slot.framing !== 'original';
+    const key = JSON.stringify([slot.input, placement, Boolean(frame)]);
     if (!prepared.has(key)) {
-      const png = await prepareSlotImage(artwork, slot.input, placement);
-      const pixels = sharp(png).removeAlpha();
+      const image = frame
+        ? await prepareFramedSlot(artwork, dimensions, slot.input, placement, custom)
+        : await prepareSlotImage(artwork, slot.input, placement);
+      const pixels = sharp(image).removeAlpha();
       if (profile) pixels.withIccProfile(join(directory, profile));
       prepared.set(key, await pixels.raw().toBuffer());
     }
@@ -48,6 +57,28 @@ export async function renderMugMockup(id, artwork, { fit } = {}) {
 
   const png = await sharp(output, { raw: { width, height, channels: 4 } }).png().toBuffer();
   return withOriginalPngMetadata(png, base);
+}
+
+async function prepareFramedSlot(artwork, dimensions, input, calibration, placement) {
+  const frame = slotFrame(input, calibration);
+  const rect = framedArtwork(dimensions, frame, placement, calibration);
+  const left = Math.max(0, Math.ceil(rect.x));
+  const top = Math.max(0, Math.ceil(rect.y));
+  const right = Math.min(frame.width, Math.floor(rect.x + rect.width));
+  const bottom = Math.min(frame.height, Math.floor(rect.y + rect.height));
+  const output = sharp({ create: { ...input, channels: 3, background: '#fff' } });
+  if (right <= left || bottom <= top) return output.png().toBuffer();
+
+  // Crop in source coordinates first. Even extreme zoom only resizes visible slot pixels.
+  const sourceLeft = Math.min(dimensions.width - 1, Math.floor((left - rect.x) / rect.width * dimensions.width));
+  const sourceTop = Math.min(dimensions.height - 1, Math.floor((top - rect.y) / rect.height * dimensions.height));
+  const sourceRight = Math.min(dimensions.width, Math.ceil((right - rect.x) / rect.width * dimensions.width));
+  const sourceBottom = Math.min(dimensions.height, Math.ceil((bottom - rect.y) / rect.height * dimensions.height));
+  const visible = await sharp(artwork).extract({
+    left: sourceLeft, top: sourceTop,
+    width: Math.max(1, sourceRight - sourceLeft), height: Math.max(1, sourceBottom - sourceTop),
+  }).resize(right - left, bottom - top, { fit: 'fill' }).png().toBuffer();
+  return output.composite([{ input: visible, left: frame.x + left, top: frame.y + top }]).png().toBuffer();
 }
 
 const colorAndDensityChunks = new Set(['iCCP', 'sRGB', 'gAMA', 'cHRM', 'pHYs']);

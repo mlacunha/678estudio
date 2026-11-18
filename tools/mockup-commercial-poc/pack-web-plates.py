@@ -78,6 +78,7 @@ for model in args.ids:
         manifest["slots"].append({
             "file": filename, "left": left, "top": top, "width": right-left, "height": bottom-top,
             "input": slot["expectedSize"], "placement": slot["defaultPlacement"],
+            **({"framing": "original"} if slot["type"] != "mug" else {}),
         })
     (target / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
     print(model, manifest["width"], manifest["height"], round(sum(f.stat().st_size for f in target.iterdir()) / (1024 ** 2), 1), "MiB")

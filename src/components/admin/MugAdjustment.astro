@@ -1,0 +1,20 @@
+---
+import { placementLimits } from '../../server/mockups/placement.mjs';
+const { local = false } = Astro.props;
+const controls = [
+  { name: 'zoom', label: local ? 'Zoom adicional' : 'Zoom', min: placementLimits.zoomMin, max: placementLimits.zoomMax, value: 100 },
+  { name: 'offsetX', label: local ? 'Horizontal adicional' : 'Horizontal', min: -placementLimits.offset, max: placementLimits.offset, value: 0 },
+  { name: 'offsetY', label: local ? 'Vertical adicional' : 'Vertical', min: -placementLimits.offset, max: placementLimits.offset, value: 0 },
+];
+---
+<div data-placement-controls class="grid gap-2">
+  {controls.map(({ name, label, min, max, value }) => (
+    <label class="block text-sm text-ink-secondary">
+      <span class="flex items-baseline justify-between gap-2">
+        <span>{label}</span><output class="tabular-nums text-ink" data-value={name}>{name === 'zoom' ? '100%' : '0% · Centro'}</output>
+      </span>
+      <input type="range" data-control={name} min={min} max={max} value={value}
+        aria-label={label} class="h-8 w-full cursor-pointer accent-accent" />
+    </label>
+  ))}
+</div>

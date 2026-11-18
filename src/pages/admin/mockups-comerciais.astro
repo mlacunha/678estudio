@@ -1,5 +1,6 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
+import MugAdjustment from '../../components/admin/MugAdjustment.astro';
 import { mugMockups } from '../../server/mockups/options.mjs';
 
 export const prerender = false;
@@ -13,7 +14,7 @@ export const prerender = false;
       <p class="mt-2 text-sm text-ink-secondary">Envie uma arte e selecione as cenas para gerar imagens em resolução original.</p>
     </header>
 
-    <div class="grid items-start gap-6 lg:grid-cols-[minmax(0,20rem)_minmax(0,1fr)]">
+    <div class="grid items-start gap-6 lg:grid-cols-[minmax(0,24rem)_minmax(0,1fr)]">
       <form id="mug-mockup-form" class="min-w-0 rounded-2xl border border-line bg-surface p-4 sm:p-5"
         action="/admin/mockups-comerciais/render" method="post" enctype="multipart/form-data">
         <fieldset id="mug-mockup-fields" class="min-w-0 space-y-5">
@@ -25,6 +26,35 @@ export const prerender = false;
             <p id="mug-artwork-help" class="text-xs text-ink-muted">PNG, JPEG ou WebP estático · Até 8 MB e 16 megapixels.</p>
           </div>
 
+          <fieldset id="mug-global-placement" class="space-y-3 border-t border-line pt-4">
+            <legend class="pr-2 text-base font-semibold text-ink">Ajustar arte</legend>
+            <label class="block space-y-1 text-sm">
+              <span>Modo de encaixe</span>
+              <select id="mug-fit" class="min-h-11 w-full rounded-lg border border-control bg-canvas px-2">
+                <option value="original">Ajuste original</option>
+                <option value="contain">Conter</option>
+                <option value="cover">Preencher</option>
+                <option value="manual">Manual</option>
+              </select>
+            </label>
+            <div id="mug-art-frame" tabindex="0" role="group" aria-label="Área útil de 20 × 9 cm" aria-describedby="mug-frame-help"
+              class="relative aspect-[20/9] touch-none cursor-grab select-none overflow-hidden rounded-lg border border-control bg-white focus-visible:outline-accent active:cursor-grabbing">
+              <p id="mug-frame-empty" class="pointer-events-none absolute inset-0 grid place-items-center px-2 text-center text-xs text-slate-600">A arte aparecerá aqui.</p>
+              <img id="mug-frame-art" hidden alt="" draggable="false" class="pointer-events-none absolute max-w-none" />
+              <div aria-hidden="true" class="pointer-events-none absolute inset-1 rounded border border-dashed border-slate-500/60"></div>
+            </div>
+            <p id="mug-frame-help" class="text-xs text-ink-muted">Área útil de 20 × 9 cm. Arraste, use as setas ou ajuste pelos controles. No ajuste original, vale a prévia de cada modelo. A faixa e os papéis mantêm o encaixe original.</p>
+            <MugAdjustment />
+            <div class="flex flex-wrap gap-2">
+              {[
+                ['original', 'Ajuste original'], ['center', 'Centralizar'], ['contain', 'Conter arte'],
+                ['cover', 'Preencher área'], ['zoom', 'Zoom 100%'], ['reset', 'Redefinir enquadramento'],
+              ].map(([id, label]) => (
+                <button type="button" data-preset={id} class="min-h-10 rounded-lg border border-control px-2 text-xs font-medium hover:border-accent">{label}</button>
+              ))}
+            </div>
+          </fieldset>
+
           <fieldset class="space-y-2">
             <legend class="mb-2 text-sm font-semibold text-ink">Modelos</legend>
             {mugMockups.map((model) => (
@@ -35,8 +65,8 @@ export const prerender = false;
             ))}
           </fieldset>
 
-          <button class="min-h-11 w-full rounded-lg bg-action px-4 text-sm font-semibold text-on-action hover:bg-action-hover disabled:opacity-50" type="submit">
-            Gerar mockups
+          <button id="mug-generate" class="min-h-11 w-full rounded-lg bg-action px-4 text-sm font-semibold text-on-action hover:bg-action-hover disabled:opacity-50" type="submit">
+            Gerar prévias
           </button>
         </fieldset>
         <p id="mug-mockup-error" role="alert" class="mt-3 text-sm text-danger" hidden></p>
@@ -56,15 +86,32 @@ export const prerender = false;
   </main>
 
   <template id="mug-mockup-result">
-    <figure class="min-w-0 overflow-hidden rounded-xl border border-line bg-canvas">
-      <img class="block aspect-square w-full bg-white object-contain" decoding="async" alt="" />
-      <figcaption class="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 p-3">
-        <span class="text-sm font-semibold text-ink"></span>
-        <a class="inline-flex min-h-11 items-center text-sm font-semibold text-accent hover:underline">Baixar PNG</a>
-      </figcaption>
-    </figure>
+    <article class="min-w-0 overflow-hidden rounded-xl border border-line bg-canvas">
+      <img hidden class="aspect-square w-full bg-white object-contain" decoding="async" alt="" />
+      <div class="space-y-2 p-3">
+        <h3 class="text-sm font-semibold text-ink"></h3>
+        <p data-state class="text-xs text-ink-secondary" aria-live="polite"></p>
+        <a hidden class="min-h-11 items-center text-sm font-semibold text-accent hover:underline">Baixar PNG</a>
+        <details class="border-t border-line pt-1">
+          <summary class="flex min-h-10 cursor-pointer items-center text-sm font-semibold text-accent">Ajustar este modelo</summary>
+          <fieldset data-local class="space-y-2">
+            <legend class="sr-only">Correções relativas ao enquadramento global</legend>
+            <MugAdjustment local />
+            <div class="flex flex-wrap gap-2">
+              <button type="button" data-local-reset class="min-h-10 rounded-lg border border-control px-2 text-xs">Restaurar este modelo</button>
+              <button type="button" data-local-apply class="min-h-10 rounded-lg border border-control px-2 text-xs">Aplicar globais novamente</button>
+              <button type="button" data-local-render class="min-h-10 rounded-lg border border-control px-2 text-xs font-semibold">Atualizar prévia</button>
+            </div>
+          </fieldset>
+        </details>
+      </div>
+    </article>
   </template>
 </BaseLayout>
+
+<style>
+  [hidden] { display: none; }
+</style>
 
 <script>
   import { initMugMockupAdmin } from '../../scripts/mugMockupAdmin';
