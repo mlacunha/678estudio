@@ -2,8 +2,8 @@ import type { APIRoute } from 'astro';
 import { isAgendaColor, renderAgendaPreview } from '../../../server/agenda/classic.mjs';
 import { normalizeAgendaLogo } from '../../../server/agenda/logo';
 import { storeAgendaDraft } from '../../../server/agenda/drafts';
-import type { PreviewName, QuoteAsset, QuoteConfig } from '../../../server/agenda/quoteConfig';
-import { agendaFormats, agendaLayouts, agendaStyles, agendaYears, maxAgendaLogoBytes } from '../../../server/agenda/options.mjs';
+import { agendaLegalDates, type PreviewName, type QuoteAsset, type QuoteConfig } from '../../../server/agenda/quoteConfig';
+import { agendaFormats, agendaLayouts, agendaStyles, agendaYears, legalAgendaPalettes, legalAgendaTemplate, maxAgendaLogoBytes } from '../../../server/agenda/options.mjs';
 import { extractCoverFromForm } from '../../../server/cover/orderAdapter';
 import { maxCoverPhotoBytes } from '../../../server/cover/photo';
 import { getPublicOrigin } from '../../../utils/publicOrigin';
@@ -48,6 +48,16 @@ export const POST: APIRoute = async ({ request, url }) => {
     const layout = form.get('layout');
     const format = form.get('format');
     const style = form.get('style');
+    const template = form.get('template') ?? 'agenda-classica-v2';
+    const legal = template === legalAgendaTemplate;
+    const paletteValue = form.get('legal_palette') ?? 'blue';
+    if (legal && (typeof paletteValue !== 'string' || !Object.hasOwn(legalAgendaPalettes, paletteValue))) {
+      return reply({ error: 'Escolha uma cor disponível para o miolo.' }, 400);
+    }
+    const legalPalette = paletteValue as keyof typeof legalAgendaPalettes;
+    if ((!legal && template !== 'agenda-classica-v2') || (legal && (layout !== 'daily-1dpp' || style !== 'classic'))) {
+      return reply({ error: 'Escolha um modelo e layout de agenda compatíveis.' }, 400);
+    }
     if (String(year) !== yearValue || !agendaYears.includes(year) || typeof layout !== 'string' || !Object.hasOwn(agendaLayouts, layout)
       || typeof format !== 'string' || !Object.hasOwn(agendaFormats, format)
       || typeof style !== 'string' || !Object.hasOwn(agendaStyles, style)) {
@@ -81,16 +91,21 @@ export const POST: APIRoute = async ({ request, url }) => {
       return reply({ error: coverResult.error }, coverResult.status);
     }
 
-    const palette = agendaStyles[style as QuoteConfig['style']];
+    const { primary: defaultPrimary, secondary: defaultSecondary } = legal
+      ? legalAgendaPalettes[legalPalette]
+      : agendaStyles[style as QuoteConfig['style']];
     const config: QuoteConfig = {
-      template: 'agenda-classica-v2', year, layout: layout as QuoteConfig['layout'],
+      template, year, layout: layout as QuoteConfig['layout'],
       format: format as QuoteConfig['format'], style: style as QuoteConfig['style'],
-      colors: colors ?? { primary: palette.primary, secondary: palette.secondary },
+      colors: colors ?? { primary: defaultPrimary, secondary: defaultSecondary },
+      ...(legal ? { legalPalette, legalFinance: form.get('legal_finance') === 'true' } : {}),
       customColors: Boolean(colors), watermark,
       logo: logo && logoFile ? { originalName: logoFile.name.slice(0, 255), original: 'original', normalized: 'logo' } : null,
       ...(coverResult?.ok ? { cover: coverResult.cover } : {}),
     };
-    const images = await renderAgendaPreview({ ...config, logo: logo?.normalized });
+    const images = await renderAgendaPreview({
+      ...config, logo: logo?.normalized, legalDates: legal ? agendaLegalDates(year) : undefined,
+    });
     config.previews = images.map(({ page, pdfPage, section }) => ({ page, pdfPage, section }));
     const assets: QuoteAsset[] = images.map(({ page, src }) => ({
       name: `preview-${page}` as PreviewName, mime: 'image/png',

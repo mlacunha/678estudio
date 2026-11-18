@@ -12,7 +12,7 @@ const files = `/admin/agendas/${quote.id}/arquivo`;
 const labelClass = 'text-xs font-semibold uppercase tracking-wider text-ink-muted';
 ---
 
-<BaseLayout title="Produção da Agenda Clássica | 678 Estudio">
+<BaseLayout title={`Produção · ${quote.product} | 678 Estudio`}>
   <section class="mx-auto max-w-5xl px-4 py-10 sm:px-6">
     <a href="/admin/agendas" class="text-sm font-semibold text-accent hover:underline">← Voltar às solicitações</a>
     <h1 class="editorial-heading mt-4 text-4xl">{quote.product}</h1>

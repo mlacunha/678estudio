@@ -40,7 +40,7 @@ services:
         protocol: tcp
 
     healthcheck:
-      test: [ "CMD", "node", "-e", "fetch('http://127.0.0.1:' + process.env.PORT + '/api/categories').then(r => { if (!r.ok) process.exitCode = 1 }).catch(() => { process.exitCode = 1 })" ]
+      test: [ "CMD", "node", "-e", "fetch('http://127.0.0.1:' + process.env.PORT + '/healthz', { redirect: 'error' }).then(r => { if (r.status !== 204) throw new Error('HTTP ' + r.status) }).catch(error => { console.error(error); process.exitCode = 1 })" ]
       interval: 30s
       timeout: 5s
       retries: 3

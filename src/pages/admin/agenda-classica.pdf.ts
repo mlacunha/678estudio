@@ -2,7 +2,8 @@ import type { APIRoute } from 'astro';
 import { getAgendaQuote, getAgendaQuoteAsset } from '../../db/agendaQuotes';
 import { getStudioSettings } from '../../db/studioSettings';
 import { compileClassicAgenda, isClassicAgendaConfig } from '../../server/agenda/classic.mjs';
-import { agendaConfigVersion } from '../../server/agenda/quoteConfig';
+import { agendaConfigVersion, agendaLegalDates } from '../../server/agenda/quoteConfig';
+import { agendaTemplates, legalAgendaTemplate } from '../../server/agenda/options.mjs';
 import { parseA4PrintQuery, renderSelectedA4Output } from '../../server/print/a4Imposition';
 
 export const prerender = false;
@@ -29,7 +30,7 @@ async function resolveAgendaConfig(url: URL) {
 
   const quote = await getAgendaQuote(quoteId);
   if (!quote) return { error: new Response('Solicitação de agenda não encontrada.', { status: 404 }) };
-  if (quote.configVersion !== agendaConfigVersion || !['agenda-classica-v1', 'agenda-classica-v2'].includes(quote.config.template)) {
+  if (quote.configVersion !== agendaConfigVersion || !Object.hasOwn(agendaTemplates, quote.config.template)) {
     return { error: new Response('Versão da configuração indisponível para geração.', { status: 409 }) };
   }
   const logo = quote.config.logo ? await getAgendaQuoteAsset(quote.id, quote.config.logo.normalized) : undefined;
@@ -37,8 +38,12 @@ async function resolveAgendaConfig(url: URL) {
     return { error: new Response('Logomarca de produção indisponível.', { status: 409 }) };
   }
   return {
-    config: { ...quote.config, logo: logo?.content },
-    baseName: `agenda-classica-${quote.config.year}-${quote.id}`,
+    config: {
+      ...quote.config,
+      logo: logo?.content,
+      legalDates: quote.config.template === legalAgendaTemplate ? agendaLegalDates(quote.config.year) : undefined,
+    },
+    baseName: `${quote.config.template === legalAgendaTemplate ? 'agenda-juridica' : 'agenda-classica'}-${quote.config.year}-${quote.id}`,
   };
 }
 
@@ -76,7 +81,7 @@ const handleRequest: APIRoute = async ({ url }) => {
       },
     });
   } catch {
-    return new Response('Falha ao gerar a Agenda Clássica.', { status: 500 });
+    return new Response('Falha ao gerar a agenda.', { status: 500 });
   } finally {
     compiling = false;
   }
