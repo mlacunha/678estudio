@@ -1,6 +1,8 @@
 import type { Client } from '@libsql/client';
 import { getDbClient, initDatabase } from './database';
 import {
+  getCollectionDestinationSlug,
+  isValidInternalDestination,
   resolveArteProductType,
   type CategoryDestinationType,
   type CategoryLayoutType,
@@ -134,6 +136,30 @@ export async function getCategoryBySlug(slug: string, client: Client = getDbClie
     args: [slug],
   });
   return result.rows.length > 0 ? mapRowToCategory(result.rows[0]) : null;
+}
+
+export async function isPublishedInternalDestination(href: string, client?: Client): Promise<boolean> {
+  const slug = getCollectionDestinationSlug(href);
+  if (!slug) return isValidInternalDestination(href);
+  const resolved = await resolveCategoryBySlugOrAlias(slug, client);
+  return resolved?.category.isActive === true;
+}
+
+const requestDestinations = new WeakMap<App.Locals, Map<string, Promise<boolean>>>();
+
+export function getRequestInternalDestinationAvailability(locals: App.Locals, href: string): Promise<boolean> {
+  const slug = getCollectionDestinationSlug(href);
+  if (!slug) return Promise.resolve(isValidInternalDestination(href));
+  let destinations = requestDestinations.get(locals);
+  if (!destinations) {
+    destinations = new Map();
+    requestDestinations.set(locals, destinations);
+  }
+  const cached = destinations.get(slug);
+  if (cached) return cached;
+  const availability = isPublishedInternalDestination(href);
+  destinations.set(slug, availability);
+  return availability;
 }
 
 export async function resolveCategoryBySlugOrAlias(

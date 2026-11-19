@@ -98,6 +98,17 @@ describe('internalDestinations resolution', () => {
     expect(resolved.label).toBe('Ver portfolio');
   });
 
+  it('does not link to an unpublished collection even when its path is well formed', () => {
+    const product = { actionType: 'details', actionHref: '/colecoes/desativada' } as const;
+    const category = { slug: 'papelaria', destinationHref: '/colecoes/desativada', destinationType: 'collection' } as const;
+    expect(resolveProductDestination(product, category, {
+      isAvailableInternalDestination: () => false,
+    })).toMatchObject({ kind: 'none' });
+    expect(resolveProductDestination(product, category, {
+      isAvailableInternalDestination: href => href === product.actionHref,
+    })).toMatchObject({ kind: 'details', href: product.actionHref });
+  });
+
   it('should detect arte product type from customizer href or category slug', () => {
     expect(resolveArteProductType('/personalizar/caneca', 'brindes')).toBe('caneca');
     expect(resolveArteProductType('/personalizar/quadro', 'brindes')).toBe('quadro');

@@ -6,6 +6,7 @@ import {
   createProduct,
   getCategoryById,
   getCategoryBySlug,
+  isPublishedInternalDestination,
   resolveValidLinkedArteId,
 } from '../../../db/catalogRepository';
 import {
@@ -27,6 +28,7 @@ export function validateProductActionOverride(
   rawType: unknown,
   rawHref: unknown,
   rawCtaLabel: unknown,
+  savedDetailsHref?: string,
 ): { actionType?: ProductActionType; actionHref?: string; ctaLabel?: string; error?: string } {
   const typeStr = typeof rawType === 'string' ? rawType.trim() : '';
   const hrefStr = typeof rawHref === 'string' ? rawHref.trim() : '';
@@ -47,7 +49,7 @@ export function validateProductActionOverride(
   if (typeStr === 'customizer' && !isValidCustomizerDestination(hrefStr)) {
     return { error: 'Personalizador selecionado inválido.' };
   }
-  if (typeStr === 'details' && !isValidInternalDestination(hrefStr)) {
+  if (typeStr === 'details' && hrefStr !== savedDetailsHref && !isValidInternalDestination(hrefStr)) {
     return { error: 'Página interna selecionada inválida.' };
   }
   return { actionType: typeStr, actionHref: hrefStr, ctaLabel };
@@ -107,6 +109,10 @@ export const POST: APIRoute = async ({ request }) => {
     const actionCheck = validateProductActionOverride(body.actionType, body.actionHref, body.ctaLabel);
     if (actionCheck.error) {
       return json({ success: false, error: actionCheck.error }, 400);
+    }
+    if (actionCheck.actionType === 'details' && actionCheck.actionHref &&
+        !(await isPublishedInternalDestination(actionCheck.actionHref))) {
+      return json({ success: false, error: 'A coleção de destino precisa existir e estar publicada.' }, 400);
     }
 
     const rawLinkedArteId = body.linkedArteId ? String(body.linkedArteId).trim() : '';

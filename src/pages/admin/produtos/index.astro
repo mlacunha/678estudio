@@ -1,9 +1,9 @@
 ---
 import BaseLayout from '../../../layouts/BaseLayout.astro';
 import BrandMark from '../../../components/BrandMark.astro';
-import { getAllCategories, listAdminProductsPaginated } from '../../../db/catalogRepository';
+import { getAllCategories, getRequestInternalDestinationAvailability, listAdminProductsPaginated } from '../../../db/catalogRepository';
 import { listAdminArtes } from '../../../db/artLibraryRepository';
-import { INTERNAL_DESTINATIONS } from '../../../data/internalDestinations';
+import { getCollectionDestinationSlug, INTERNAL_DESTINATIONS } from '../../../data/internalDestinations';
 
 export const prerender = false;
 
@@ -32,6 +32,17 @@ const [categories, paginated, availableArtes] = await Promise.all([
 ]);
 
 const { items: products, total, page, totalPages } = paginated;
+const collectionDestinations = categories.flatMap(category => {
+  const href = `/colecoes/${category.slug}`;
+  return category.isActive && getCollectionDestinationSlug(href)
+    ? [{ href, label: `${category.title} — ${href}`, kind: 'page' }]
+    : [];
+});
+const unavailableDetails = new Set(await Promise.all(products
+  .filter(product => product.actionType === 'details' && product.actionHref)
+  .map(async product => (await getRequestInternalDestinationAvailability(Astro.locals, product.actionHref!))
+    ? undefined
+    : product.id)));
 const startIdx = total === 0 ? 0 : (page - 1) * pageSize + 1;
 const endIdx = Math.min(page * pageSize, total);
 const arteById = new Map(availableArtes.map(art => [art.id, art]));
@@ -240,6 +251,7 @@ const actionLabels: Record<string, string> = {
                       <span class="text-[10px] text-ink-secondary bg-canvas px-2 py-0.5 rounded border border-line">
                         Destino: {actionLabels[prod.actionType] ?? prod.actionType}
                         {prod.actionHref ? ` (${prod.actionHref})` : ''}
+                        {unavailableDetails.has(prod.id) && ' · Destino indisponível. Revise ao editar.'}
                       </span>
                     )}
                   </div>
@@ -287,6 +299,7 @@ const actionLabels: Record<string, string> = {
                     type="button"
                     class="btn-edit-product text-ink-muted hover:text-accent font-medium motion-safe:transition-colors"
                     data-product={JSON.stringify(prod)}
+                    data-destination-unavailable={unavailableDetails.has(prod.id) ? 'true' : undefined}
                   >
                     Editar
                   </button>
@@ -494,13 +507,17 @@ const actionLabels: Record<string, string> = {
                 <select
                   id="form-action-href"
                   name="actionHref"
+                  aria-describedby="form-destination-warning"
                   class="w-full px-3 py-2 rounded-lg bg-surface border border-control text-ink focus:border-accent"
                 >
                   <option value="">Selecione um destino...</option>
-                  {INTERNAL_DESTINATIONS.map(dest => (
+                  {[...INTERNAL_DESTINATIONS, ...collectionDestinations].map(dest => (
                     <option value={dest.href} data-kind={dest.kind}>{dest.label}</option>
                   ))}
                 </select>
+                <p id="form-destination-warning" class="mt-1 text-xs text-danger" hidden>
+                  A página salva está indisponível para o público. Selecione uma coleção publicada para restaurar o link.
+                </p>
               </div>
 
               <div>
@@ -573,6 +590,7 @@ const actionLabels: Record<string, string> = {
     const actionTypeSelect = document.getElementById('form-action-type') as HTMLSelectElement | null;
     const actionHrefSelect = document.getElementById('form-action-href') as HTMLSelectElement | null;
     const wrapActionHref = document.getElementById('wrap-action-href');
+    const destinationWarning = document.getElementById('form-destination-warning');
 
     function syncActionFields() {
       if (!actionTypeSelect || !actionHrefSelect || !wrapActionHref) return;
@@ -588,13 +606,23 @@ const actionLabels: Record<string, string> = {
           if (!kind) continue;
           opt.hidden = type === 'customizer' && kind !== 'customizer';
         }
+        if (actionHrefSelect.selectedOptions[0]?.hidden) actionHrefSelect.value = '';
+      }
+      if (destinationWarning) {
+        destinationWarning.hidden = type !== 'details' ||
+          actionHrefSelect.selectedOptions[0]?.dataset.unavailable !== 'true';
       }
     }
 
     actionTypeSelect?.addEventListener('change', syncActionFields);
+    actionHrefSelect?.addEventListener('change', syncActionFields);
 
     function openModal(isEdit = false) {
       if (!modal) return;
+      if (!isEdit) {
+        actionHrefSelect?.querySelector('[data-saved-destination]')?.remove();
+        syncActionFields();
+      }
       modal.classList.remove('hidden');
       modal.classList.add('flex');
       if (modalTitle) modalTitle.textContent = isEdit ? 'Editar Produto' : 'Novo Produto';
@@ -675,8 +703,23 @@ const actionLabels: Record<string, string> = {
         (document.getElementById('form-active') as HTMLInputElement).checked = prod.isActive !== false;
         (document.getElementById('form-linked-arte') as HTMLSelectElement).value = prod.linkedArteId || '';
         (document.getElementById('form-action-type') as HTMLSelectElement).value = prod.actionType || '';
+        if (actionHrefSelect) {
+          actionHrefSelect.querySelector('[data-saved-destination]')?.remove();
+          if (prod.actionType === 'details' && prod.actionHref &&
+              !Array.from(actionHrefSelect.options).some(option => option.value === prod.actionHref)) {
+            const unavailable = button.getAttribute('data-destination-unavailable') === 'true';
+            const saved = new Option(
+              `${prod.actionHref} — ${unavailable ? 'indisponível' : 'destino salvo'}`,
+              prod.actionHref,
+            );
+            saved.dataset.kind = 'page';
+            saved.dataset.savedDestination = '';
+            saved.dataset.unavailable = String(unavailable);
+            actionHrefSelect.add(saved);
+          }
+          actionHrefSelect.value = prod.actionHref || '';
+        }
         syncActionFields();
-        (document.getElementById('form-action-href') as HTMLSelectElement).value = prod.actionHref || '';
         (document.getElementById('form-cta-label') as HTMLInputElement).value = prod.ctaLabel || '';
         (document.getElementById('form-image-url') as HTMLInputElement).value = prod.imageUrl;
 

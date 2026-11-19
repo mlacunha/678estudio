@@ -69,7 +69,11 @@ export function isValidInternalDestination(href: string): boolean {
   const clean = href.trim();
   if (!clean) return false;
   if (INTERNAL_DESTINATIONS.some((dest) => dest.href === clean)) return true;
-  return /^\/colecoes\/[a-z0-9]+(?:-[a-z0-9]+)*$/.test(clean);
+  return Boolean(getCollectionDestinationSlug(clean));
+}
+
+export function getCollectionDestinationSlug(href: string): string | undefined {
+  return /^\/colecoes\/([a-z0-9]+(?:-[a-z0-9]+)*)$/.exec(href.trim())?.[1];
 }
 
 export function isValidCustomizerDestination(href: string): boolean {
@@ -196,7 +200,11 @@ export function resolveCategoryDestination(
 export function resolveProductDestination(
   product: ProductDestinationInput,
   category: CategoryDestinationInput,
-  options: { validLinkedArteId?: string; whatsappQuoteHref?: string } = {},
+  options: {
+    validLinkedArteId?: string;
+    whatsappQuoteHref?: string;
+    isAvailableInternalDestination?: (href: string) => boolean;
+  } = {},
 ): ResolvedProductDestination {
   const effectiveAction: ProductActionType =
     product.actionType ?? category.defaultProductAction ?? 'quote';
@@ -207,6 +215,7 @@ export function resolveProductDestination(
 
   const customLabel = product.ctaLabel?.trim();
   const hasValidArte = Boolean(options.validLinkedArteId);
+  const isAvailable = options.isAvailableInternalDestination ?? isValidInternalDestination;
 
   if (effectiveAction === 'customizer') {
     const candidateHref = isValidCustomizerDestination(rawHref)
@@ -238,9 +247,9 @@ export function resolveProductDestination(
   }
 
   if (effectiveAction === 'details') {
-    const candidateHref = isValidInternalDestination(rawHref)
+    const candidateHref = isAvailable(rawHref)
       ? rawHref
-      : category.defaultProductHref && isValidInternalDestination(category.defaultProductHref)
+      : category.defaultProductHref && isAvailable(category.defaultProductHref)
         ? category.defaultProductHref.trim()
         : '';
 
@@ -266,7 +275,7 @@ export function resolveProductDestination(
   }
 
   const categoryDest = resolveCategoryDestination(category);
-  if (effectiveAction === 'details' && categoryDest.collectionHref) {
+  if (effectiveAction === 'details' && isAvailable(categoryDest.collectionHref)) {
     return {
       kind: 'details',
       href: categoryDest.collectionHref,

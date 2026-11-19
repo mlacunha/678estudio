@@ -11,6 +11,7 @@ import {
   getAllCategories,
   getCategoryById,
   getCategoryBySlug,
+  isPublishedInternalDestination,
   resolveCategoryBySlugOrAlias,
   listAdminCategoriesWithCounts,
   createCategory,
@@ -64,6 +65,18 @@ describe('Catalog Repository with SQLite', () => {
   });
 
   describe('Categories Operations', () => {
+    it('validates published collection destinations without removing saved product references', async () => {
+      const category = (await getCategoryBySlug('quadros', testClient))!;
+      const product = (await getProductById('prod-c1', testClient))!;
+      const href = '/colecoes/quadros';
+      await updateProduct({ ...product, actionType: 'details', actionHref: href }, testClient);
+      expect(await isPublishedInternalDestination(href, testClient)).toBe(true);
+      expect(await isPublishedInternalDestination('/colecoes/nao-cadastrada', testClient)).toBe(false);
+      expect(await isPublishedInternalDestination('/canecas', testClient)).toBe(true);
+      await toggleCategoryActive(category.id, false, testClient);
+      expect(await isPublishedInternalDestination(href, testClient)).toBe(false);
+      expect(await getProductById(product.id, testClient)).toMatchObject({ actionType: 'details', actionHref: href });
+    });
     it('should retrieve active categories ordered by display_order', async () => {
       const categories = await getActiveCategories(testClient);
       expect(categories.length).toBeGreaterThan(0);
