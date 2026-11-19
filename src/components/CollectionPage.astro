@@ -1,7 +1,6 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import ProductCard from './ProductCard.astro';
-import './carousel.css';
 import WhatsAppCTA from './WhatsAppCTA.astro';
 import { getActiveProductsByCategory } from '../db/catalogRepository';
 import { resolveCategoryDestination } from '../data/internalDestinations';
@@ -64,10 +63,7 @@ const pageDescription =
     </header>
 
     {products.length > 0 ? (
-      <div class:list={[
-        'grid gap-6 sm:grid-cols-2 lg:grid-cols-3',
-        category.slug === 'papelaria' ? 'carousel-track carousel-track--mobile' : 'grid-cols-1',
-      ]}>
+      <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
         {products.map((product) => (
           <ProductCard product={product} category={category} />
         ))}
