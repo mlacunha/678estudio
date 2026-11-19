@@ -52,6 +52,7 @@ const demoImage = new Map([
 const isIllustrative = product.isProvisional || Boolean(demoImage);
 const displayImageSrc = demoImage ? `/images/demo/${demoImage}.webp` : product.imageUrl;
 const largeImage = getCatalogLargeImage(product.imageUrl);
+const imageAlt = isIllustrative ? `Referência visual: ${product.name}` : product.name;
 
 const { whatsapp } = await getRequestStudioSettings(Astro.locals);
 const whatsappQuoteHref =
@@ -69,45 +70,21 @@ const hasInternalPrimaryLink =
   (destination.kind === 'customizer' || destination.kind === 'details') && Boolean(destination.href);
 ---
 
-<article class="min-w-0 flex flex-col rounded-lg bg-surface border border-line hover:border-accent/40 focus-within:border-accent/40 motion-safe:transition-colors">
-  <div class="relative aspect-[5/4] bg-canvas rounded-t-lg overflow-hidden">
-    {hasInternalPrimaryLink ? (
-      <a href={destination.href} aria-label={`${destination.label}: ${product.name}`} class="block h-full">
-        <img
-          src={displayImageSrc}
-          alt={isIllustrative ? `Referência visual: ${product.name}` : product.name}
-          class="h-full w-full object-cover"
-          loading="lazy"
-          decoding="async"
-        />
-      </a>
-    ) : largeImage ? (
-      <a
-        href={largeImage}
-        target="_blank"
-        rel="noopener noreferrer"
-        aria-label={`Ampliar imagem: ${product.name}`}
-        class="block h-full bg-[#262422] focus-visible:outline focus-visible:outline-offset-[-3px] focus-visible:outline-accent"
-      >
-        <img
-          src={product.imageUrl}
-          alt={product.name}
-          width="480"
-          height="480"
-          class="h-full w-full object-contain"
-          loading="lazy"
-          decoding="async"
-        />
-      </a>
-    ) : (
-      <img
-        src={displayImageSrc}
-        alt={isIllustrative ? `Referência visual da linha de ${displayCategoryTitle.toLocaleLowerCase('pt-BR')}` : product.name}
-        class="w-full h-full object-cover"
-        loading="lazy"
-        decoding="async"
-      />
-    )}
+<article class="relative min-w-0 flex flex-col rounded-lg bg-surface border border-line hover:border-accent/40 focus-within:border-accent/40 motion-safe:transition-colors">
+  <a
+    href={largeImage ?? displayImageSrc}
+    data-product-image-open
+    aria-label={`Ampliar imagem: ${product.name}`}
+    class="absolute inset-0 z-10 cursor-zoom-in rounded-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+  ></a>
+  <div class:list={['relative aspect-[5/4] rounded-t-lg overflow-hidden', largeImage ? 'bg-[#262422]' : 'bg-canvas']}>
+    <img
+      src={displayImageSrc}
+      alt={imageAlt}
+      class:list={['h-full w-full', largeImage ? 'object-contain' : 'object-cover']}
+      loading="lazy"
+      decoding="async"
+    />
 
     {isIllustrative && (
       <span class="pointer-events-none absolute bottom-3 left-3 px-2.5 py-1 rounded text-xs font-medium bg-media-badge/95 text-on-media">
@@ -119,11 +96,7 @@ const hasInternalPrimaryLink =
   <div class="p-4 sm:p-5 flex-1 flex flex-col justify-between">
     <div>
       <h3 class="text-lg leading-snug font-semibold text-ink break-words">
-        {hasInternalPrimaryLink ? (
-          <a href={destination.href} class="hover:underline">{product.name}</a>
-        ) : (
-          product.name
-        )}
+        {product.name}
       </h3>
       <p class="mt-2 text-sm text-ink-secondary leading-relaxed break-words">
         {product.description}
@@ -137,7 +110,7 @@ const hasInternalPrimaryLink =
       {hasInternalPrimaryLink ? (
         <a
           href={destination.href}
-          class="min-h-11 inline-flex items-center gap-1 text-xs font-semibold text-accent hover:underline"
+          class="relative z-20 min-h-11 inline-flex items-center gap-1 text-xs font-semibold text-accent hover:underline"
         >
           {destination.label} <span aria-hidden="true">→</span>
         </a>
@@ -147,7 +120,7 @@ const hasInternalPrimaryLink =
           target="_blank"
           rel="noopener noreferrer"
           aria-label={`${destination.label}: ${product.name}`}
-          class="min-h-11 inline-flex items-center gap-1.5 px-3 rounded-md text-xs font-semibold bg-surface-raised hover:bg-action hover:text-on-action text-ink motion-safe:transition-colors"
+          class="relative z-20 min-h-11 inline-flex items-center gap-1.5 px-3 rounded-md text-xs font-semibold bg-surface-raised hover:bg-action hover:text-on-action text-ink motion-safe:transition-colors"
         >
           {destination.label} <span aria-hidden="true">↗</span>
         </a>
@@ -161,11 +134,68 @@ const hasInternalPrimaryLink =
           target="_blank"
           rel="noopener noreferrer"
           aria-label={`Orçar peça: ${product.name}`}
-          class="min-h-11 inline-flex items-center gap-1.5 px-3 rounded-md text-xs font-semibold bg-surface-raised hover:bg-action hover:text-on-action text-ink motion-safe:transition-colors"
+          class="relative z-20 min-h-11 inline-flex items-center gap-1.5 px-3 rounded-md text-xs font-semibold bg-surface-raised hover:bg-action hover:text-on-action text-ink motion-safe:transition-colors"
         >
           Orçar peça <span aria-hidden="true">↗</span>
         </a>
       )}
     </div>
   </div>
+  <dialog
+    data-product-image-dialog
+    aria-label={`Imagem ampliada: ${product.name}`}
+    class="m-auto w-[min(92vw,64rem)] max-h-[92dvh] overflow-auto rounded-xl border border-line bg-surface p-0 text-ink shadow-2xl backdrop:bg-black/75"
+  >
+    <div class="flex items-center justify-between gap-3 border-b border-line px-4 py-2">
+      <p class="min-w-0 break-words font-semibold">{product.name}</p>
+      <form method="dialog">
+        <button autofocus class="min-h-11 rounded-md border border-control px-3 text-sm font-semibold hover:border-accent">Fechar</button>
+      </form>
+    </div>
+    <img data-product-image-full data-fallback={displayImageSrc} alt={imageAlt} hidden class="block max-h-[75dvh] w-full bg-canvas object-contain [&[hidden]]:hidden" />
+    <p data-product-image-status role="status" class="px-4 py-3"></p>
+  </dialog>
 </article>
+
+<script>
+  document.addEventListener('click', event => {
+    if (!(event.target instanceof Element)) return;
+    const target = event.target;
+    if (target instanceof HTMLDialogElement && target.matches('[data-product-image-dialog]')) {
+      target.close();
+      return;
+    }
+    const link = target.closest<HTMLAnchorElement>('[data-product-image-open]');
+    if (!link || event.defaultPrevented || event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
+
+    const dialog = link.parentElement?.querySelector<HTMLDialogElement>('[data-product-image-dialog]');
+    const image = dialog?.querySelector<HTMLImageElement>('[data-product-image-full]');
+    const status = dialog?.querySelector<HTMLElement>('[data-product-image-status]');
+    if (!dialog || !image || !status || typeof dialog.showModal !== 'function') return;
+
+    event.preventDefault();
+    if (dialog.open) return;
+    const fallback = new URL(image.dataset.fallback ?? link.href, document.baseURI).href;
+    image.hidden = true;
+    status.hidden = false;
+    status.textContent = 'Carregando imagem…';
+    image.onload = () => {
+      image.hidden = false;
+      status.hidden = true;
+    };
+    image.onerror = () => {
+      if (image.src !== fallback) image.src = fallback;
+      else status.textContent = 'Não foi possível carregar a imagem.';
+    };
+    image.src = link.href;
+    dialog.addEventListener('close', () => link.focus({ preventScroll: true }), { once: true });
+    dialog.showModal();
+  });
+</script>
+
+<style is:global>
+  html:has(dialog[data-product-image-dialog][open]) {
+    overflow: hidden;
+    scrollbar-gutter: stable;
+  }
+</style>
