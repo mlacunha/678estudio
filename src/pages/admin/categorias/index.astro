@@ -71,7 +71,7 @@ const actionLabels: Record<string, string> = {
               <th class="px-5 py-3.5 font-medium">Apresentação &amp; Destinos</th>
               <th class="px-5 py-3.5 font-medium text-center">Vínculos</th>
               <th class="px-5 py-3.5 font-medium text-center">Ordem</th>
-              <th class="px-5 py-3.5 font-medium text-center">Exibir na Home</th>
+              <th class="px-5 py-3.5 font-medium text-center">Home e menu</th>
               <th class="px-5 py-3.5 font-medium text-center">Publicação</th>
               <th class="px-5 py-3.5 font-medium text-right">Ações</th>
             </tr>
@@ -156,6 +156,9 @@ const actionLabels: Record<string, string> = {
                     >
                       {cat.showOnHome ? 'Na Home' : 'Fora da Home'}
                     </button>
+                    <p class="mt-1 text-[11px] text-ink-muted">
+                      {cat.showOnMenu ? 'No menu superior' : 'Fora do menu superior'}
+                    </p>
                   </td>
 
                   <td class="px-5 py-4 text-center">
@@ -317,7 +320,7 @@ const actionLabels: Record<string, string> = {
             ></textarea>
           </div>
 
-          <!-- Status vs Visibilidade na Home -->
+          <!-- Publicação e visibilidade -->
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <label class="flex items-start gap-2.5 rounded-lg border border-control bg-canvas p-3 cursor-pointer">
               <input
@@ -344,6 +347,19 @@ const actionLabels: Record<string, string> = {
               <div>
                 <span class="block text-ink font-semibold">Exibir seção na Home</span>
                 <span class="block text-[11px] text-ink-muted">Mostra esta categoria como vitrine na página inicial.</span>
+              </div>
+            </label>
+            <label class="flex items-start gap-2.5 rounded-lg border border-control bg-canvas p-3 cursor-pointer">
+              <input
+                type="checkbox"
+                id="form-show-menu"
+                name="showOnMenu"
+                checked
+                class="mt-0.5 h-4 w-4 rounded border-control text-accent focus:ring-accent"
+              />
+              <div>
+                <span class="block text-ink font-semibold">Exibir no menu superior</span>
+                <span class="block text-[11px] text-ink-muted">Inclui a categoria publicada no menu Produtos.</span>
               </div>
             </label>
           </div>
@@ -603,6 +619,7 @@ const actionLabels: Record<string, string> = {
         (document.getElementById('form-order') as HTMLInputElement).value = String(cat.displayOrder ?? 1);
         (document.getElementById('form-active') as HTMLInputElement).checked = cat.isActive !== false;
         (document.getElementById('form-show-home') as HTMLInputElement).checked = cat.showOnHome !== false;
+        (document.getElementById('form-show-menu') as HTMLInputElement).checked = cat.showOnMenu !== false;
         (document.getElementById('form-layout-type') as HTMLSelectElement).value = cat.layoutType || 'carousel';
         (document.getElementById('form-dest-type') as HTMLSelectElement).value = cat.destinationType || 'collection';
         (document.getElementById('form-default-action') as HTMLSelectElement).value = cat.defaultProductAction || 'quote';
@@ -655,6 +672,7 @@ const actionLabels: Record<string, string> = {
         displayOrder: Number((document.getElementById('form-order') as HTMLInputElement).value),
         isActive: (document.getElementById('form-active') as HTMLInputElement).checked,
         showOnHome: (document.getElementById('form-show-home') as HTMLInputElement).checked,
+        showOnMenu: (document.getElementById('form-show-menu') as HTMLInputElement).checked,
         layoutType: (document.getElementById('form-layout-type') as HTMLSelectElement).value,
         destinationType: (document.getElementById('form-dest-type') as HTMLSelectElement).value,
         destinationHref: (document.getElementById('form-dest-href') as HTMLSelectElement).value,

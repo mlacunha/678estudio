@@ -93,6 +93,7 @@ export function validateCategoryPayload(body: Record<string, unknown>): {
       displayOrder: Number.isFinite(Number(body.displayOrder)) ? Number(body.displayOrder) : 0,
       isActive: body.isActive !== false,
       showOnHome: body.showOnHome !== false,
+      showOnMenu: body.showOnMenu !== false,
       layoutType,
       destinationType,
       destinationHref,

@@ -51,7 +51,7 @@ const PRODUCT_SELECT = `
 
 function mapRowToCategory(
   row: Record<string, unknown>,
-): ProductCategory & { displayOrder: number; isActive: boolean; showOnHome: boolean } {
+): ProductCategory & { displayOrder: number; isActive: boolean; showOnHome: boolean; showOnMenu: boolean } {
   return {
     id: String(row.id),
     slug: String(row.slug) as CategorySlug,
@@ -63,6 +63,7 @@ function mapRowToCategory(
     displayOrder: Number(row.display_order ?? 0),
     isActive: Boolean(row.is_active),
     showOnHome: row.show_on_home !== undefined ? Boolean(row.show_on_home) : true,
+    showOnMenu: Boolean(row.show_on_menu),
     layoutType: (row.layout_type ? String(row.layout_type) : 'carousel') as CategoryLayoutType,
     destinationType: (row.destination_type ? String(row.destination_type) : 'collection') as CategoryDestinationType,
     destinationHref: row.destination_href ? String(row.destination_href) : undefined,
@@ -108,6 +109,14 @@ export async function getHomeCategories(client: Client = getDbClient()) {
     sql: 'SELECT * FROM categories WHERE is_active = 1 AND show_on_home = 1 ORDER BY display_order ASC',
     args: [],
   });
+  return result.rows.map(mapRowToCategory);
+}
+
+export async function getMenuCategories(client: Client = getDbClient()) {
+  await initDatabase(client);
+  const result = await client.execute(
+    'SELECT * FROM categories WHERE is_active = 1 AND show_on_menu = 1 ORDER BY display_order ASC',
+  );
   return result.rows.map(mapRowToCategory);
 }
 
@@ -255,9 +264,9 @@ export async function createCategory(category: ProductCategory, client: Client =
   await client.execute({
     sql: `INSERT INTO categories (
             id, slug, title, subtitle, description, badge, cover_image_url,
-            display_order, is_active, show_on_home, layout_type,
+            display_order, is_active, show_on_home, show_on_menu, layout_type,
             destination_type, destination_href, default_product_action, default_product_href
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     args: [
       category.id,
       normalizedSlug,
@@ -269,6 +278,7 @@ export async function createCategory(category: ProductCategory, client: Client =
       category.displayOrder ?? 0,
       category.isActive !== false ? 1 : 0,
       category.showOnHome !== false ? 1 : 0,
+      category.showOnMenu !== false ? 1 : 0,
       category.layoutType ?? 'carousel',
       destType,
       destHref,
@@ -331,7 +341,7 @@ export async function updateCategory(category: ProductCategory, client: Client =
     await tx.execute({
       sql: `UPDATE categories
             SET slug = ?, title = ?, subtitle = ?, description = ?, badge = ?, cover_image_url = ?,
-                display_order = ?, is_active = ?, show_on_home = ?, layout_type = ?,
+                display_order = ?, is_active = ?, show_on_home = ?, show_on_menu = ?, layout_type = ?,
                 destination_type = ?, destination_href = ?, default_product_action = ?, default_product_href = ?
             WHERE id = ?`,
       args: [
@@ -344,6 +354,7 @@ export async function updateCategory(category: ProductCategory, client: Client =
         category.displayOrder ?? 0,
         category.isActive !== false ? 1 : 0,
         category.showOnHome !== false ? 1 : 0,
+        (category.showOnMenu ?? current.showOnMenu) ? 1 : 0,
         category.layoutType ?? 'carousel',
         destType,
         destHref,
