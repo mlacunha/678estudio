@@ -36,6 +36,7 @@ async function runCoverTypst(options, format, ppi) {
     subtitle = '',
     colors = {},
     photoBuffer = null,
+    logoPosition,
   } = options;
 
   const tempDir = await fsMktemp();
@@ -89,6 +90,9 @@ async function runCoverTypst(options, format, ppi) {
     }
     if (photoInputName) {
       args.push('--input', `photo=/${photoInputName}`);
+    }
+    if (logoPosition === 'top' || logoPosition === 'bottom') {
+      args.push('--input', `logo-position=${logoPosition}`);
     }
 
     args.push(path.join(rootDir, 'cover.typ'), outputPath);

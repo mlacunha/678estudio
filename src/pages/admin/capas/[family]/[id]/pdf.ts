@@ -60,6 +60,7 @@ export const GET: APIRoute = async ({ params, url }) => {
       name: coverConfig?.name || config?.personalizationName || '',
       subtitle: coverConfig?.subtitle || '',
       colors: coverConfig?.colors || {},
+      logoPosition: coverConfig?.logoPosition,
       photoBuffer,
     });
 

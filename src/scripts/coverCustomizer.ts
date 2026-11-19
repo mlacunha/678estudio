@@ -12,6 +12,8 @@ export function setupCoverCustomizer(options: {
   const primaryInput = form.querySelector('input[name="cover_color_primary"]') as HTMLInputElement | null;
   const accentInput = form.querySelector('input[name="cover_color_accent"]') as HTMLInputElement | null;
   const photoInput = document.getElementById('cover-photo-input') as HTMLInputElement | null;
+  const logoPositionField = form.querySelector('#cover-logo-position-field');
+  const logoPosition = form.querySelector<HTMLSelectElement>('[name="cover_logo_position"]');
   const coverPreviewImg = document.getElementById(options.coverPreviewId) as HTMLImageElement | null;
   const coverPlaceholder = document.getElementById('cover-preview-placeholder') as HTMLDivElement | null;
   const coverStatus = document.getElementById('cover-preview-status') as HTMLParagraphElement | null;
@@ -66,6 +68,12 @@ export function setupCoverCustomizer(options: {
     sideBackBtn.classList.toggle('text-ink-muted', isFront);
   }
 
+  function updateLogoPositionField() {
+    const photographic = form?.querySelector<HTMLInputElement>('[name="cover_style"]:checked')?.value === 'photographic';
+    logoPositionField?.toggleAttribute('hidden', photographic);
+    if (logoPosition) logoPosition.disabled = photographic;
+  }
+
   sideFrontBtn?.addEventListener('click', () => {
     currentTarget = 'front-a5';
     updateSideButtons();
@@ -84,6 +92,7 @@ export function setupCoverCustomizer(options: {
   });
 
   function triggerPreviewRefresh(delayMs = 300) {
+    updateLogoPositionField();
     if (debounceTimer) clearTimeout(debounceTimer);
     debounceTimer = setTimeout(fetchCoverPreview, delayMs);
   }
@@ -124,6 +133,7 @@ export function setupCoverCustomizer(options: {
     const formData = new FormData();
     formData.append('target', currentTarget);
     formData.append('style', style);
+    if (logoPosition && !logoPosition.disabled) formData.append('logo_position', logoPosition.value);
     formData.append('typography', typography);
     formData.append('title', title);
     formData.append('name', name);
@@ -189,7 +199,13 @@ export function setupCoverCustomizer(options: {
     el.addEventListener('change', () => triggerPreviewRefresh(50));
   });
 
-  photoInput?.addEventListener('change', () => triggerPreviewRefresh(0));
+  for (const field of [photoInput, logoPosition]) {
+    field?.addEventListener('change', () => {
+      currentTarget = 'front-a5';
+      updateSideButtons();
+      triggerPreviewRefresh(0);
+    });
+  }
 
   triggerPreviewRefresh(0);
 }

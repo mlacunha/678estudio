@@ -1,6 +1,6 @@
 #import "shared.typ": *
 
-#let render-classic-front(title, name, subtitle, colors, heading-font, body-font, dims) = {
+#let render-classic-front(title, name, subtitle, colors, heading-font, body-font, dims, photo-path, logo-position) = {
   place(top + left, rect(width: 100%, height: 100%, fill: rgb(colors.primary)))
 
   let b = dims.bleed
@@ -49,6 +49,7 @@
     ]
   ]
 
+  render-cover-logo(photo-path, logo-position, dims, 17mm, 18mm)
   draw-crop-marks(dims)
 }
 

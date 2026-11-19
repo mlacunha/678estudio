@@ -9,7 +9,7 @@
 #let a4-landscape-width = 297mm
 #let a4-landscape-height = 210mm
 
-#let render-combined-a4(style, title, name, subtitle, colors, heading-font, body-font, photo-path) = {
+#let render-combined-a4(style, title, name, subtitle, colors, heading-font, body-font, photo-path, logo-position) = {
   let half-w = a4-landscape-width / 2 // 148.5 mm
   let zero-bleed-dims = (
     width: a5-width,
@@ -34,9 +34,9 @@
   place(top + left, dx: half-w, dy: 0mm,
     block(width: half-w, height: a4-landscape-height, clip: true)[
       #if style == "classic" {
-        render-classic-front(title, name, subtitle, colors, heading-font, body-font, zero-bleed-dims)
+        render-classic-front(title, name, subtitle, colors, heading-font, body-font, zero-bleed-dims, photo-path, logo-position)
       } else if style == "modern" {
-        render-modern-front(title, name, subtitle, colors, heading-font, body-font, zero-bleed-dims)
+        render-modern-front(title, name, subtitle, colors, heading-font, body-font, zero-bleed-dims, photo-path, logo-position)
       } else {
         render-photographic-front(title, name, subtitle, colors, heading-font, body-font, zero-bleed-dims, photo-path)
       }

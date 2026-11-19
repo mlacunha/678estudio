@@ -1,6 +1,6 @@
 #import "shared.typ": *
 
-#let render-modern-front(title, name, subtitle, colors, heading-font, body-font, dims) = {
+#let render-modern-front(title, name, subtitle, colors, heading-font, body-font, dims, photo-path, logo-position) = {
   place(top + left, rect(width: 100%, height: 100%, fill: rgb(colors.secondary)))
 
   // Bloco assimétrico de cor primária na metade superior/lateral
@@ -52,6 +52,7 @@
     ]
   )
 
+  render-cover-logo(photo-path, logo-position, dims, 10mm, 12mm)
   draw-crop-marks(dims)
 }
 

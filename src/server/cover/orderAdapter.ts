@@ -33,6 +33,7 @@ export async function extractCoverFromForm(
 
   const cover = parseCoverConfig({
     style: form.get('cover_style'),
+    logoPosition: form.get('cover_logo_position'),
     typography: form.get('cover_typography'),
     title: form.get('cover_title') || defaults.title,
     name: form.get('cover_name') || defaults.name || '',

@@ -12,6 +12,7 @@
 #let name = sys.inputs.at("name", default: "")
 #let subtitle = sys.inputs.at("subtitle", default: "")
 #let photo-path = sys.inputs.at("photo", default: "")
+#let logo-position = sys.inputs.at("logo-position", default: "")
 
 #let primary-color = sys.inputs.at("color_primary", default: "#1e293b")
 #let secondary-color = sys.inputs.at("color_secondary", default: "#f8fafc")
@@ -42,7 +43,7 @@
     height: a4-landscape-height,
     margin: 0mm,
   )
-  render-combined-a4(style, title, name, subtitle, colors, heading-font, body-font, photo-path)
+  render-combined-a4(style, title, name, subtitle, colors, heading-font, body-font, photo-path, logo-position)
 } else {
   let dims = get-page-dimensions(bleed-str)
   set page(
@@ -62,9 +63,9 @@
   } else {
     // Default is front-a5
     if style == "classic" {
-      render-classic-front(title, name, subtitle, colors, heading-font, body-font, dims)
+      render-classic-front(title, name, subtitle, colors, heading-font, body-font, dims, photo-path, logo-position)
     } else if style == "modern" {
-      render-modern-front(title, name, subtitle, colors, heading-font, body-font, dims)
+      render-modern-front(title, name, subtitle, colors, heading-font, body-font, dims, photo-path, logo-position)
     } else {
       render-photographic-front(title, name, subtitle, colors, heading-font, body-font, dims, photo-path)
     }
