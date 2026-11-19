@@ -8,6 +8,8 @@ import { execFileSync } from 'node:child_process';
 import { createClient, type Client } from '@libsql/client';
 import {
   getActiveCategories,
+  getHomeCategories,
+  getMenuCategories,
   getAllCategories,
   getCategoryById,
   getCategoryBySlug,
@@ -65,6 +67,29 @@ describe('Catalog Repository with SQLite', () => {
   });
 
   describe('Categories Operations', () => {
+    it('defaults existing categories to visible and keeps menu visibility independent of publication and home', async () => {
+      const published = await getActiveCategories(testClient);
+      expect(await getMenuCategories(testClient)).toEqual(published);
+      expect(published.every(category => category.showOnMenu)).toBe(true);
+
+      const validated = validateCategoryPayload({ slug: 'colecao-reservada', title: 'Coleção Reservada', showOnMenu: false });
+      expect(validated.category?.showOnMenu).toBe(false);
+      const id = 'cat-reservada';
+      await createCategory({ id, ...validated.category! }, testClient);
+      expect((await getMenuCategories(testClient)).some(category => category.id === id)).toBe(false);
+      expect((await getHomeCategories(testClient)).some(category => category.id === id)).toBe(true);
+      expect(await isPublishedInternalDestination('/colecoes/colecao-reservada', testClient)).toBe(true);
+      expect((await listAdminCategoriesWithCounts(testClient)).find(category => category.id === id)?.showOnMenu).toBe(false);
+
+      const saved = (await getCategoryById(id, testClient))!;
+      await updateCategory({ ...saved, showOnMenu: true, showOnHome: false }, testClient);
+      expect((await getMenuCategories(testClient)).some(category => category.id === id)).toBe(true);
+      expect((await getHomeCategories(testClient)).some(category => category.id === id)).toBe(false);
+
+      await toggleCategoryActive(id, false, testClient);
+      expect((await getMenuCategories(testClient)).some(category => category.id === id)).toBe(false);
+      expect(await isPublishedInternalDestination('/colecoes/colecao-reservada', testClient)).toBe(false);
+    });
     it('validates published collection destinations without removing saved product references', async () => {
       const category = (await getCategoryBySlug('quadros', testClient))!;
       const product = (await getProductById('prod-c1', testClient))!;

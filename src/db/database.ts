@@ -145,6 +145,7 @@ async function createSchemaAndSeed(client: Client): Promise<void> {
   await migrateArtLibrary(client);
   await migrateCatalogShowcase(client);
   await migrateDynamicCatalog(client);
+  await migrateCategoryMenuVisibility(client);
 }
 
 async function seedInitialDataIfEmpty(client: Client): Promise<void> {
@@ -360,6 +361,22 @@ export async function migrateCatalogShowcase(client: Client): Promise<void> {
   } catch (error) {
     await tx.rollback();
     throw error;
+  } finally {
+    tx.close();
+  }
+}
+
+async function migrateCategoryMenuVisibility(client: Client): Promise<void> {
+  const columns = await client.execute("PRAGMA table_info('categories')");
+  if (columns.rows.some(row => row.name === 'show_on_menu')) return;
+
+  const tx = await client.transaction('write');
+  try {
+    const current = await tx.execute("PRAGMA table_info('categories')");
+    if (!current.rows.some(row => row.name === 'show_on_menu')) {
+      await tx.execute('ALTER TABLE categories ADD COLUMN show_on_menu INTEGER NOT NULL DEFAULT 1');
+    }
+    await tx.commit();
   } finally {
     tx.close();
   }

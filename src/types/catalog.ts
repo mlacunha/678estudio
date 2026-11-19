@@ -39,6 +39,7 @@ export interface ProductCategory {
   displayOrder?: number;
   isActive?: boolean;
   showOnHome?: boolean;
+  showOnMenu?: boolean;
   layoutType?: CategoryLayoutType;
   destinationType?: CategoryDestinationType;
   destinationHref?: string;
@@ -56,6 +57,7 @@ export interface AdminCategorySummary extends ProductCategory {
   displayOrder: number;
   isActive: boolean;
   showOnHome: boolean;
+  showOnMenu: boolean;
   productCount: number;
   workCount: number;
   aliases: string[];

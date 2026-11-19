@@ -1,5 +1,5 @@
 ---
-import { getActiveCategories } from '../db/catalogRepository';
+import { getMenuCategories } from '../db/catalogRepository';
 import { resolveCategoryDestination } from '../data/internalDestinations';
 import { getRequestStudioSettings } from '../db/studioSettings';
 import { buildWhatsAppQuotePath } from '../utils/whatsapp';
@@ -7,12 +7,12 @@ import BrandMark from './BrandMark.astro';
 import CustomizerNav from './CustomizerNav.astro';
 import ProductsNav from './ProductsNav.astro';
 
-const [{ whatsapp }, activeCategories] = await Promise.all([
+const [{ whatsapp }, menuCategories] = await Promise.all([
   getRequestStudioSettings(Astro.locals),
-  getActiveCategories(),
+  getMenuCategories(),
 ]);
 
-const navCategories = activeCategories.map((category) => ({
+const navCategories = menuCategories.map((category) => ({
   title: category.title,
   href: resolveCategoryDestination(category).collectionHref,
 }));
