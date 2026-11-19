@@ -85,3 +85,14 @@
   ]
 }
 
+#let render-cover-logo(path, position, dims, top-inset, max-height) = {
+  if path != "" and position in ("top", "bottom") {
+    let at-top = position == "top"
+    let inset = dims.bleed + if at-top { top-inset } else { 17mm }
+    place(
+      center + if at-top { top } else { bottom },
+      dy: if at-top { inset } else { -inset },
+      image(path, width: 42mm, height: max-height, fit: "contain"),
+    )
+  }
+}

@@ -4,6 +4,38 @@ import { compileCoverPdf, generateCoverPreviewPng } from './compiler.mjs';
 import { normalizeCoverPhotoBuffer } from './photo';
 
 describe('Cover Typst Compiler Integration', () => {
+  it.each(['classic', 'modern'])('positions the logo on the front of %s covers', async style => {
+    const photoBuffer = await sharp({
+      create: { width: 120, height: 40, channels: 3, background: '#ff00ff' },
+    }).png().toBuffer();
+    const options = { style, photoBuffer };
+    const [top, bottom, combined, back] = await Promise.all([
+      generateCoverPreviewPng({ ...options, logoPosition: 'top' }),
+      generateCoverPreviewPng({ ...options, logoPosition: 'bottom' }),
+      generateCoverPreviewPng({ ...options, logoPosition: 'bottom', target: 'combined-a4' }),
+      generateCoverPreviewPng({ ...options, logoPosition: 'top', target: 'back-a5' }),
+    ]);
+
+    const logoPixels = async (png: Buffer, left: number, top: number, width: number, height: number) => {
+      const data = await sharp(png).extract({ left, top, width, height }).removeAlpha().raw().toBuffer();
+      for (let index = 0; index < data.length; index += 3) {
+        if (data[index] === 255 && data[index + 1] === 0 && data[index + 2] === 255) return true;
+      }
+      return false;
+    };
+    const { width, height } = await sharp(top).metadata();
+    const coverWidth = width!;
+    const coverHeight = height!;
+    const quarter = Math.floor(coverHeight / 4);
+    expect(await logoPixels(top, 0, 0, coverWidth, quarter)).toBe(true);
+    expect(await logoPixels(top, 0, coverHeight - quarter, coverWidth, quarter)).toBe(false);
+    expect(await logoPixels(bottom, 0, 0, coverWidth, quarter)).toBe(false);
+    expect(await logoPixels(bottom, 0, coverHeight - quarter, coverWidth, quarter)).toBe(true);
+    expect(await logoPixels(combined, 0, 0, coverWidth, coverHeight)).toBe(false);
+    expect(await logoPixels(combined, coverWidth, coverHeight - quarter, coverWidth, quarter)).toBe(true);
+    expect(await logoPixels(back, 0, 0, coverWidth, coverHeight)).toBe(false);
+  });
+
   it('should compile Classic A5 front cover with 3mm bleed', async () => {
     const pdfBuffer = await compileCoverPdf({
       target: 'front-a5',

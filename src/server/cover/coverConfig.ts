@@ -25,6 +25,7 @@ export interface CoverConfig {
   subtitle?: string;
   colors: CoverColors;
   hasCustomImage: boolean;
+  logoPosition?: 'top' | 'bottom';
   imageCrop?: CoverCrop;
   origin?: 'custom_upload' | 'studio_library';
   libraryAssetId?: string;
@@ -124,6 +125,7 @@ export function parseCoverConfig(input: any): CoverConfig {
     subtitle,
     colors,
     hasCustomImage,
+    logoPosition: input.logoPosition === 'top' ? 'top' : 'bottom',
     imageCrop,
     origin,
     libraryAssetId,

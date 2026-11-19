@@ -35,6 +35,7 @@ export const POST: APIRoute = async ({ request }) => {
 
       coverConfig = parseCoverConfig({
         style: formData.get('style'),
+        logoPosition: formData.get('logo_position'),
         typography: formData.get('typography'),
         title: formData.get('title'),
         name: formData.get('name'),
@@ -74,6 +75,7 @@ export const POST: APIRoute = async ({ request }) => {
       name: coverConfig.name,
       subtitle: coverConfig.subtitle,
       colors: coverConfig.colors,
+      logoPosition: coverConfig.logoPosition,
       photoBuffer,
     });
 
