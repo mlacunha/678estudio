@@ -132,25 +132,15 @@ const { studioProducts } = Astro.props;
                 </select>
                 <p class="mt-1 text-xs text-ink-muted">Quadros sem arte própria usam a arte do Quadro 1.</p>
               </div>
-              {studioProducts ? (
-                <label class="cursor-pointer min-h-11 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-surface-raised hover:bg-surface-hover border border-control text-ink-secondary text-xs font-semibold focus-within:outline focus-within:outline-2 focus-within:outline-accent">
+              <ArtLibraryPicker product="quadro">
+                <label slot="upload" class="cursor-pointer min-h-11 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-surface-raised hover:bg-surface-hover border border-control text-ink-secondary text-xs font-semibold focus-within:outline focus-within:outline-2 focus-within:outline-accent">
                   <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
                   </svg>
                   <span>Carregar Imagem (JPG ou PNG)</span>
                   <input type="file" id="input-frame-art" accept="image/*" class="sr-only" />
                 </label>
-              ) : (
-                <ArtLibraryPicker product="quadro">
-                  <label slot="upload" class="cursor-pointer min-h-11 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-surface-raised hover:bg-surface-hover border border-control text-ink-secondary text-xs font-semibold focus-within:outline focus-within:outline-2 focus-within:outline-accent">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-                    </svg>
-                    <span>Carregar Imagem (JPG ou PNG)</span>
-                    <input type="file" id="input-frame-art" accept="image/*" class="sr-only" />
-                  </label>
-                </ArtLibraryPicker>
-              )}
+              </ArtLibraryPicker>
               <p id="art-filename" data-art-status role="status" class="text-xs text-accent mt-2 break-all"></p>
               <button id="btn-remove-frame-art" type="button" hidden class="mt-2 min-h-11 rounded-md border border-line px-3 text-xs font-medium text-ink-secondary hover:border-accent [&[hidden]]:hidden">
                 Remover arte deste quadro
@@ -853,10 +843,9 @@ const { studioProducts } = Astro.props;
       if (labelScale) labelScale.textContent = '100%';
     }
 
-    const artPicker = studio ? null
-      : connectArtLibraryPicker(document.querySelector<HTMLElement>('[data-art-picker-root]'), {
-          onSelect: art => setArtwork(`[${art.code}] ${art.title} (v${art.version})`, () => loadImageFromUrl(art.previewUrl), art),
-        });
+    const artPicker = connectArtLibraryPicker(document.querySelector<HTMLElement>('[data-art-picker-root]'), {
+      onSelect: art => setArtwork(`[${art.code}] ${art.title} (v${art.version})`, () => loadImageFromUrl(art.previewUrl), art),
+    });
 
     artSlot?.addEventListener('change', () => {
       artPicker?.clearSelection();
