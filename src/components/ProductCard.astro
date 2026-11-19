@@ -2,9 +2,10 @@
 import type { Product, ProductCategory } from '../types/catalog';
 import {
   resolveProductDestination,
+  resolveCategoryDestination,
   type CategoryDestinationInput,
 } from '../data/internalDestinations';
-import { resolveValidLinkedArteId } from '../db/catalogRepository';
+import { getRequestInternalDestinationAvailability, resolveValidLinkedArteId } from '../db/catalogRepository';
 import { getRequestStudioSettings } from '../db/studioSettings';
 import { buildWhatsAppQuotePath } from '../utils/whatsapp';
 import { getCatalogLargeImage } from '../utils/catalogImages';
@@ -62,9 +63,22 @@ const whatsappQuoteHref =
     categoryTitle: displayCategoryTitle,
   });
 
+const detailsCandidates = effectiveAction === 'details'
+  ? new Set([
+      product.actionHref,
+      effectiveCategory.defaultProductHref,
+      resolveCategoryDestination(effectiveCategory).collectionHref,
+    ].map(href => href?.trim()).filter((href): href is string => Boolean(href)))
+  : new Set<string>();
+const availableDestinations = new Set(
+  (await Promise.all([...detailsCandidates].map(async href =>
+    await getRequestInternalDestinationAvailability(Astro.locals, href) ? href : undefined
+  ))).filter(Boolean),
+);
 const destination = resolveProductDestination(product, effectiveCategory, {
   validLinkedArteId,
   whatsappQuoteHref: whatsappQuoteHref || undefined,
+  isAvailableInternalDestination: href => availableDestinations.has(href.trim()),
 });
 const hasInternalPrimaryLink =
   (destination.kind === 'customizer' || destination.kind === 'details') && Boolean(destination.href);

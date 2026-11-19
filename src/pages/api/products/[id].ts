@@ -7,6 +7,7 @@ import {
   deleteProduct,
   getCategoryById,
   getCategoryBySlug,
+  isPublishedInternalDestination,
   resolveValidLinkedArteId,
 } from '../../../db/catalogRepository';
 import { validateProductActionOverride } from './index';
@@ -72,6 +73,7 @@ export const PUT: APIRoute = async ({ params, request }) => {
             body.actionType !== undefined ? body.actionType : existing.actionType,
             body.actionHref !== undefined ? body.actionHref : existing.actionHref,
             body.ctaLabel !== undefined ? body.ctaLabel : existing.ctaLabel,
+            existing.actionType === 'details' ? existing.actionHref : undefined,
           )
         : {
             actionType: existing.actionType,
@@ -81,6 +83,11 @@ export const PUT: APIRoute = async ({ params, request }) => {
 
     if (actionCheck.error) {
       return json({ success: false, error: actionCheck.error }, 400);
+    }
+    if (actionCheck.actionType === 'details' && actionCheck.actionHref &&
+        (existing.actionType !== 'details' || existing.actionHref !== actionCheck.actionHref) &&
+        !(await isPublishedInternalDestination(actionCheck.actionHref))) {
+      return json({ success: false, error: 'A coleção de destino precisa existir e estar publicada.' }, 400);
     }
 
     let nextLinkedArteId = existing.linkedArteId;
